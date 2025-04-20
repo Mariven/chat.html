@@ -1,10 +1,10 @@
 # chat.html
 
-A self‑contained, zero‑dependency HTML page for chatting with LLMs. No Dockerfile, no yarn, no vite, no grotesque Dockerfiles or ultramassive node_modules folders—just download and open `chat.html`. 
+A self‑contained, zero‑dependency HTML page for chatting with LLMs.
 
 ## Overview
 
-This HTML file provides a notebook‑style interface for assembling and iterating on LLM prompts. You can create individual “cells”, representing messages, with arbitrary roles (system, user, assistant or comment), and then edit them in place, move them around, enable/disable/condense/collapse them, add custom names and labels, and then invoke a Chat, Text, or FIM completion. Results stream in to a specified output cell which can then be turned into a new assistant message cell.
+This is a notebook‑style interface for assembling and iterating on LLM prompts. You can create individual cells, representing messages with roles, edit them in place, move them around, enable/disable/condense/collapse them, add custom names and labels, and then invoke Chat, Text, or FIM completions. Results stream in to a specified output cell which can then be turned into a new assistant message cell.
 
 Everything runs in your browser: all state (API keys, saved conversations, variables) lives in your browser's local storage, everything is done client-side, and third‑party libraries (KaTeX, Marked, Highlight.js) are pulled from public CDNs.
 
