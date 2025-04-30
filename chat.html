@@ -1040,7 +1040,7 @@
             padding: 8px;
         }
 
-        #versionHash {
+        #versionHash, #shamelessSelfPromotion {
             color: var(--color-text-light);
             padding: 5px;
         }
@@ -1306,6 +1306,9 @@
                             </li>
                             <li>
                                 Certain chat models (Claude 3.x, DeepSeek v3) allow you to <em>prefill</em> the assistant's response, or select a prefix that it must start with. To use this, put an <em>assistant block with the desired prefix</em> at the end of the chat before generating a chat completion.
+                            </li>
+                            <li>
+                                Certain chat models, including many offered through OpenRouter, offer completions through their completions endpoint. The "Text w/ Chat Model" button allows you to <em>try</em> sending the <em>selected message</em> for a text completion with the given model. You can see a (likely-outdated) list of which models will respond appropriately <a href="https://gist.github.com/Mariven/b252720d77bb2d8cb99a1ce1fb2e2e91">here</a>.
                             </li>
                             <li>
                                 If you don't want to see a certain provider's models in the model selector, set their API key to 'hide'. Doing this for Exa will hide the 'Similar Sites' and 'Exa Search' buttons.
@@ -1722,6 +1725,9 @@
                         <div id="save-load-message">Local data loaded</div>
                     </div>
                 </div>
+                <div id="shamelessSelfPromotion">
+                    <a href="https://n.cohomology.group/chat.html">chat.html</a> by <a href="https://n.cohomology.group">Mariven</a> (<a href="https://x.com/psychiel">@psychiel</a>)
+                </div>
                 <div id="versionHash">
                     Script hash:
                     <br>
@@ -1789,6 +1795,9 @@
                 </button>
                 <button id="textCompletionBtn" onclick="generate('text')">
                     Text Completion
+                </button>
+                <button id="chatCompletionsEndpointBtn" onclick="generate('textwchat')">
+                    Text w/ Chat Model
                 </button>
                 <button id="findSimilarSitesBtn" onclick="findSimilarSites()">
                     Similar Sites
@@ -2004,11 +2013,29 @@
                     cost: { in: 1.25, out: 10.00 },
                     max: { in: 1048576, out: 65536 }
                 },
+                "google/gemini-2.5-flash-preview": {
+                    short: "Gemini 2.5 Flash Preview (OR)",
+                    provider: "OpenRouter",
+                    cost: { in: 0.15, out: 0.60 },
+                    max: { in: 1048576, out: 65536 }
+                },
+                "google/gemini-2.5-flash-preview:thinking": {
+                    short: "Gemini 2.5 Flash Preview (thinking) (OR)",
+                    provider: "OpenRouter",
+                    cost: { in: 0.15, out: 3.50 },
+                    max: { in: 1048576, out: 65536 }
+                },
                 "gemini-2.5-pro-exp-03-25": {
                     short: "Gemini 2.5 Pro 3-25 (Gem)",
                     provider: "Gemini",
                     cost: { in: 0.0, out: 0.0 },
                     max: { in: 1048576, out: 8192 }
+                },
+                "gemini-2.5-flash-preview-04-17": {
+                    short: "Gemini 2.5 Flash Preview (04-17) (Gem)",
+                    provider: "Gemini",
+                    cost: { in: 0.15, out: 0.60 },
+                    max: { in: 1048576, out: 65536 }
                 },
                 "gemini-2.0-flash": {
                     short: "Gemini 2.0 Flash (Gem)",
@@ -2057,6 +2084,24 @@
                     provider: "OpenRouter",
                     cost: { in: 2.5, out: 10.0 },
                     max: { in: 128000, out: 4000 }
+                },
+                "inception/mercury-coder-small-beta": {
+                    short: "Mercury Coder Small Beta (OR)",
+                    provider: "OpenRouter",
+                    cost: { in: 0.25, out: 1.00 },
+                    max: { in: 32000, out: 32000 }
+                },
+                "deepseek/deepseek-prover-v2": {
+                    short: "DeepSeek Prover V2 (OR)",
+                    provider: "OpenRouter",
+                    cost: { in: 0.70, out: 2.50 },
+                    max: { in: 160000, out: 160000 }
+                },
+                "tngtech/deepseek-r1t-chimera:free": {
+                    short: "DeepSeek R1T Chimera (Free) (OR)",
+                    provider: "OpenRouter",
+                    cost: { in: 0.00, out: 0.00 },
+                    max: { in: 163480, out: 163480 }
                 },
                 "deepseek/deepseek-r1": {
                     short: "DeepSeek R1 (OR)",
@@ -2213,6 +2258,36 @@
                     provider: "Groq",
                     cost: { in: 0.055, out: 0.055 },
                     max: { in: 131072, out: 4096 },
+                },
+                "qwen/qwen3-235b-a22b": {
+                    short: "Qwen3 235B A22B (OR)",
+                    provider: "OpenRouter",
+                    cost: { in: 0.10, out: 2.00 },
+                    max: { in: 32768, out: 32768 }
+                },
+                "qwen/qwen3-30b-a3b": {
+                    short: "Qwen3 30B A3B (OR)",
+                    provider: "OpenRouter",
+                    cost: { in: 0.10, out: 0.30 },
+                    max: { in: 40960, out: 40960 }
+                },
+                "qwen/qwen3-32b": {
+                    short: "Qwen3 32B (OR)",
+                    provider: "OpenRouter",
+                    cost: { in: 0.10, out: 0.30 },
+                    max: { in: 40960, out: 40960 }
+                },
+                "qwen/qwen3-14b": {
+                    short: "Qwen3 14B (OR)",
+                    provider: "OpenRouter",
+                    cost: { in: 0.07, out: 0.24 },
+                    max: { in: 40960, out: 40960 }
+                },
+                "qwen/qwen3-8b": {
+                    short: "Qwen3 8B (OR)",
+                    provider: "OpenRouter",
+                    cost: { in: 0.035, out: 0.138 },
+                    max: { in: 40960, out: 40960 }
                 },
                 "qwen/qvq-72b-preview": {
                     short: "Qwen QvQ 72B Preview (OR)",
@@ -5168,9 +5243,15 @@ const MsgBlock = {
         if (isFim) {
             modelType = 'text';
         }
+        let realModelType = modelType;
         let modelKey = model;
         if (!modelKey) {
             modelKey = getId('model' + (isChat ? 'Chat' : 'Text')).value;
+            if (modelType == 'textwchat') {
+                modelKey = getId('modelChat').value;
+                modelType = 'text';
+                realModelType = 'chat';
+            }
         }
 
         let destination = await getDestination({modelKey});
@@ -5183,7 +5264,7 @@ const MsgBlock = {
 
         let customModel = null;
 
-        const info = $models[modelType][modelKey];
+        const info = $models[realModelType][modelKey];
         const { key, url } = getApiKeyAndUrl(info.provider);
         let corsProxy = getId('corsProxy')?.value;
         if (corsProxy && !corsProxy.endsWith('?')) {
