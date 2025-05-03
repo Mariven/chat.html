@@ -464,7 +464,7 @@
                 }
             }
             & .katex-display {
-                margin-top: -4px;
+                margin-top: 2px;
                 margin-bottom: -4px;
             }
             & li {
@@ -5464,7 +5464,7 @@ const MsgBlock = {
                     const lines = chunk.split('\n');
                     let next = '';
                     for (const line of lines) {
-                        if (line.startsWith('data:') && line.trim() !== 'data: [DONE]') {
+                        if (line.startsWith('data:') && !line.includes('data: [DONE]')) {
                             try {
                                 next = '';
                                 const data = JSON.parse(line.slice(5));
@@ -5496,6 +5496,8 @@ const MsgBlock = {
                                     }
                                 } else if (data?.text) {
                                     next = data.text;
+                                } else if (data?.error) {
+                                    next += `\n<b style='color: red;'>Error</b> <span style='color: red;'>(${data.error?.code ? 'code: ' + data.error.code : data.error?.type ? 'type: ' + data.error.type : 'no code'}): ${data.error?.message ?? "no message (check console)"}</span>\n`;
                                 }
                                 if (!reasoning) {
                                     output += next || '';
@@ -5522,11 +5524,11 @@ const MsgBlock = {
 
                                 // unprincipled hack to make models output parseable latex
                                 [
-                                    [/\n\$\$\n(.*?)\n\$\$\n/g, "\n$$$$$1$$$$\n"],
+                                    [/(\n+\s*\$\$\s*\n+)?(.*?)\n+\s*\$\$\s*\n+/g, "\n$1$2$$$$\n"],
                                     [/\n\$ /g, "\n$$"],
                                     [/ \$\n/g, "$$\n"],
                                     [/\n\s*\\\[\s/g, "\n$$$$"],
-                                    [/\s\\\]\s*\n/g, "$$$$\n"],
+                                    [/\n*\s\\\]\s*\n/g, "$$$$\n"],
                                     [/\s*\\\(\s/g, " $$"],
                                     [/\s\\\)\s*/g, "$$ "],
                                     [/\\\(\s*/g, " $$"],
@@ -5540,25 +5542,72 @@ const MsgBlock = {
                             } catch (error) {
                                 // If there's an error parsing JSON, attempt to salvage its content field, appending the raw line upon failure
                                 if (line.trim() !== '') {
-                                    console.log("Incomplete event data: " + line);
-                                    let content = '\n```\n' + line.slice(5) + '\n```\n';
-                                    const salvageIdx = line.search(/"content":/);
-                                    if (salvageIdx !== -1) {
-                                        content = line.slice(salvageIdx + '"content":'.length);
-                                        content = content.slice(content.search('"'));
-                                        const endIdx = content.search(/[^\\]"/);
-                                        if (endIdx !== -1) {
-                                            content = content.slice(1, endIdx + 1);
-                                            console.log("Salvaged content field as: " + content);
+                                    try {
+                                        const data2 = JSON.parse(line.slice(5));
+                                        if (data2?.usage) {
+                                            const completion_tokens = data2.usage.completion_tokens;
+                                            if (completion_tokens && completion_tokens > 0) {
+                                                await updateTokenCount(destination, false, completion_tokens);
+                                            }
                                         } else {
-                                            console.log("Incompletely salvaged content field as: " + content);
+                                            console.log("Could not understand line: " + line);
                                         }
-                                    } else {
-                                        console.log("Could not salvage content field; appending raw line.");
+                                    } catch {
+                                        console.log("Incomplete event data: " + line);
+                                        let content = '\n```\n' + line.slice(5) + '\n```\n';
+                                        const salvageIdx = line.search(/"content":/);
+                                        if (salvageIdx !== -1) {
+                                            content = line.slice(salvageIdx + '"content":'.length);
+                                            content = content.slice(content.search('"'));
+                                            const endIdx = content.search(/[^\\]"/);
+                                            if (endIdx !== -1) {
+                                                content = content.slice(1, endIdx + 1);
+                                                console.log("Salvaged content field of broken line as: " + content);
+                                            } else {
+                                                console.log("Incompletely salvaged content field of broken line as: " + content);
+                                            }
+                                            if (content.trim()) {
+                                                output += content;
+                                            }
+                                        } else {
+                                            console.log("Could not salvage content field of broken line.");
+                                        }
+                                        destination.innerHTML = renderMarked(output);
+                                        renderMath(destination);
                                     }
-                                    // output += content;
+                                }
+                            }
+                        } else if (line && !line.includes("OPENROUTER PROCESSING")) {
+                            try {
+                                const data = JSON.parse(line);
+                                if (data?.error) {
+                                    output += `\n<b style='color: red;'>Error</b> <span style='color: red;'>(${data.error?.code ? 'code: ' + data.error.code : data.error?.type ? 'type: ' + data.error.type : 'no code'}): ${data.error?.message ?? "no message (check console)"}</span>\n`;
                                     destination.innerHTML = renderMarked(output);
                                     renderMath(destination);
+                                } else {
+                                    console.log(line);
+                                }
+                            } catch {
+                                console.log("Incomplete event data: " + line);
+                                let content = '\n```\n' + line.slice(5) + '\n```\n';
+                                const salvageIdx = line.search(/"content":/);
+                                if (salvageIdx !== -1) {
+                                    content = line.slice(salvageIdx + '"content":'.length);
+                                    content = content.slice(content.search('"'));
+                                    const endIdx = content.search(/[^\\]"/);
+                                    if (endIdx !== -1) {
+                                        content = content.slice(1, endIdx + 1);
+                                        console.log("Salvaged content field of broken line as: " + content);
+                                        if (content.trim()) {
+                                            output += content;
+                                        }
+                                    } else {
+                                        console.log("Incompletely salvaged content field of broken line as: " + content);
+                                    }
+                                    destination.innerHTML = renderMarked(output);
+                                    renderMath(destination);
+                                } else {
+                                    console.log("Could not salvage content field of broken line.");
                                 }
                             }
                         }
