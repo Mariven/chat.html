@@ -1491,6 +1491,16 @@
                             <li>
                                 Note: To use a custom model from a specific provider, select a model from the dropdown <em>belonging to that provider</em>. E.g. to use an OpenAI fine-tune, enter its name above (ft:whatever), check the box, and select an OpenAI model (say "GPT-4o (OAI)") from the dropdown.
                             </li>
+                            <li>
+                                <br>
+                                <button onclick="addLiteLLMModels()" style="border: 1px solid var(--button-text-color-main); background-color: var(--button-bg-color-main);">
+                                    Get more models
+                                </button>
+                                <br>
+                                Click this button to (attempt to) add the very large and continually updated list of LLMs <a href="https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json">here</a> with this page's model selection options. You'll very likely need to provide a CORS proxy (in the Keys section) for the fetch request to work; if it does, the (over 200) new models in the dropdown list will be prefixed with a '+'.
+                                <br>
+                                Note that there are <em>lots</em> of untied loose ends and weird edge cases brought up by the expanded selection range, so you may need to use the console to manually check the requests being sent and responses being received.
+                            </li>
                         </ul>
                         <h3>Tokenization</h3>
                             <ul>
@@ -1853,10 +1863,10 @@
                 "ModelBox": "https://api.model.box/v1",
                 "OpenAI": "https://api.openai.com/v1",
                 "OpenRouter": "https://openrouter.ai/api/v1",
-                "Replicate": "",
+                "Replicate": "https://api.replicate.com/v1",
                 "SambaNova": "https://api.sambanova.ai/v1",
                 "TogetherAI": "https://api.together.xyz/v1",
-                "Voyage": "",
+                "Voyage": "https://api.voyageai.com/v1",
                 "xAI": "https://api.x.ai/v1",
                 "none": ""
             },
@@ -2596,10 +2606,156 @@
                     cost: { in: 3.0, out: 3.0 },
                     max: { in: 32768, out: 4096 },
                 },
-                "echo": {short: "Echo input", provider: "none", cost: {in: 0, out: 0}, max: {in: -1, out: -1},},
-                "none": {short: "No model", provider: "none", cost: {in: 0, out: 0}, max: {in: -1, out: -1},}
+                "echo": {
+                    short: "Echo input",
+                    provider: "none",
+                    cost: {in: 0, out: 0},
+                    max: {in: -1, out: -1},
+                },
+                "none": {
+                    short: "No model",
+                    provider: "none",
+                    cost: {in: 0, out: 0},
+                    max: {in: -1, out: -1},
+                }
             }
         }
+
+    const addLiteLLMModels = async () => {
+        const prettyVersion = (rawId) => {
+            const acronyms = ['gpt'];
+            const out = rawId.replace(
+                    /([a-zA-Z0-9]+)-([0-9]+)-([0-9]+)-/g,
+                    (_, a, b, c) => (/^[A-Z]+$/.test(a) ? `${a}-${b}.${c} ` : `${a} ${b}.${c} `)
+                ).replace(
+                    /([A-Z]+)-([0-9]+)/g, (_, a, b) => `${a}-${b}`
+                ).replace(
+                    /-/g, ' '
+                );
+            let result = '';
+            for (let i = 0; i < out.length; ++i) {
+                let c = out[i];
+                if (/[a-zA-Z]/.test(c) && (i === 0 || !/[a-zA-Z]/.test(out[i-1])))
+                    c = c.toUpperCase();
+                result += c;
+            }
+            result = result.split(/\s+/).map(word =>
+                acronyms.map(l => l.toUpperCase()).includes(word.toUpperCase()) ? word.toUpperCase() : word
+            ).join(' ');
+            return result.trim();
+        };
+
+        const shortNames = {
+            openrouter: "OR",
+            openai: "OAI",
+            gemini: "Gem",
+            anthropic: "Ant",
+            deepseek: "DS",
+            deepseek_beta: "DS",
+            groq: "Groq",
+            sambanova: "SN",
+            cerebras: "Cer",
+            fireworks: "FW",
+            hyperbolic: "Hyp",
+            mistral: "Mis",
+            mistral_text: "Mis",
+            modelbox: "Mod",
+            replicate: "Rep",
+            xai: "xAI",
+            togetherai: "Tog",
+            voyage: "Voy",
+        };
+        const capitalize = {
+            openrouter: "OpenRouter",
+            openai: "OpenAI",
+            gemini: "Gemini",
+            anthropic: "Anthropic",
+            deepseek: "DeepSeek",
+            deepseek_beta: "DeepSeek_Beta",
+            groq: "Groq",
+            sambanova: "Sambanova",
+            cerebras: "Cerebras",
+            fireworks: "Fireworks",
+            hyperbolic: "Hyperbolic",
+            mistral: "Mistral",
+            mistral_text: "Mistral_Text",
+            modelbox: "ModelBox",
+            replicate: "Replicate",
+            xai: "xAI",
+            togetherai: "TogetherAI",
+            voyage: "Voyage",
+        };
+
+        let models = await fetch(
+            "https://github.com/BerriAI/litellm/raw/refs/heads/main/model_prices_and_context_window.json",
+            null,
+            getId("corsProxy")?.value
+        ).then(x=>x.json())
+
+        let liteProviders = Object.keys($models.providerBaseURLs).map(x => x.toLowerCase());
+        liteProviders.forEach(pr => liteProviders.push("text-completion-" + pr));
+        let liteModes = ["chat", "completion"];
+        parsedModels = Object.entries(models).filter(
+            ([name, data]) => liteProviders.includes(data?.litellm_provider)
+                    && liteModes.includes(data?.mode ?? 'chat')
+                    && !name.match(/[0-9]{4,}/)
+                    && !name.match(/(^[a-z]+:|:[a-z]+$)/)
+        ).map(
+            ([name, data]) => {
+                let shortName = prettyVersion(name.split('/').reverse()[0])
+                        // hahaha
+                    .replace('4O','4o').replace('GPT ','GPT-')
+                    .replace('O1','o1').replace('O3','o3').replace('O4','o4')
+                    .replace('8X','8x');
+                let provider = data.litellm_provider.replace("text-completion-", "").toLowerCase();
+                let newName = name;
+                if (name.startsWith(provider + '/'))
+                    newName = name.replace(provider + '/', '');
+
+                return [newName, {
+                    short: shortName + ` (${shortNames[provider] || '?'})`,
+                    provider: capitalize[provider],
+                    cost: {
+                        in: (data?.input_cost_per_token ?? 0) * 1000000,
+                        out: (data?.output_cost_per_token ?? 0) * 1000000,
+                    },
+                    max: {
+                        in: data?.max_input_tokens ?? 0,
+                        out: data?.max_output_tokens ?? 0,
+                    },
+                    mode: data?.mode ?? 'chat',
+                }];
+            }
+        );
+        availableModels = {
+            chat: Object.fromEntries(parsedModels.filter(
+                ([name, data]) => data?.mode == "chat" && !Object.keys($models.chat).includes(name))
+            ),
+            text: Object.fromEntries(parsedModels.filter(
+                ([name, data]) => data?.mode == "completion" && !Object.keys($models.text).includes(name))
+            ),
+        };
+        Object.assign($models.chat, availableModels.chat);
+        Object.assign($models.text, availableModels.text);
+
+        ["chat", "text"].forEach(type => {
+            const typeId = type == "chat" ? "modelChat" : "modelText";
+            const modelSelect = getId(typeId);
+            modelSelect.innerText = '';
+            // add all models for given type to appropriate dropdown
+            Object.entries($models[type]).forEach(([key, model]) => {
+                let prefix = '';
+                if (Object.keys(availableModels[type]).includes(key)) {
+                    prefix = ' + ';
+                }
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = prefix + model.short;
+                modelSelect.appendChild(option);
+            });
+            modelSelect.value = getLocal(typeId) || Object.keys($models[type])[0];
+        });
+    }
 
     const immutableConversations = {
         "Read Me": {
