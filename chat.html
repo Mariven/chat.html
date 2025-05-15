@@ -517,8 +517,8 @@
             opacity: 0.5;
         }
         .author-info {
-            grid-column-start: 2;
-            grid-column-end: 2;
+            grid-column-start: 3;
+            grid-column-end: 3;
             &:empty::after {
                 opacity: 0;
                 content: "author";
@@ -526,8 +526,8 @@
         }
         .label-info {
 /*            display: contents;*/
-            grid-column-start: 3;
-            grid-column-end: 3;
+            grid-column-start: 4;
+            grid-column-end: 4;
             color: var(--role-color-heavy);
             opacity: 0.3;
             overflow-x: scroll;
@@ -537,13 +537,19 @@
                 content: "label";
             }
         }
-        .role-button {
+        .swipe-button {
             grid-row: 1;
             grid-column: 1;
+            align-self: center;
+            top: -2px;
+        }
+        .role-button {
+            grid-row: 1;
+            grid-column: 2;
         }
         .token-info {
             grid-row: 1;
-            grid-column: 4;
+            grid-column: 5;
             align-self: center;
             justify-self: end;
             color: var(--color-text-light);
@@ -573,7 +579,7 @@
             &.control-button {
                 top: 0px;
                 grid-row: 1;
-                grid-column: 4;
+                grid-column: 5;
                 align-self: center;
                 justify-self: end;
                 color: var(--color-text-light);
@@ -1413,6 +1419,14 @@
                                 <input type="text" class="secret key" id="replicateKey" placeholder="Replicate API Key">
                             </li>
                             <li>
+                                <span class="provider-name">Chutes:</span>
+                                <input type="text" class="secret key" id="chutesKey" placeholder="Chutes API Key">
+                            </li>
+                            <li>
+                                <span class="provider-name">Inception:</span>
+                                <input type="text" class="secret key" id="inceptionKey" placeholder="Inception API Key">
+                            </li>
+                            <li>
                                 <span class="provider-name">xAI:</span>
                                 <input type="text" class="secret key" id="xaiKey" placeholder="xAI API Key">
                             </li>
@@ -1673,9 +1687,12 @@
                                 Each JSON object should have the following pseudo-schema: <br>
                                 <code>
                                     {
-                                        "providerBaseURLs": {
-                                            [provider]: [url],
-                                            [provider]: [url],
+                                        "providers": {
+                                            [provider]: {
+                                                "baseURL": [url],
+                                                "shortName": [short name],
+                                                "capitalize": [capitalized name]
+                                            },
                                             ...
                                         },
                                         "chat": {
@@ -1712,6 +1729,19 @@
                         <button class="add-variable-button" onclick="addVariable()">
                             Add Variable
                         </button>
+                    </div>
+                </div>
+
+                <div class="collapsible-section">
+
+                    <h2 class="section-header">Saved Prompts</h2>
+                    <div id="prompt-menu" class="section-content">
+                        <div id="prompt-list"></div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="save-new-button" onclick="createNewPrompt()">
+                                Save New
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -1847,779 +1877,1016 @@
 
     // see https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json for consistent updates
     const $models = {
-            providerBaseURLs: {
-                "Anthropic": "https://api.anthropic.com/v1",
-                "Cerebras": "https://api.cerebras.ai/v1",
-                "Custom": "",
-                "DeepSeek": "https://api.deepseek.com/v1",
-                "DeepSeek_Beta": "https://api.deepseek.com/beta",
-                "Fireworks": "https://api.fireworks.ai/inference/v1",
-                "Exa": "https://api.exa.ai/v1",
-                "Gemini": "https://generativelanguage.googleapis.com/v1beta/openai",
-                "Groq": "https://api.groq.com/openai/v1",
-                "Hyperbolic": "https://api.hyperbolic.xyz/v1",
-                "Mistral": "https://api.mistral.ai/v1",
-                "Mistral_Text": "https://api.mistral.ai/v1",
-                "ModelBox": "https://api.model.box/v1",
-                "OpenAI": "https://api.openai.com/v1",
-                "OpenRouter": "https://openrouter.ai/api/v1",
-                "Replicate": "https://api.replicate.com/v1",
-                "SambaNova": "https://api.sambanova.ai/v1",
-                "TogetherAI": "https://api.together.xyz/v1",
-                "Voyage": "https://api.voyageai.com/v1",
-                "xAI": "https://api.x.ai/v1",
-                "none": ""
+        providers: {
+            "anthropic": {
+                "baseURL": "https://api.anthropic.com/v1",
+                "shortName": "Ant",
+                "capitalize": "Anthropic"
             },
-            chat: {
-                "openai/gpt-4o": {
-                    short: "GPT-4o (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 5.0, out: 15.0 },
-                    max: { in: 128000, out: 16384 }
-                },
-                "openai/o4-mini-high": {
-                    short: "o4 Mini High (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 1.10, out: 4.40 },
-                    max: { in: 200000, out: 100000 },
-                    extra: ["developer"],
-                },
-                "openai/o3": {
-                    short: "o3 (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 10.0, out: 40.0 },
-                    max: { in: 200000, out: 100000 },
-                    extra: ["developer"],
-                },
-                "openai/o3-mini-high": {
-                    short: "o3 Mini High (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 1.10, out: 4.40 },
-                    max: { in: 200000, out: 100000 },
-                    extra: ["developer"],
-                },
-                "openai/o1": {
-                    short: "o1 (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 15.00, out: 60.00 },
-                    max: { in: 200000, out: 100000 },
-                    extra: ["developer"],
-                },
-                "openai/gpt-4.5-preview": {
-                    short: "GPT-4.5 Preview (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 75.00, out: 150.00 },
-                    max: { in: 128000, out: 16384 },
-                },
-                "openai/gpt-4.1": {
-                    short: "GPT-4.1 (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 2.0, out: 8.0 },
-                    max: { in: 1048576, out: 32768 }
-                },
-                "openai/gpt-4.1-mini": {
-                    short: "GPT-4.1 Mini (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.40, out: 1.60 },
-                    max: { in: 1048576, out: 32768 }
-                },
-                "openai/gpt-4.1-nano": {
-                    short: "GPT-4.1 Nano (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.10, out: 0.40 },
-                    max: { in: 1048576, out: 32768 }
-                },
-                "gpt-4.1": {
-                    short: "GPT-4.1 (OAI)",
-                    provider: "OpenAI",
-                    cost: { in: 2.0, out: 8.0 },
-                    max: { in: 1048576, out: 32768 }
-                },
-                "gpt-4.1-mini": {
-                    short: "GPT-4.1 Mini (OAI)",
-                    provider: "OpenAI",
-                    cost: { in: 0.40, out: 1.60 },
-                    max: { in: 1048576, out: 32768 }
-                },
-                "gpt-4.1-nano": {
-                    short: "GPT-4.1 Nano (OAI)",
-                    provider: "OpenAI",
-                    cost: { in: 0.10, out: 0.40 },
-                    max: { in: 1048576, out: 32768 }
-                },
-                "gpt-4o": {
-                    short: "GPT-4o (OAI)",
-                    provider: "OpenAI",
-                    cost: { in: 5.0, out: 15.0 },
-                    max: { in: 128000, out: 16384 }
-                },
-                "o4-mini": {
-                    short: "o4 Mini (OAI)",
-                    provider: "OpenAI",
-                    cost: { in: 1.10, out: 4.40 },
-                    max: { in: 200000, out: 100000 },
-                    extra: ["developer"],
-                },
-                "o3": {
-                    short: "o3 (OAI)",
-                    provider: "OpenAI",
-                    cost: { in: 10.0, out: 40.0 },
-                    max: { in: 200000, out: 100000 },
-                    extra: ["developer"],
-                },
-                "o3-mini": {
-                    short: "o3-mini (OAI)",
-                    provider: "OpenAI",
-                    cost: { in: 1.10, out: 4.40 },
-                    max: { in: 200000, out: 100000 },
-                    params: ["reasoning_effort"],
-                    extra: ["developer"],
-                },
-                "o1": {
-                    short: "o1 (OAI)",
-                    provider: "OpenAI",
-                    cost: { in: 15.00, out: 60.00 },
-                    max: { in: 200000, out: 100000 },
-                    extra: ["developer"],
-                },
-                "claude-3-7-sonnet-latest": {
-                    short: "Claude 3.7 Sonnet (Ant)",
-                    provider: "Anthropic",
-                    cost: { in: 3.0, out: 15.0 },
-                    max: { in: 200000, out: 8192 },
-                    extra: ["prefix", "thinking"], // enable thinking by putting `extra_body={"thinking":{"type":"enabled","budget_tokens":2000}}` in the payload
-                },
-                "claude-3-5-sonnet-latest": {
-                    short: "Claude 3.5.1 Sonnet (Ant)",
-                    provider: "Anthropic",
-                    cost: { in: 3.0, out: 15.0 },
-                    max: { in: 200000, out: 8192 },
-                    extra: ["prefix"],
-                },
-                "claude-3-5-haiku-latest": {
-                    short: "Claude 3.5 Haiku (Ant)",
-                    provider: "Anthropic",
-                    cost: { in: 0.80, out: 4.00 },
-                    max: { in: 200000, out: 8192 },
-                    extra: ["prefix"],
-                },
-                "anthropic/claude-3.7-sonnet": {
-                    short: "Claude 3.7 Sonnet (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 3.0, out: 15.0 },
-                    max: { in: 200000, out: 8192 },
-                    extra: ["prefix", "thinking"],
-                },
-                "anthropic/claude-3.5-sonnet": {
-                    short: "Claude 3.5.1 Sonnet (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 3.0, out: 15.0 },
-                    max: { in: 200000, out: 8192 },
-                    extra: ["prefix"],
-                },
-                "google/gemini-2.5-pro-preview-03-25": {
-                    short: "Gemini 2.5 Pro 3-25 (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 1.25, out: 10.00 },
-                    max: { in: 1048576, out: 65536 }
-                },
-                "google/gemini-2.5-flash-preview": {
-                    short: "Gemini 2.5 Flash Preview (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.15, out: 0.60 },
-                    max: { in: 1048576, out: 65536 }
-                },
-                "google/gemini-2.5-flash-preview:thinking": {
-                    short: "Gemini 2.5 Flash Preview (thinking) (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.15, out: 3.50 },
-                    max: { in: 1048576, out: 65536 }
-                },
-                "gemini-2.5-pro-exp-03-25": {
-                    short: "Gemini 2.5 Pro 3-25 (Gem)",
-                    provider: "Gemini",
-                    cost: { in: 0.0, out: 0.0 },
-                    max: { in: 1048576, out: 8192 }
-                },
-                "gemini-2.5-flash-preview-04-17": {
-                    short: "Gemini 2.5 Flash Preview (04-17) (Gem)",
-                    provider: "Gemini",
-                    cost: { in: 0.15, out: 0.60 },
-                    max: { in: 1048576, out: 65536 }
-                },
-                "gemini-2.0-flash": {
-                    short: "Gemini 2.0 Flash (Gem)",
-                    provider: "Gemini",
-                    cost: { in: 0.10, out: 0.40 },
-                    max: { in: 1048576, out: 8192 }
-                },
-                "gemini-2.0-flash-lite-001": {
-                    short: "Gemini 2.0 Flash Lite (Gem)",
-                    provider: "Gemini",
-                    cost: { in: 0.075, out: 0.30 },
-                    max: { in: 1048576, out: 8192 }
-                },
-                "gemini-2.0-flash-thinking-exp": {
-                    short: "Gemini 2.0 Flash Thinking Experimental (Gem)",
-                    provider: "Gemini",
-                    cost: { in: 0.0, out: 0.0 },
-                    max: { in: 1048576, out: 8192 }
-                },
-                "gemini-2.0-pro-exp": {
-                    short: "Gemini 2.0 Pro Experimental (Gem)",
-                    provider: "Gemini",
-                    cost: { in: 0.0, out: 0.0 },
-                    max: { in: 2097152, out: 8192 }
-                },
-                "x-ai/grok-3-beta": {
-                    short: "Grok 3 Beta (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 3.00, out: 15.00 },
-                    max: { in: 131072, out: 131072 }
-                },
-                "x-ai/grok-3-mini-beta": {
-                    short: "Grok 3 Mini Beta (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.30, out: 0.50 },
-                    max: { in: 131072, out: 131072 }
-                },
-                "grok-2-1212": {
-                    short: "Grok 2 12-12 (xAI)",
-                    provider: "xAI",
-                    cost: { in: 2.0, out: 10.0 },
-                    max: { in: 131072, out: 8192 }
-                },
-                "cohere/command-r-plus-08-2024": {
-                    short: "Cohere Command R+ 08-2024 (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 2.5, out: 10.0 },
-                    max: { in: 128000, out: 4000 }
-                },
-                "inception/mercury-coder-small-beta": {
-                    short: "Mercury Coder Small Beta (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.25, out: 1.00 },
-                    max: { in: 32000, out: 32000 }
-                },
-                "deepseek/deepseek-prover-v2": {
-                    short: "DeepSeek Prover V2 (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.70, out: 2.50 },
-                    max: { in: 160000, out: 160000 }
-                },
-                "tngtech/deepseek-r1t-chimera:free": {
-                    short: "DeepSeek R1T Chimera (Free) (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.00, out: 0.00 },
-                    max: { in: 163480, out: 163480 }
-                },
-                "deepseek/deepseek-r1": {
-                    short: "DeepSeek R1 (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.55, out: 2.19 },
-                    max: { in: 64000, out: 8000 },
-                    extra: ["prefix"],
-                },
-                "deepseek-ai/DeepSeek-R1": {
-                    short: "DeepSeek R1 (Hyp)",
-                    provider: "Hyperbolic",
-                    cost: { in: 2.00, out: 2.00 },
-                    max: { in: 131072, out: 131072 },
-                    extra: ["prefix"],
-                },
-                "deepseek-ai/DeepSeek-R1-Zero": {
-                    short: "DeepSeek R1 Zero (Hyp)",
-                    provider: "Hyperbolic",
-                    cost: { in: 2.00, out: 2.00 },
-                    max: { in: 131072, out: 131072 }
-                },
-                "deepseek/deepseek-chat": {
-                    short: "DeepSeek V3 (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.9, out: 0.9 },
-                    max: { in: 128000, out: 128000 },
-                    extra: ["prefix"],
-                },
-                "DeepSeek-V3-0324": {
-                    short: "DeepSeek V3-0324 (SN)",
-                    provider: "SambaNova",
-                    cost: { in: 1.0, out: 1.5 },
-                    max: { in: 8000, out: 4000 },
-                    defaults: { temperature: 1.0, },
-                },
-                "deepseek-chat": {
-                    short: "DeepSeek V3 (DS)",
-                    provider: "DeepSeek_Beta",
-                    cost: { in: 0.14, out: 0.28 },
-                    max: { in: 64000, out: 8000 },
-                    extra: ["prefix"],
-                },
-                "deepseek-reasoner": {
-                    short: "DeepSeek R1 (DS)",
-                    provider: "DeepSeek_Beta",
-                    cost: { in: 0.55, out: 2.19 },
-                    max: { in: 64000, out: 8000 },
-                    extra: ["prefix", "reasoning_content"],
-                },
-                "DeepSeek-R1": {
-                    short: "DeepSeek R1 (SN)",
-                    provider: "SambaNova",
-                    cost: { in: 5.0, out: 7.0 },
-                    max: { in: 16000, out: 4000 },
-                },
-                "google/gemma-3-27b-it": {
-                    short: "Gemma 3 27B Instruct (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.1, out: 0.2 },
-                    max: { in: 131072, out: 8192 },
-                },
-                "mistralai/codestral-2501": {
-                    short: "Codestral 2501 (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.30, out: 0.90 },
-                    max: { in: 256000, out: 256000 },
-                },
-                "microsoft/phi-4": {
-                    short: "Phi 4 (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.07, out: 0.14 },
-                    max: { in: 16384, out: 16384 },
-                },
-                "accounts/fireworks/models/llama4-scout-instruct-basic": {
-                    short: "Llama 4 Scout Instruct Basic (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.15, out: 0.6 },
-                    max: { in: 128000, out: 16384 },
-                },
-                "accounts/fireworks/models/llama4-maverick-instruct-basic": {
-                    short: "Llama 4 Maverick Instruct Basic (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.22, out: 0.88 },
-                    max: { in: 1000000, out: 131072 },
-                },
-                "meta-llama/llama-3.1-405b-instruct": {
-                    short: "Llama 3.1 405B Inst (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 1.79, out: 1.79 },
-                    max: { in: 131072, out: 32000 },
-                },
-                "Meta-Llama-3.1-405B-Instruct": {
-                    short: "Llama 3.1 405B Inst (SN)",
-                    provider: "SambaNova",
-                    cost: { in: 0.0, out: 0.0 },
-                    max: { in: 8192, out: 8192 },
-                },
-                "meta-llama/Meta-Llama-3.1-405B-Instruct": {
-                    short: "Llama 3.1 405B Inst (Hyp)",
-                    provider: "Hyperbolic",
-                    cost: { in: 4.0, out: 4.0 },
-                    max: { in: 8192, out: 8192 },
-                },
-                "nousresearch/hermes-3-llama-3.1-405b": {
-                    short: "Nous Hermes 3 Llama 3.1 405B (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 4.5, out: 4.5 },
-                    max: { in: 131072, out: 8192 },
-                },
-                "meta-llama/llama-3.2-90b-vision-instruct": {
-                    short: "Llama 3.2V 90B Inst (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.9, out: 0.9 },
-                    max: { in: 131072, out: 131072 },
-                },
-                "meta-llama/llama-3.3-70b-instruct": {
-                    short: "Llama 3.3 70B Inst (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.4, out: 0.4 },
-                    max: { in: 131072, out: 131072 },
-                },
-                "NousResearch/Hermes-3-Llama-3.1-70B": {
-                    short: "Nous Hermes 3.1 70B (Hyp)",
-                    provider: "Hyperbolic",
-                    cost: { in: 0.4, out: 0.4 },
-                    max: { in: 12288, out: 12288 },
-                },
-                "nvidia/llama-3.1-nemotron-70b-instruct": {
-                    short: "Llama 3.1 70B Nemo Inst (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.35, out: 0.4 },
-                    max: { in: 131072, out: 131072 },
-                },
-                "llama-3.1-70b-versatile": {
-                    short: "Llama 3.1 70B (Groq)",
-                    provider: "Groq",
-                    cost: { in: 0.3, out: 0.3 },
-                    max: { in: 131072, out: 4096 },
-                },
-                "sao10k/l3.1-euryale-70b": {
-                    short: "Llama 3.1 Euryale 70B v2.2 (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.35, out: 0.4 },
-                    max: { in: 8192, out: 16000 },
-                },
-                "meta-llama/llama-3.2-11b-vision-instruct": {
-                    short: "Llama 3.2V 11B Inst (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.2, out: 0.2 },
-                    max: { in: 131072, out: 131072 },
-                },
-                "llama-3.1-8b-instant": {
-                    short: "Llama 3.1 8B (Groq)",
-                    provider: "Groq",
-                    cost: { in: 0.055, out: 0.055 },
-                    max: { in: 131072, out: 4096 },
-                },
-                "qwen/qwen3-235b-a22b": {
-                    short: "Qwen3 235B A22B (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.10, out: 2.00 },
-                    max: { in: 32768, out: 32768 }
-                },
-                "qwen/qwen3-30b-a3b": {
-                    short: "Qwen3 30B A3B (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.10, out: 0.30 },
-                    max: { in: 40960, out: 40960 }
-                },
-                "qwen/qwen3-32b": {
-                    short: "Qwen3 32B (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.10, out: 0.30 },
-                    max: { in: 40960, out: 40960 }
-                },
-                "qwen/qwen3-14b": {
-                    short: "Qwen3 14B (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.07, out: 0.24 },
-                    max: { in: 40960, out: 40960 }
-                },
-                "qwen/qwen3-8b": {
-                    short: "Qwen3 8B (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.035, out: 0.138 },
-                    max: { in: 40960, out: 40960 }
-                },
-                "qwen/qvq-72b-preview": {
-                    short: "Qwen QvQ 72B Preview (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.25, out: 0.5 },
-                    max: { in: 128000, out: 4000 },
-                },
-                "qwen/qwq-32b": {
-                    short: "Qwen QwQ 32B (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.12, out: 0.18 },
-                    max: { in: 131072, out: 131072 },
-                },
-                "qwen-qwq-32b": {
-                    short: "Qwen QwQ 32B (Groq)",
-                    provider: "Groq",
-                    cost: { in: 0.29, out: 0.39 },
-                    max: { in: 131072, out: 131072 },
-                },
-                "Qwen/QwQ-32B-Preview": {
-                    short: "Qwen 2.5 QwQ 32B Preview (Hyp)",
-                    provider: "Hyperbolic",
-                    cost: { in: 0.2, out: 0.6 },
-                    max: { in: 32768, out: 32768 },
-                },
-                "Qwen/Qwen2.5-Coder-32B-Instruct": {
-                    short: "Qwen 2.5 Coder 32B (Hyp)",
-                    provider: "Hyperbolic",
-                    cost: { in: 0.6, out: 0.6 },
-                    max: { in: 131072, out: 8192 },
-                },
-                "eva-unit-01/eva-qwen-2.5-72b": {
-                    short: "Eva Qwen 2.5 72B (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 4.0, out: 4.0 },
-                    max: { in: 32000, out: 32000 },
-                },
-                "Qwen/Qwen2.5-72B-Instruct": {
-                    short: "Qwen 2.5 72B Inst (Hyp)",
-                    provider: "Hyperbolic",
-                    cost: { in: 0.4, out: 0.4 },
-                    max: { in: 32768, out: 32768 },
-                },
-                "qwen/qwen-2.5-7b-instruct": {
-                    short: "Qwen 2.5 7B Inst (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.27, out: 0.27 },
-                    max: { in: 131072, out: 32768 },
-                },
-                "gemini-1.5-pro-latest": {
-                    short: "Gemini Pro 1.5",
-                    provider: "Gemini",
-                    cost: { in: 1.25, out: 5.0 },
-                    max: { in: 2000000, out: 8192 },
-                },
-                "gemini-1.5-flash-latest": {
-                    short: "Gemini Flash 1.5",
-                    provider: "Gemini",
-                    cost: { in: 0.0375, out: 0.075 },
-                    max: { in: 1000000, out: 8192 },
-                },
-                "x-ai/grok-2": {
-                    short: "Grok 2 (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 5.0, out: 15.0 },
-                    max: { in: 131072, out: 131072 },
-                },
-                "chatgpt-4o-latest": {
-                    short: "ChatGPT-4o (OAI)",
-                    provider: "OpenAI",
-                    cost: { in: 5.0, out: 15.0 },
-                    max: { in: 128000, out: 16384 },
-                },
-                "gpt-4o-mini": {
-                    short: "GPT-4o Mini (OAI)",
-                    provider: "OpenAI",
-                    cost: { in: 0.15, out: 0.6 },
-                    max: { in: 128000, out: 16384 },
-                },
-                "liquid/lfm-40b": {
-                    short: "Liquid LFM 40B MoE (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 1.0, out: 2.0 },
-                    max: { in: 32768, out: 32768 },
-                },
-                "mistralai/mistral-large": {
-                    short: "Mistral Large 2 (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 2.0, out: 6.0 },
-                    max: { in: 128000, out: 128000 },
-                },
-                "mistralai/codestral-mamba": {
-                    short: "Codestral Mamba (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.25, out: 0.25 },
-                    max: { in: 256000, out: 256000 },
-                },
-                "codestral-latest": {
-                    short: "Codestral (Mistral)",
-                    provider: "Mistral",
-                    cost: { in: 1.0, out: 3.0 },
-                    max: { in: 32000, out: 8191 },
-                },
-                "mistralai/mistral-nemo": {
-                    short: "Mistral Nemo (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.13, out: 0.13 },
-                    max: { in: 128000, out: 32768 },
-                },
-                "microsoft/wizardlm-2-8x22b": {
-                    short: "WizardLM 2 8x22B (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.5, out: 0.5 },
-                    max: { in: 65536, out: 65536 },
-                },
-                "cognitivecomputations/dolphin-mixtral-8x22b": {
-                    short: "Dolphin 2.9.2 Mixtral 8x22B (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.9, out: 0.9 },
-                    max: { in: 65536, out: 16000 },
-                },
-                "anthropic/claude-3-opus": {
-                    short: "Claude 3 Opus (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 15.0, out: 75.0 },
-                    max: { in: 200000, out: 4096 },
-                },
-                "anthropic/claude-3-haiku": {
-                    short: "Claude 3 Haiku (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.25, out: 1.25 },
-                    max: { in: 200000, out: 4096 },
-                },
-                "echo": {short: "Echo input", provider: "none", cost: {in: 0, out: 0}, max: {in: -1, out: -1},},
-                "none": {short: "No model", provider: "none", cost: {in: 0, out: 0}, max: {in: -1, out: -1},}
+            "cerebras": {
+                "baseURL": "https://api.cerebras.ai/v1",
+                "shortName": "Cer",
+                "capitalize": "Cerebras"
             },
-            text: {
-                "gpt-3.5-turbo-instruct": {
-                    short: "GPT-3.5 Turbo Inst (OAI)",
-                    provider: "OpenAI",
-                    cost: { in: 1.5, out: 2.0 },
-                    max: { in: 4095, out: 4096 },
-                    extra: ["suffix"],
-                },
-                "deepseek/deepseek-v3-base:free": {
-                    short: "DeepSeek V3 Base (free) (OR)",
-                    provider: "OpenRouter",
-                    cost: { in: 0.0, out: 0.0 },
-                    max: { in: 131072, out: 131072 },
-                    defaults: { temperature: 1.5, repetition_penalty: 0.5, presence_penalty: 0.5, frequency_penalty: 0.5 },
-                },
-                "davinci-002": {
-                    short: "davinci-002 (OAI)",
-                    provider: "OpenAI",
-                    cost: { in: 2.0, out: 2.0 },
-                    max: { in: 16835, out: 4096 },
-                    extra: ["suffix"],
-                },
-                "babbage-002": {
-                    short: "babbage-002 (OAI)",
-                    provider: "OpenAI",
-                    cost: { in: 0.4, out: 0.4 },
-                    max: { in: 4095, out: 4096 },
-                    extra: ["suffix"],
-                },
-                "accounts/fireworks/models/llama4-maverick-instruct-basic": {
-                    short: "Llama 4 Maverick Instruct Basic (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.22, out: 0.88 },
-                    max: { in: 1000000, out: 131072 },
-                },
-                "accounts/fireworks/models/llama4-scout-instruct-basic": {
-                    short: "Llama 4 Scout Instruct Basic (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.15, out: 0.6 },
-                    max: { in: 128000, out: 16384 },
-                },
-                "accounts/fireworks/models/deepseek-v3-0324": {
-                    short: "DeepSeek V3-0324 (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.9, out: 0.9 },
-                    max: { in: 160000, out: 160000 },
-                    defaults: { temperature: 1.5, },
-                },
-                "accounts/fireworks/models/deepseek-v3": {
-                    short: "DeepSeek V3 (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.9, out: 0.9 },
-                    max: { in: 128000, out: 128000 },
-                    defaults: { temperature: 1.5,  },
-                },
-                "accounts/fireworks/models/deepseek-r1": {
-                    short: "DeepSeek R1 (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 8.00, out: 8.00 },
-                    max: { in: 20480, out: 20480 },
-                },
-                "deepseek-chat": {
-                    short: "DeepSeek V3 (DS)",
-                    provider: "DeepSeek_Beta",
-                    cost: { in: 0.14, out: 0.28 },
-                    max: { in: 64000, out: 8000 },
-                    extra: ["suffix"],
-                    defaults: { temperature: 1.5, },
-                },
-                "codestral-latest": {
-                    short: "Codestral (Mistral)",
-                    provider: "Mistral_Text",
-                    cost: { in: 1.0, out: 3.0 },
-                    max: { in: 32000, out: 8191 },
-                    extra: ["suffix"],
-                },
-                "accounts/fireworks/models/qwen-qwq-32b-preview": {
-                    short: "Qwen 2.5 QwQ 32B Preview (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.2, out: 0.6 },
-                    max: {in: 32768, out: 32768 },
-                },
-                "accounts/fireworks/models/qwen2p5-coder-32b-instruct": {
-                    short: "Qwen 2.5 Coder 32B (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.9, out: 0.9 },
-                    max: {in: 32768, out: 32768 },
-                },
-                "accounts/fireworks/models/qwen2p5-72b-instruct": {
-                    short: "Qwen 2.5 72B Inst (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.9, out: 0.9 },
-                    max: {in: 32768, out: 32768 },
-                },
-                "accounts/fireworks/models/llama-v3p2-90b-vision-instruct": {
-                    short: "Llama 3.2 90B Inst (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.9, out: 0.9 },
-                    max: { in: 131072, out: 131072 },
-                },
-                "accounts/fireworks/models/llama-v3p2-11b-vision-instruct": {
-                    short: "Llama 3.2 11B Inst (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.2, out: 0.2 },
-                    max: { in: 131072, out: 131072 },
-                },
-                "accounts/fireworks/models/llama-v3p2-3b-instruct": {
-                    short: "Llama 3.2 3B Inst (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.1, out: 0.1 },
-                    max: { in: 131072, out: 131072 },
-                },
-                "accounts/fireworks/models/llama-v3p2-1b-instruct": {
-                    short: "Llama 3.2 1B Inst (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.1, out: 0.1 },
-                    max: { in: 131072, out: 131072 },
-                },
-                "meta-llama/Meta-Llama-3.1-405B": {
-                    short: "Llama 3.1 405B Base (Hyp)",
-                    provider: "Hyperbolic",
-                    cost: { in: 4.0, out: 4.0 },
-                    max: { in: 32768, out: 32768 },
-                },
-                "accounts/fireworks/models/llama-v3p1-405b-instruct": {
-                    short: "Llama 3.1 405B Inst (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 1.79, out: 1.79 },
-                    max: { in: 131072, out: 4096 },
-                },
-                "accounts/fireworks/models/llama-v3p1-70b-instruct": {
-                    short: "Llama 3.1 70B Inst (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.3, out: 0.3 },
-                    max: { in: 131072, out: 4096 },
-                },
-                "accounts/fireworks/models/llama-v3p1-8b-instruct": {
-                    short: "Llama 3.1 8B Inst (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.055, out: 0.055 },
-                    max: { in: 131072, out: 4096 },
-                },
-                "accounts/fireworks/models/mixtral-8x22b-instruct": {
-                    short: "Mixtral 8x22B Inst (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.65, out: 0.65 },
-                    max: { in: 65536, out: 4096 },
-                },
-                "accounts/fireworks/models/mixtral-8x7b-instruct": {
-                    short: "Mixtral 8x7B Inst (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.24, out: 0.24 },
-                    max: { in: 32768, out: 4096 },
-                },
-                "accounts/fireworks/models/gemma2-9b-it": {
-                    short: "Gemma 2 9B Inst (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.2, out: 0.2 },
-                    max: { in: 8192, out: 4096 },
-                },
-                "accounts/fireworks/models/phi-3-vision-128k-instruct": {
-                    short: "Phi 3.5V Inst (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 0.0, out: 0.0 },
-                    max: { in: 32064, out: 4096 },
-                },
-                "accounts/yi-01-ai/models/yi-large": {
-                    short: "Yi Large (FW)",
-                    provider: "Fireworks",
-                    cost: { in: 3.0, out: 3.0 },
-                    max: { in: 32768, out: 4096 },
-                },
-                "echo": {
-                    short: "Echo input",
-                    provider: "none",
-                    cost: {in: 0, out: 0},
-                    max: {in: -1, out: -1},
-                },
-                "none": {
-                    short: "No model",
-                    provider: "none",
-                    cost: {in: 0, out: 0},
-                    max: {in: -1, out: -1},
-                }
+            "chutes": {
+                "baseURL": "https://llm.chutes.ai/v1",
+                "shortName": "Chu",
+                "capitalize": "Chutes"
+            },
+            "custom": {
+                "baseURL": "",
+                "shortName": "Custom",
+                "capitalize": "Custom"
+            },
+            "deepseek": {
+                "baseURL": "https://api.deepseek.com/v1",
+                "shortName": "DS",
+                "capitalize": "DeepSeek"
+            },
+            "deepseek_beta": {
+                "baseURL": "https://api.deepseek.com/beta",
+                "shortName": "DS",
+                "capitalize": "DeepSeek_Beta"
+            },
+            "exa": {
+                "baseURL": "https://api.exa.ai/v1",
+                "shortName": "Exa",
+                "capitalize": "Exa"
+            },
+            "fireworks": {
+                "baseURL": "https://api.fireworks.ai/inference/v1",
+                "shortName": "FW",
+                "capitalize": "Fireworks"
+            },
+            "gemini": {
+                "baseURL": "https://generativelanguage.googleapis.com/v1beta/openai",
+                "shortName": "Gem",
+                "capitalize": "Gemini"
+            },
+            "groq": {
+                "baseURL": "https://api.groq.com/openai/v1",
+                "shortName": "Groq",
+                "capitalize": "Groq"
+            },
+            "hyperbolic": {
+                "baseURL": "https://api.hyperbolic.xyz/v1",
+                "shortName": "Hyp",
+                "capitalize": "Hyperbolic"
+            },
+            "inception": {
+                "baseURL": "https://api.inceptionlabs.ai/v1",
+                "shortName": "Inc",
+                "capitalize": "Inception"
+            },
+            "jina": {
+                "baseURL": "https://api.jina.ai/v1",
+                "shortName": "Jina",
+                "capitalize": "Jina"
+            },
+            "mistral": {
+                "baseURL": "https://api.mistral.ai/v1",
+                "shortName": "Mis",
+                "capitalize": "Mistral"
+            },
+            "mistral_text": {
+                "baseURL": "https://api.mistral.ai/v1",
+                "shortName": "Mis",
+                "capitalize": "Mistral_Text"
+            },
+            "modelbox": {
+                "baseURL": "https://api.model.box/v1",
+                "shortName": "MB",
+                "capitalize": "ModelBox"
+            },
+            "openai": {
+                "baseURL": "https://api.openai.com/v1",
+                "shortName": "OAI",
+                "capitalize": "OpenAI"
+            },
+            "openrouter": {
+                "baseURL": "https://openrouter.ai/api/v1",
+                "shortName": "OR",
+                "capitalize": "OpenRouter"
+            },
+            "replicate": {
+                "baseURL": "https://api.replicate.com/v1",
+                "shortName": "Rep",
+                "capitalize": "Replicate"
+            },
+            "sambanova": {
+                "baseURL": "https://api.sambanova.ai/v1",
+                "shortName": "SN",
+                "capitalize": "Sambanova"
+            },
+            "togetherai": {
+                "baseURL": "https://api.together.xyz/v1",
+                "shortName": "TAI",
+                "capitalize": "TogetherAI"
+            },
+            "voyage": {
+                "baseURL": "https://api.voyageai.com/v1",
+                "shortName": "Voy",
+                "capitalize": "Voyage"
+            },
+            "xai": {
+                "baseURL": "https://api.x.ai/v1",
+                "shortName": "xAI",
+                "capitalize": "xAI"
+            },
+            "none": {
+                "baseURL": "",
+                "shortName": "None",
+                "capitalize": "None"
+            }
+        },
+        chat: {
+            "openai/gpt-4o": {
+                short: "GPT-4o (OR)",
+                class: "gpt-4o",
+                provider: "OpenRouter",
+                cost: { in: 5.0, out: 15.0 },
+                max: { in: 128000, out: 16384 }
+            },
+            "openai/o4-mini-high": {
+                short: "o4 Mini High (OR)",
+                class: "o4-mini",
+                provider: "OpenRouter",
+                cost: { in: 1.10, out: 4.40 },
+                max: { in: 200000, out: 100000 },
+                extra: ["developer"],
+            },
+            "openai/o3": {
+                short: "o3 (OR)",
+                class: "o3",
+                provider: "OpenRouter",
+                cost: { in: 10.0, out: 40.0 },
+                max: { in: 200000, out: 100000 },
+                extra: ["developer"],
+            },
+            "openai/o3-mini-high": {
+                short: "o3 Mini High (OR)",
+                class: "o3-mini",
+                provider: "OpenRouter",
+                cost: { in: 1.10, out: 4.40 },
+                max: { in: 200000, out: 100000 },
+                extra: ["developer"],
+            },
+            "openai/o1": {
+                short: "o1 (OR)",
+                class: "o1",
+                provider: "OpenRouter",
+                cost: { in: 15.00, out: 60.00 },
+                max: { in: 200000, out: 100000 },
+                extra: ["developer"],
+            },
+            "openai/gpt-4.5-preview": {
+                short: "GPT-4.5 Preview (OR)",
+                class: "gpt-4.5-preview",
+                provider: "OpenRouter",
+                cost: { in: 75.00, out: 150.00 },
+                max: { in: 128000, out: 16384 },
+            },
+            "openai/gpt-4.1": {
+                short: "GPT-4.1 (OR)",
+                class: "gpt-4.1",
+                provider: "OpenRouter",
+                cost: { in: 2.0, out: 8.0 },
+                max: { in: 1048576, out: 32768 }
+            },
+            "openai/gpt-4.1-mini": {
+                short: "GPT-4.1 Mini (OR)",
+                class: "gpt-4.1-mini",
+                provider: "OpenRouter",
+                cost: { in: 0.40, out: 1.60 },
+                max: { in: 1048576, out: 32768 }
+            },
+            "openai/gpt-4.1-nano": {
+                short: "GPT-4.1 Nano (OR)",
+                class: "gpt-4.1-nano",
+                provider: "OpenRouter",
+                cost: { in: 0.10, out: 0.40 },
+                max: { in: 1048576, out: 32768 }
+            },
+            "gpt-4.1": {
+                short: "GPT-4.1 (OAI)",
+                class: "gpt-4.1",
+                provider: "OpenAI",
+                cost: { in: 2.0, out: 8.0 },
+                max: { in: 1048576, out: 32768 }
+            },
+            "gpt-4.1-mini": {
+                short: "GPT-4.1 Mini (OAI)",
+                class: "gpt-4.1-mini",
+                provider: "OpenAI",
+                cost: { in: 0.40, out: 1.60 },
+                max: { in: 1048576, out: 32768 }
+            },
+            "gpt-4.1-nano": {
+                short: "GPT-4.1 Nano (OAI)",
+                class: "gpt-4.1-nano",
+                provider: "OpenAI",
+                cost: { in: 0.10, out: 0.40 },
+                max: { in: 1048576, out: 32768 }
+            },
+            "gpt-4o": {
+                short: "GPT-4o (OAI)",
+                class: "gpt-4o",
+                provider: "OpenAI",
+                cost: { in: 5.0, out: 15.0 },
+                max: { in: 128000, out: 16384 }
+            },
+            "o4-mini": {
+                short: "o4 Mini (OAI)",
+                class: "o4-mini",
+                provider: "OpenAI",
+                cost: { in: 1.10, out: 4.40 },
+                max: { in: 200000, out: 100000 },
+                extra: ["developer"],
+            },
+            "o3": {
+                short: "o3 (OAI)",
+                class: "o3",
+                provider: "OpenAI",
+                cost: { in: 10.0, out: 40.0 },
+                max: { in: 200000, out: 100000 },
+                extra: ["developer"],
+            },
+            "o3-mini": {
+                short: "o3-mini (OAI)",
+                class: "o3-mini",
+                provider: "OpenAI",
+                cost: { in: 1.10, out: 4.40 },
+                max: { in: 200000, out: 100000 },
+                params: ["reasoning_effort"],
+                extra: ["developer"],
+            },
+            "o1": {
+                short: "o1 (OAI)",
+                class: "o1",
+                provider: "OpenAI",
+                cost: { in: 15.00, out: 60.00 },
+                max: { in: 200000, out: 100000 },
+                extra: ["developer"],
+            },
+            "claude-3-7-sonnet-latest": {
+                short: "Claude 3.7 Sonnet (Ant)",
+                class: "claude-3.7-sonnet",
+                provider: "Anthropic",
+                cost: { in: 3.0, out: 15.0 },
+                max: { in: 200000, out: 8192 },
+                extra: ["prefix", "thinking"], // enable thinking by putting `extra_body={"thinking":{"type":"enabled","budget_tokens":2000}}` in the payload
+            },
+            "claude-3-5-sonnet-latest": {
+                short: "Claude 3.5.1 Sonnet (Ant)",
+                class: "claude-3.5-sonnet",
+                provider: "Anthropic",
+                cost: { in: 3.0, out: 15.0 },
+                max: { in: 200000, out: 8192 },
+                extra: ["prefix"],
+            },
+            "claude-3-5-haiku-latest": {
+                short: "Claude 3.5 Haiku (Ant)",
+                class: "claude-3.5-haiku",
+                provider: "Anthropic",
+                cost: { in: 0.80, out: 4.00 },
+                max: { in: 200000, out: 8192 },
+                extra: ["prefix"],
+            },
+            "anthropic/claude-3.7-sonnet": {
+                short: "Claude 3.7 Sonnet (OR)",
+                class: "claude-3.7-sonnet",
+                provider: "OpenRouter",
+                cost: { in: 3.0, out: 15.0 },
+                max: { in: 200000, out: 8192 },
+                extra: ["prefix", "thinking"],
+            },
+            "anthropic/claude-3.5-sonnet": {
+                short: "Claude 3.5.1 Sonnet (OR)",
+                class: "claude-3.5-sonnet",
+                provider: "OpenRouter",
+                cost: { in: 3.0, out: 15.0 },
+                max: { in: 200000, out: 8192 },
+                extra: ["prefix"],
+            },
+            "google/gemini-2.5-pro-preview-03-25": {
+                short: "Gemini 2.5 Pro 3-25 (OR)",
+                class: "gemini-2.5-pro",
+                provider: "OpenRouter",
+                cost: { in: 1.25, out: 10.00 },
+                max: { in: 1048576, out: 65536 }
+            },
+            "google/gemini-2.5-flash-preview": {
+                short: "Gemini 2.5 Flash Preview (OR)",
+                class: "gemini-2.5-flash",
+                provider: "OpenRouter",
+                cost: { in: 0.15, out: 0.60 },
+                max: { in: 1048576, out: 65536 }
+            },
+            "google/gemini-2.5-flash-preview:thinking": {
+                short: "Gemini 2.5 Flash Preview (thinking) (OR)",
+                class: "gemini-2.5-flash",
+                provider: "OpenRouter",
+                cost: { in: 0.15, out: 3.50 },
+                max: { in: 1048576, out: 65536 }
+            },
+            "gemini-2.5-pro-exp-03-25": {
+                short: "Gemini 2.5 Pro 3-25 (Gem)",
+                class: "gemini-2.5-pro",
+                provider: "Gemini",
+                cost: { in: 0.0, out: 0.0 },
+                max: { in: 1048576, out: 8192 }
+            },
+            "gemini-2.5-flash-preview-04-17": {
+                short: "Gemini 2.5 Flash Preview (04-17) (Gem)",
+                class: "gemini-2.5-flash",
+                provider: "Gemini",
+                cost: { in: 0.15, out: 0.60 },
+                max: { in: 1048576, out: 65536 }
+            },
+            "gemini-2.0-flash": {
+                short: "Gemini 2.0 Flash (Gem)",
+                class: "gemini-2.0-flash",
+                provider: "Gemini",
+                cost: { in: 0.10, out: 0.40 },
+                max: { in: 1048576, out: 8192 }
+            },
+            "gemini-2.0-flash-lite-001": {
+                short: "Gemini 2.0 Flash Lite (Gem)",
+                class: "gemini-2.0-flash-lite",
+                provider: "Gemini",
+                cost: { in: 0.075, out: 0.30 },
+                max: { in: 1048576, out: 8192 }
+            },
+            "gemini-2.0-flash-thinking-exp": {
+                short: "Gemini 2.0 Flash Thinking Experimental (Gem)",
+                class: "gemini-2.0-flash",
+                provider: "Gemini",
+                cost: { in: 0.0, out: 0.0 },
+                max: { in: 1048576, out: 8192 }
+            },
+            "gemini-2.0-pro-exp": {
+                short: "Gemini 2.0 Pro Experimental (Gem)",
+                class: "gemini-2.0-pro",
+                provider: "Gemini",
+                cost: { in: 0.0, out: 0.0 },
+                max: { in: 2097152, out: 8192 }
+            },
+            "x-ai/grok-3-beta": {
+                short: "Grok 3 Beta (OR)",
+                class: "grok-3",
+                provider: "OpenRouter",
+                cost: { in: 3.00, out: 15.00 },
+                max: { in: 131072, out: 131072 }
+            },
+            "x-ai/grok-3-mini-beta": {
+                short: "Grok 3 Mini Beta (OR)",
+                class: "grok-3-mini",
+                provider: "OpenRouter",
+                cost: { in: 0.30, out: 0.50 },
+                max: { in: 131072, out: 131072 }
+            },
+            "grok-2-1212": {
+                short: "Grok 2 12-12 (xAI)",
+                class: "grok-2",
+                provider: "xAI",
+                cost: { in: 2.0, out: 10.0 },
+                max: { in: 131072, out: 8192 }
+            },
+            "cohere/command-r-plus-08-2024": {
+                short: "Cohere Command R+ 08-2024 (OR)",
+                class: "command-r-plus",
+                provider: "OpenRouter",
+                cost: { in: 2.5, out: 10.0 },
+                max: { in: 128000, out: 4000 }
+            },
+            "inception/mercury-coder-small-beta": {
+                short: "Mercury Coder Small Beta (OR)",
+                class: "mercury-coder-small",
+                provider: "OpenRouter",
+                cost: { in: 0.25, out: 1.00 },
+                max: { in: 32000, out: 32000 }
+            },
+            "mercury-coder-small": {
+                short: "Mercury Coder Small (Inc)",
+                class: "mercury-coder-small",
+                provider: "Inception",
+                cost: { in: 0.25, out: 1.00 },
+                max: { in: 32000, out: 32000 }
+            },
+            "deepseek/deepseek-prover-v2": {
+                short: "DeepSeek Prover V2 (OR)",
+                class: "deepseek-prover-v2",
+                provider: "OpenRouter",
+                cost: { in: 0.70, out: 2.50 },
+                max: { in: 160000, out: 160000 }
+            },
+            "tngtech/deepseek-r1t-chimera:free": {
+                short: "DeepSeek R1T Chimera (Free) (OR)",
+                class: "deepseek-r1t-chimera",
+                provider: "OpenRouter",
+                cost: { in: 0.00, out: 0.00 },
+                max: { in: 163480, out: 163480 }
+            },
+            "deepseek/deepseek-r1": {
+                short: "DeepSeek R1 (OR)",
+                class: "deepseek-r1",
+                provider: "OpenRouter",
+                cost: { in: 0.55, out: 2.19 },
+                max: { in: 64000, out: 8000 },
+                extra: ["prefix"],
+            },
+            "deepseek-ai/DeepSeek-R1": {
+                short: "DeepSeek R1 (Hyp)",
+                class: "deepseek-r1",
+                provider: "Hyperbolic",
+                cost: { in: 2.00, out: 2.00 },
+                max: { in: 131072, out: 131072 },
+                extra: ["prefix"],
+            },
+            "deepseek-ai/DeepSeek-R1-Zero": {
+                short: "DeepSeek R1 Zero (Hyp)",
+                class: "deepseek-r1-zero",
+                provider: "Hyperbolic",
+                cost: { in: 2.00, out: 2.00 },
+                max: { in: 131072, out: 131072 }
+            },
+            "deepseek/deepseek-chat": {
+                short: "DeepSeek V3 (OR)",
+                class: "deepseek-v3",
+                provider: "OpenRouter",
+                cost: { in: 0.9, out: 0.9 },
+                max: { in: 128000, out: 128000 },
+                extra: ["prefix"],
+            },
+            "DeepSeek-V3-0324": {
+                short: "DeepSeek V3-0324 (SN)",
+                class: "deepseek-v3",
+                provider: "SambaNova",
+                cost: { in: 1.0, out: 1.5 },
+                max: { in: 8000, out: 4000 },
+                defaults: { temperature: 1.0, },
+            },
+            "deepseek-chat": {
+                short: "DeepSeek V3 (DS)",
+                class: "deepseek-v3",
+                provider: "DeepSeek_Beta",
+                cost: { in: 0.14, out: 0.28 },
+                max: { in: 64000, out: 8000 },
+                extra: ["prefix"],
+            },
+            "deepseek-reasoner": {
+                short: "DeepSeek R1 (DS)",
+                class: "deepseek-r1",
+                provider: "DeepSeek_Beta",
+                cost: { in: 0.55, out: 2.19 },
+                max: { in: 64000, out: 8000 },
+                extra: ["prefix", "reasoning_content"],
+            },
+            "DeepSeek-R1": {
+                short: "DeepSeek R1 (SN)",
+                class: "deepseek-r1",
+                provider: "SambaNova",
+                cost: { in: 5.0, out: 7.0 },
+                max: { in: 16000, out: 4000 },
+            },
+            "google/gemma-3-27b-it": {
+                short: "Gemma 3 27B Instruct (OR)",
+                class: "gemma-3-27b-it",
+                provider: "OpenRouter",
+                cost: { in: 0.1, out: 0.2 },
+                max: { in: 131072, out: 8192 },
+            },
+            "mistralai/codestral-2501": {
+                short: "Codestral 2501 (OR)",
+                class: "codestral",
+                provider: "OpenRouter",
+                cost: { in: 0.30, out: 0.90 },
+                max: { in: 256000, out: 256000 },
+            },
+            "microsoft/phi-4": {
+                short: "Phi 4 (OR)",
+                class: "phi-4",
+                provider: "OpenRouter",
+                cost: { in: 0.07, out: 0.14 },
+                max: { in: 16384, out: 16384 },
+            },
+            "accounts/fireworks/models/llama4-scout-instruct-basic": {
+                short: "Llama 4 Scout Instruct Basic (FW)",
+                class: "llama-4-scout-instruct",
+                provider: "Fireworks",
+                cost: { in: 0.15, out: 0.6 },
+                max: { in: 128000, out: 16384 },
+            },
+            "accounts/fireworks/models/llama4-maverick-instruct-basic": {
+                short: "Llama 4 Maverick Instruct Basic (FW)",
+                class: "llama-4-maverick-instruct",
+                provider: "Fireworks",
+                cost: { in: 0.22, out: 0.88 },
+                max: { in: 1000000, out: 131072 },
+            },
+            "meta-llama/llama-3.1-405b-instruct": {
+                short: "Llama 3.1 405B Inst (OR)",
+                class: "llama-3.1-405b-instruct",
+                provider: "OpenRouter",
+                cost: { in: 1.79, out: 1.79 },
+                max: { in: 131072, out: 32000 },
+            },
+            "Meta-Llama-3.1-405B-Instruct": {
+                short: "Llama 3.1 405B Inst (SN)",
+                class: "llama-3.1-405b-instruct",
+                provider: "SambaNova",
+                cost: { in: 0.0, out: 0.0 },
+                max: { in: 8192, out: 8192 },
+            },
+            "meta-llama/Meta-Llama-3.1-405B-Instruct": {
+                short: "Llama 3.1 405B Inst (Hyp)",
+                class: "llama-3.1-405b-instruct",
+                provider: "Hyperbolic",
+                cost: { in: 4.0, out: 4.0 },
+                max: { in: 8192, out: 8192 },
+            },
+            "nousresearch/hermes-3-llama-3.1-405b": {
+                short: "Nous Hermes 3 Llama 3.1 405B (OR)",
+                class: "hermes-3-405b-instruct",
+                provider: "OpenRouter",
+                cost: { in: 4.5, out: 4.5 },
+                max: { in: 131072, out: 8192 },
+            },
+            "meta-llama/llama-3.2-90b-vision-instruct": {
+                short: "Llama 3.2V 90B Inst (OR)",
+                class: "llama-3.2v-90b-instruct",
+                provider: "OpenRouter",
+                cost: { in: 0.9, out: 0.9 },
+                max: { in: 131072, out: 131072 },
+            },
+            "meta-llama/llama-3.3-70b-instruct": {
+                short: "Llama 3.3 70B Inst (OR)",
+                class: "llama-3.3-70b-instruct",
+                provider: "OpenRouter",
+                cost: { in: 0.4, out: 0.4 },
+                max: { in: 131072, out: 131072 },
+            },
+            "NousResearch/Hermes-3-Llama-3.1-70B": {
+                short: "Nous Hermes 3.1 70B (Hyp)",
+                class: "hermes-3.1-70b-instruct",
+                provider: "Hyperbolic",
+                cost: { in: 0.4, out: 0.4 },
+                max: { in: 12288, out: 12288 },
+            },
+            "nvidia/llama-3.1-nemotron-70b-instruct": {
+                short: "Llama 3.1 70B Nemo Inst (OR)",
+                class: "llama-3.1-nemotron-70b-instruct",
+                provider: "OpenRouter",
+                cost: { in: 0.35, out: 0.4 },
+                max: { in: 131072, out: 131072 },
+            },
+            "llama-3.1-70b-versatile": {
+                short: "Llama 3.1 70B (Groq)",
+                class: "llama-3.1-70b-instruct",
+                provider: "Groq",
+                cost: { in: 0.3, out: 0.3 },
+                max: { in: 131072, out: 4096 },
+            },
+            "sao10k/l3.1-euryale-70b": {
+                short: "Llama 3.1 Euryale 70B v2.2 (OR)",
+                class: "llama-3.1-70b-euryale",
+                provider: "OpenRouter",
+                cost: { in: 0.35, out: 0.4 },
+                max: { in: 8192, out: 16000 },
+            },
+            "meta-llama/llama-3.2-11b-vision-instruct": {
+                short: "Llama 3.2V 11B Inst (OR)",
+                class: "llama-3.2v-11b-instruct",
+                provider: "OpenRouter",
+                cost: { in: 0.2, out: 0.2 },
+                max: { in: 131072, out: 131072 },
+            },
+            "llama-3.1-8b-instant": {
+                short: "Llama 3.1 8B (Groq)",
+                class: "llama-3.1-8b-instruct",
+                provider: "Groq",
+                cost: { in: 0.055, out: 0.055 },
+                max: { in: 131072, out: 4096 },
+            },
+            "qwen/qwen3-235b-a22b": {
+                short: "Qwen3 235B A22B (OR)",
+                class: "qwen3-235b-a22b",
+                provider: "OpenRouter",
+                cost: { in: 0.10, out: 2.00 },
+                max: { in: 32768, out: 32768 }
+            },
+            "qwen/qwen3-30b-a3b": {
+                short: "Qwen3 30B A3B (OR)",
+                class: "qwen3-30b-a3b",
+                provider: "OpenRouter",
+                cost: { in: 0.10, out: 0.30 },
+                max: { in: 40960, out: 40960 }
+            },
+            "qwen/qwen3-32b": {
+                short: "Qwen3 32B (OR)",
+                class: "qwen3-32b",
+                provider: "OpenRouter",
+                cost: { in: 0.10, out: 0.30 },
+                max: { in: 40960, out: 40960 }
+            },
+            "qwen/qwen3-14b": {
+                short: "Qwen3 14B (OR)",
+                class: "qwen3-14b",
+                provider: "OpenRouter",
+                cost: { in: 0.07, out: 0.24 },
+                max: { in: 40960, out: 40960 }
+            },
+            "qwen/qwen3-8b": {
+                short: "Qwen3 8B (OR)",
+                class: "qwen3-8b",
+                provider: "OpenRouter",
+                cost: { in: 0.035, out: 0.138 },
+                max: { in: 40960, out: 40960 }
+            },
+            "qwen/qvq-72b-preview": {
+                short: "Qwen QvQ 72B Preview (OR)",
+                class: "qvq-72b",
+                provider: "OpenRouter",
+                cost: { in: 0.25, out: 0.5 },
+                max: { in: 128000, out: 4000 },
+            },
+            "qwen/qwq-32b": {
+                short: "Qwen QwQ 32B (OR)",
+                class: "qwq-32b",
+                provider: "OpenRouter",
+                cost: { in: 0.12, out: 0.18 },
+                max: { in: 131072, out: 131072 },
+            },
+            "qwen-qwq-32b": {
+                short: "Qwen QwQ 32B (Groq)",
+                class: "qwq-32b",
+                provider: "Groq",
+                cost: { in: 0.29, out: 0.39 },
+                max: { in: 131072, out: 131072 },
+            },
+            "Qwen/QwQ-32B-Preview": {
+                short: "Qwen 2.5 QwQ 32B Preview (Hyp)",
+                class: "qwq-32b",
+                provider: "Hyperbolic",
+                cost: { in: 0.2, out: 0.6 },
+                max: { in: 32768, out: 32768 },
+            },
+            "Qwen/Qwen2.5-Coder-32B-Instruct": {
+                short: "Qwen 2.5 Coder 32B (Hyp)",
+                class: "qwen2.5-coder-32b-instruct",
+                provider: "Hyperbolic",
+                cost: { in: 0.6, out: 0.6 },
+                max: { in: 131072, out: 8192 },
+            },
+            "eva-unit-01/eva-qwen-2.5-72b": {
+                short: "Eva Qwen 2.5 72B (OR)",
+                class: "qwen-2.5-72b-eva",
+                provider: "OpenRouter",
+                cost: { in: 4.0, out: 4.0 },
+                max: { in: 32000, out: 32000 },
+            },
+            "Qwen/Qwen2.5-72B-Instruct": {
+                short: "Qwen 2.5 72B Inst (Hyp)",
+                class: "qwen-2.5-72b-instruct",
+                provider: "Hyperbolic",
+                cost: { in: 0.4, out: 0.4 },
+                max: { in: 32768, out: 32768 },
+            },
+            "qwen/qwen-2.5-7b-instruct": {
+                short: "Qwen 2.5 7B Inst (OR)",
+                class: "qwen-2.5-7b-instruct",
+                provider: "OpenRouter",
+                cost: { in: 0.27, out: 0.27 },
+                max: { in: 131072, out: 32768 },
+            },
+            "gemini-1.5-pro-latest": {
+                short: "Gemini Pro 1.5",
+                class: "gemini-1.5-pro",
+                provider: "Gemini",
+                cost: { in: 1.25, out: 5.0 },
+                max: { in: 2000000, out: 8192 },
+            },
+            "gemini-1.5-flash-latest": {
+                short: "Gemini Flash 1.5",
+                class: "gemini-1.5-flash",
+                provider: "Gemini",
+                cost: { in: 0.0375, out: 0.075 },
+                max: { in: 1000000, out: 8192 },
+            },
+            "x-ai/grok-2": {
+                short: "Grok 2 (OR)",
+                class: "grok-2",
+                provider: "OpenRouter",
+                cost: { in: 5.0, out: 15.0 },
+                max: { in: 131072, out: 131072 },
+            },
+            "chatgpt-4o-latest": {
+                short: "ChatGPT-4o (OAI)",
+                class: "chatgpt-4o",
+                provider: "OpenAI",
+                cost: { in: 5.0, out: 15.0 },
+                max: { in: 128000, out: 16384 },
+            },
+            "gpt-4o-mini": {
+                short: "GPT-4o Mini (OAI)",
+                class: "gpt-4o-mini",
+                provider: "OpenAI",
+                cost: { in: 0.15, out: 0.6 },
+                max: { in: 128000, out: 16384 },
+            },
+            "liquid/lfm-40b": {
+                short: "Liquid LFM 40B MoE (OR)",
+                class: "lfm-40b",
+                provider: "OpenRouter",
+                cost: { in: 1.0, out: 2.0 },
+                max: { in: 32768, out: 32768 },
+            },
+            "mistralai/mistral-large": {
+                short: "Mistral Large 2 (OR)",
+                class: "mistral-large",
+                provider: "OpenRouter",
+                cost: { in: 2.0, out: 6.0 },
+                max: { in: 128000, out: 128000 },
+            },
+            "mistralai/codestral-mamba": {
+                short: "Codestral Mamba (OR)",
+                class: "codestral-mamba",
+                provider: "OpenRouter",
+                cost: { in: 0.25, out: 0.25 },
+                max: { in: 256000, out: 256000 },
+            },
+            "codestral-latest": {
+                short: "Codestral (Mistral)",
+                class: "codestral",
+                provider: "Mistral",
+                cost: { in: 1.0, out: 3.0 },
+                max: { in: 32000, out: 8191 },
+            },
+            "mistralai/mistral-nemo": {
+                short: "Mistral Nemo (OR)",
+                class: "mistral-nemo",
+                provider: "OpenRouter",
+                cost: { in: 0.13, out: 0.13 },
+                max: { in: 128000, out: 32768 },
+            },
+            "microsoft/wizardlm-2-8x22b": {
+                short: "WizardLM 2 8x22B (OR)",
+                class: "wizardlm-2-8x22b",
+                provider: "OpenRouter",
+                cost: { in: 0.5, out: 0.5 },
+                max: { in: 65536, out: 65536 },
+            },
+            "cognitivecomputations/dolphin-mixtral-8x22b": {
+                short: "Dolphin 2.9.2 Mixtral 8x22B (OR)",
+                class: "mixtral-8x22b-dolphin",
+                provider: "OpenRouter",
+                cost: { in: 0.9, out: 0.9 },
+                max: { in: 65536, out: 16000 },
+            },
+            "anthropic/claude-3-opus": {
+                short: "Claude 3 Opus (OR)",
+                class: "claude-3-opus",
+                provider: "OpenRouter",
+                cost: { in: 15.0, out: 75.0 },
+                max: { in: 200000, out: 4096 },
+            },
+            "anthropic/claude-3-haiku": {
+                short: "Claude 3 Haiku (OR)",
+                class: "claude-3-haiku",
+                provider: "OpenRouter",
+                cost: { in: 0.25, out: 1.25 },
+                max: { in: 200000, out: 4096 },
+            },
+            "echo": {
+                short: "Echo input",
+                class: "echo",
+                provider: "none",
+                cost: {in: 0, out: 0},
+                max: {in: -1, out: -1},
+            },
+            "none": {
+                short: "No model",
+                class: "none",
+                provider: "none",
+                cost: {in: 0, out: 0},
+                max: {in: -1, out: -1},
+            },
+        },
+        text: {
+            "gpt-3.5-turbo-instruct": {
+                short: "GPT-3.5 Turbo Inst (OAI)",
+                class: "gpt-3.5-turbo-instruct",
+                provider: "OpenAI",
+                cost: { in: 1.5, out: 2.0 },
+                max: { in: 4095, out: 4096 },
+                extra: ["suffix"],
+            },
+            "deepseek/deepseek-v3-base:free": {
+                short: "DeepSeek V3 Base (free) (OR)",
+                class: "deepseek-v3-base",
+                provider: "OpenRouter",
+                cost: { in: 0.0, out: 0.0 },
+                max: { in: 131072, out: 131072 },
+                defaults: { temperature: 1.5, repetition_penalty: 0.5, presence_penalty: 0.5, frequency_penalty: 0.5 },
+            },
+            "davinci-002": {
+                short: "davinci-002 (OAI)",
+                class: "davinci-002",
+                provider: "OpenAI",
+                cost: { in: 2.0, out: 2.0 },
+                max: { in: 16835, out: 4096 },
+                extra: ["suffix"],
+            },
+            "babbage-002": {
+                short: "babbage-002 (OAI)",
+                class: "babbage-002",
+                provider: "OpenAI",
+                cost: { in: 0.4, out: 0.4 },
+                max: { in: 4095, out: 4096 },
+                extra: ["suffix"],
+            },
+            "accounts/fireworks/models/llama4-maverick-instruct-basic": {
+                short: "Llama 4 Maverick Instruct Basic (FW)",
+                class: "llama-4-maverick-instruct",
+                provider: "Fireworks",
+                cost: { in: 0.22, out: 0.88 },
+                max: { in: 1000000, out: 131072 },
+            },
+            "accounts/fireworks/models/llama4-scout-instruct-basic": {
+                short: "Llama 4 Scout Instruct Basic (FW)",
+                class: "llama-4-scout-instruct",
+                provider: "Fireworks",
+                cost: { in: 0.15, out: 0.6 },
+                max: { in: 128000, out: 16384 },
+            },
+            "accounts/fireworks/models/deepseek-v3-0324": {
+                short: "DeepSeek V3-0324 (FW)",
+                class: "deepseek-v3",
+                provider: "Fireworks",
+                cost: { in: 0.9, out: 0.9 },
+                max: { in: 160000, out: 160000 },
+                defaults: { temperature: 1.5, },
+            },
+            "accounts/fireworks/models/deepseek-v3": {
+                short: "DeepSeek V3 (FW)",
+                class: "deepseek-v3",
+                provider: "Fireworks",
+                cost: { in: 0.9, out: 0.9 },
+                max: { in: 128000, out: 128000 },
+                defaults: { temperature: 1.5,  },
+            },
+            "accounts/fireworks/models/deepseek-r1": {
+                short: "DeepSeek R1 (FW)",
+                class: "deepseek-r1",
+                provider: "Fireworks",
+                cost: { in: 8.00, out: 8.00 },
+                max: { in: 20480, out: 20480 },
+            },
+            "deepseek-chat": {
+                short: "DeepSeek V3 (DS)",
+                class: "deepseek-v3",
+                provider: "DeepSeek_Beta",
+                cost: { in: 0.14, out: 0.28 },
+                max: { in: 64000, out: 8000 },
+                extra: ["suffix"],
+                defaults: { temperature: 1.5, },
+            },
+            "codestral-latest": {
+                short: "Codestral (Mistral)",
+                class: "codestral",
+                provider: "Mistral_Text",
+                cost: { in: 1.0, out: 3.0 },
+                max: { in: 32000, out: 8191 },
+                extra: ["suffix"],
+            },
+            "accounts/fireworks/models/qwen-qwq-32b-preview": {
+                short: "Qwen 2.5 QwQ 32B Preview (FW)",
+                class: "qwq-32b",
+                provider: "Fireworks",
+                cost: { in: 0.2, out: 0.6 },
+                max: {in: 32768, out: 32768 },
+            },
+            "accounts/fireworks/models/qwen2p5-coder-32b-instruct": {
+                short: "Qwen 2.5 Coder 32B (FW)",
+                class: "qwen2.5-coder-32b-instruct",
+                provider: "Fireworks",
+                cost: { in: 0.9, out: 0.9 },
+                max: {in: 32768, out: 32768 },
+            },
+            "accounts/fireworks/models/qwen2p5-72b-instruct": {
+                short: "Qwen 2.5 72B Inst (FW)",
+                class: "qwen2.5-72b-instruct",
+                provider: "Fireworks",
+                cost: { in: 0.9, out: 0.9 },
+                max: {in: 32768, out: 32768 },
+            },
+            "accounts/fireworks/models/llama-v3p2-90b-vision-instruct": {
+                short: "Llama 3.2 90B Inst (FW)",
+                class: "llama-3.2-90b-instruct",
+                provider: "Fireworks",
+                cost: { in: 0.9, out: 0.9 },
+                max: { in: 131072, out: 131072 },
+            },
+            "accounts/fireworks/models/llama-v3p2-11b-vision-instruct": {
+                short: "Llama 3.2 11B Inst (FW)",
+                class: "llama-3.2-11b-instruct",
+                provider: "Fireworks",
+                cost: { in: 0.2, out: 0.2 },
+                max: { in: 131072, out: 131072 },
+            },
+            "accounts/fireworks/models/llama-v3p2-3b-instruct": {
+                short: "Llama 3.2 3B Inst (FW)",
+                class: "llama-3.2-3b-instruct",
+                provider: "Fireworks",
+                cost: { in: 0.1, out: 0.1 },
+                max: { in: 131072, out: 131072 },
+            },
+            "accounts/fireworks/models/llama-v3p2-1b-instruct": {
+                short: "Llama 3.2 1B Inst (FW)",
+                class: "llama-3.2-1b-instruct",
+                provider: "Fireworks",
+                cost: { in: 0.1, out: 0.1 },
+                max: { in: 131072, out: 131072 },
+            },
+            "meta-llama/Meta-Llama-3.1-405B": {
+                short: "Llama 3.1 405B Base (Hyp)",
+                class: "llama-3.1-405b-base",
+                provider: "Hyperbolic",
+                cost: { in: 4.0, out: 4.0 },
+                max: { in: 32768, out: 32768 },
+            },
+            "accounts/fireworks/models/llama-v3p1-405b-instruct": {
+                short: "Llama 3.1 405B Inst (FW)",
+                class: "llama-3.1-405b-instruct",
+                provider: "Fireworks",
+                cost: { in: 1.79, out: 1.79 },
+                max: { in: 131072, out: 4096 },
+            },
+            "accounts/fireworks/models/llama-v3p1-70b-instruct": {
+                short: "Llama 3.1 70B Inst (FW)",
+                class: "llama-3.1-70b-instruct",
+                provider: "Fireworks",
+                cost: { in: 0.3, out: 0.3 },
+                max: { in: 131072, out: 4096 },
+            },
+            "accounts/fireworks/models/llama-v3p1-8b-instruct": {
+                short: "Llama 3.1 8B Inst (FW)",
+                class: "llama-3.1-8b-instruct",
+                provider: "Fireworks",
+                cost: { in: 0.055, out: 0.055 },
+                max: { in: 131072, out: 4096 },
+            },
+            "accounts/fireworks/models/mixtral-8x22b-instruct": {
+                short: "Mixtral 8x22B Inst (FW)",
+                class: "mixtral-8x22b-instruct",
+                provider: "Fireworks",
+                cost: { in: 0.65, out: 0.65 },
+                max: { in: 65536, out: 4096 },
+            },
+            "accounts/fireworks/models/mixtral-8x7b-instruct": {
+                short: "Mixtral 8x7B Inst (FW)",
+                class: "mixtral-8x7b-instruct",
+                provider: "Fireworks",
+                cost: { in: 0.24, out: 0.24 },
+                max: { in: 32768, out: 4096 },
+            },
+            "accounts/fireworks/models/gemma2-9b-it": {
+                short: "Gemma 2 9B Inst (FW)",
+                class: "gemma-2-9b-it",
+                provider: "Fireworks",
+                cost: { in: 0.2, out: 0.2 },
+                max: { in: 8192, out: 4096 },
+            },
+            "accounts/fireworks/models/phi-3-vision-128k-instruct": {
+                short: "Phi 3.5V Inst (FW)",
+                class: "phi-3-instruct",
+                provider: "Fireworks",
+                cost: { in: 0.0, out: 0.0 },
+                max: { in: 32064, out: 4096 },
+            },
+            "accounts/yi-01-ai/models/yi-large": {
+                short: "Yi Large (FW)",
+                class: "yi-large",
+                provider: "Fireworks",
+                cost: { in: 3.0, out: 3.0 },
+                max: { in: 32768, out: 4096 },
+            },
+            "echo": {
+                short: "Echo input",
+                class: "echo",
+                provider: "none",
+                cost: {in: 0, out: 0},
+                max: {in: -1, out: -1},
+            },
+            "none": {
+                short: "No model",
+                class: "none",
+                provider: "none",
+                cost: {in: 0, out: 0},
+                max: {in: -1, out: -1},
             }
         }
+    };
 
     const addLiteLLMModels = async () => {
         const prettyVersion = (rawId) => {
@@ -2645,61 +2912,20 @@
             return result.trim();
         };
 
-        const shortNames = {
-            openrouter: "OR",
-            openai: "OAI",
-            gemini: "Gem",
-            anthropic: "Ant",
-            deepseek: "DS",
-            deepseek_beta: "DS",
-            groq: "Groq",
-            sambanova: "SN",
-            cerebras: "Cer",
-            fireworks: "FW",
-            hyperbolic: "Hyp",
-            mistral: "Mis",
-            mistral_text: "Mis",
-            modelbox: "Mod",
-            replicate: "Rep",
-            xai: "xAI",
-            togetherai: "Tog",
-            voyage: "Voy",
-        };
-        const capitalize = {
-            openrouter: "OpenRouter",
-            openai: "OpenAI",
-            gemini: "Gemini",
-            anthropic: "Anthropic",
-            deepseek: "DeepSeek",
-            deepseek_beta: "DeepSeek_Beta",
-            groq: "Groq",
-            sambanova: "Sambanova",
-            cerebras: "Cerebras",
-            fireworks: "Fireworks",
-            hyperbolic: "Hyperbolic",
-            mistral: "Mistral",
-            mistral_text: "Mistral_Text",
-            modelbox: "ModelBox",
-            replicate: "Replicate",
-            xai: "xAI",
-            togetherai: "TogetherAI",
-            voyage: "Voyage",
-        };
-
         let models = await fetch(
             "https://github.com/BerriAI/litellm/raw/refs/heads/main/model_prices_and_context_window.json",
             null,
             getId("corsProxy")?.value
         ).then(x=>x.json())
 
-        let liteProviders = Object.keys($models.providerBaseURLs).map(x => x.toLowerCase());
+        let liteProviders = Object.keys($models.providers).map(x => x.toLowerCase());
         liteProviders.forEach(pr => liteProviders.push("text-completion-" + pr));
         let liteModes = ["chat", "completion"];
         parsedModels = Object.entries(models).filter(
             ([name, data]) => liteProviders.includes(data?.litellm_provider)
-                    && liteModes.includes(data?.mode ?? 'chat')
-                    && !name.match(/[0-9]{4,}/)
-                    && !name.match(/(^[a-z]+:|:[a-z]+$)/)
+                && liteModes.includes(data?.mode ?? 'chat')
+                && !name.match(/[0-9]{4,}/)
+                && !name.match(/(^[a-z]+:|:[a-z]+$)/)
         ).map(
             ([name, data]) => {
                 let shortName = prettyVersion(name.split('/').reverse()[0])
@@ -2713,8 +2939,8 @@
                     newName = name.replace(provider + '/', '');
 
                 return [newName, {
-                    short: shortName + ` (${shortNames[provider] || '?'})`,
-                    provider: capitalize[provider],
+                    short: shortName + ` (${$models.providers[provider].shortName || '?'})`,
+                    provider: $models.providers[provider].capitalize,
                     cost: {
                         in: (data?.input_cost_per_token ?? 0) * 1000000,
                         out: (data?.output_cost_per_token ?? 0) * 1000000,
@@ -2903,6 +3129,7 @@
     let maxHistoryLength = 5; // Maximum states to keep in history
 
     let savedStates = {};
+    let savedPrompts = {};
     let quickSaveSlots = {};
 
     const cache = new Map();
@@ -3075,7 +3302,7 @@
             "snapshot",
         ],
         providerKeyId: (provider) => {
-            if (["echo", "none"].includes(provider))
+            if (["echo", "none"].includes(provider.toLowerCase()))
                 return "customKey";
             return provider.toLowerCase().split("_")[0] + "Key";
         },
@@ -3395,6 +3622,21 @@
                 const classesToAdd = ["disabled", "enabled", "condensed", "expanded", "collapsed", "uncollapsed", "selected"].filter(cls => options[cls]);
                 if (classesToAdd.length)
                     contentDiv.classList.add(...classesToAdd);
+
+                const swipeLeft = createButton(
+                    constants.symbols.chevronLeft,
+                    () => swipeLeft(contentDiv),
+                    ['swipe-button']
+                );
+                const swipeRight = createButton(
+                    constants.symbols.chevronRight,
+                    () => swipeRight(contentDiv),
+                    ['swipe-button']
+                );
+                const swipeNum = create('span', { class: 'swipe-number' });
+                swipeNum.textContent = contentDiv.getAttribute('swipe') || '';
+                const swipeDiv = create('div', { class: 'swipe-container' }, [swipeLeft, swipeNum, swipeRight]);
+                contentDiv.appendChild(swipeDiv);
 
                 const roleButton = createButton(
                     contentDiv.getAttribute('role'),
@@ -4367,6 +4609,194 @@ const MsgBlock = {
         showSaveLoadMessage(constants.text.states.slot.deletedQuicksave(slot));
     }
 
+
+/******************** SAVED PROMPTS ********************/
+
+    // Serialize a single message element to an object
+    function serializeMessage(el) {
+        if (!el) return null;
+        if (!el.id)
+            el.id = 'M' + randStr(4);
+        return {
+            ...Object.fromEntries(
+                $inputs.attributes.messages.map(attr => [attr, el.getAttribute(attr)?.trim()])
+            ),
+            content: el.getAttribute('content') || buildText(el),
+            ...Object.fromEntries(
+                $inputs.classes.messages.map(cls => [cls, el.classList.contains(cls)])
+            ),
+            classes: Array.from(el.classList),
+            rowLabel: el.closest('.message-row')?.getAttribute('label')
+        };
+    }
+
+    // Refresh the Saved Prompts list UI
+    function updatePromptMenu() {
+        const promptList = getId('prompt-list');
+        if (!promptList) return;
+        promptList.innerHTML = '';
+
+        const buttons = {
+            symbol: {
+                delete: constants.symbols.circleX,
+                save: constants.symbols.save,
+                load: constants.symbols.download,
+                summarize: constants.symbols.textSelect,
+            },
+            text: {
+                delete: constants.text.buttons.delete,
+                save: constants.text.buttons.save,
+                load: constants.text.buttons.load,
+                summarize: constants.text.buttons.summarize,
+            }
+        };
+
+        Object.keys(savedPrompts).sort().forEach(name => {
+            const promptBox = document.createElement('div');
+            promptBox.className = 'save-box';
+            promptBox.innerHTML = `
+                <div class="save-name" onclick="editPromptName('${name}', this)">${name}</div>
+                <div class="button-container">
+                    <button class="title-button" onclick="titlePrompt('${name}')" title="auto-generate prompt title">${buttons.symbol.summarize}</button>
+                    <button class="delete-button" onclick="deletePrompt('${name}')" title="delete prompt">${buttons.symbol.delete}</button>
+                    <button class="save-button" onclick="savePrompt('${name}')" title="overwrite prompt">${buttons.symbol.save}</button>
+                    <button class="load-button" onclick="loadPrompt('${name}')" title="load prompt">${buttons.symbol.load}</button>
+                </div>`;
+            promptList.appendChild(promptBox);
+        });
+    }
+
+    // Inline renaming of a prompt
+    function editPromptName(oldName, element) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = oldName;
+        input.addEventListener('blur', () => {
+            const newName = input.value.trim();
+            if (newName && newName !== oldName && !savedPrompts[newName]) {
+                savedPrompts[newName] = savedPrompts[oldName];
+                delete savedPrompts[oldName];
+            }
+            saveSavedPrompts();
+            updatePromptMenu();
+        });
+        element.replaceWith(input);
+        input.focus();
+    }
+
+    // Create a new prompt from the currently selected message
+    async function createNewPrompt() {
+        const selected = document.querySelector('.message-content.selected') || document.querySelector('.message-content');
+        if (!selected) {
+            showSaveLoadMessage('No message selected to save', true);
+            return;
+        }
+        const date = new Date();
+        let base = `${date.getDate()}-${date.toLocaleString('default', { month: 'short' })}-${date.getFullYear()}`;
+        let counter = 1;
+        while (savedPrompts.hasOwnProperty(base + `-${counter}`)) counter++;
+        const defaultTitle = base + `-${counter}`;
+        savedPrompts[defaultTitle] = serializeMessage(selected);
+
+        if (getId('autoSummarizeNewSaves')?.checked) {
+            showSaveLoadMessage(`Generating title for prompt ${defaultTitle}...`, false, -1);
+            const autoTitle = await autoSummarize({data:{messages:[savedPrompts[defaultTitle]]}});
+            if (autoTitle.success) {
+                savedPrompts[autoTitle.content] = savedPrompts[defaultTitle];
+                if (autoTitle.content !== defaultTitle) delete savedPrompts[defaultTitle];
+                showSaveLoadMessage(`Saved prompt: ${autoTitle.content}`, false, 5000);
+            } else {
+                showSaveLoadMessage(`Auto-title failed: ${autoTitle.content}`, true);
+            }
+        }
+
+        saveSavedPrompts();
+        updatePromptMenu();
+    }
+
+    // Overwrite existing prompt with selected message
+    function savePrompt(name) {
+        const selected = document.querySelector('.message-content.selected');
+        if (!selected) {
+            showSaveLoadMessage('No message selected to save', true);
+            return;
+        }
+        savedPrompts[name] = serializeMessage(selected);
+        saveSavedPrompts();
+        updatePromptMenu();
+        showSaveLoadMessage(`Saved prompt: ${name}`);
+    }
+
+    // Insert prompt after selected message
+    async function loadPrompt(name) {
+        const prompt = savedPrompts[name];
+        if (!prompt) return;
+        snapshotState();
+        const selected = document.querySelector('.message-content.selected');
+        const afterRow = selected?.closest('.message-row');
+        const newBlock = constants.html.messageBlock(prompt);
+        const newRow = constants.html.messageRow();
+        const contentDiv = newBlock.querySelector('.message-content');
+        $inputs.attributes.messages.forEach(attr => {
+            const val = prompt[attr] ?? $inputs.attrDefaults.messages[attr];
+            contentDiv.setAttribute(attr, val);
+        });
+        contentDiv.innerHTML = renderMarked(prompt.content);
+        renderMath(contentDiv);
+        newRow.appendChild(newBlock);
+
+        if (afterRow && afterRow.parentNode) {
+            if (afterRow.nextSibling) {
+                afterRow.parentNode.insertBefore(newRow, afterRow.nextSibling);
+            } else {
+                afterRow.parentNode.appendChild(newRow);
+            }
+        } else {
+            getId('messages').appendChild(newRow);
+        }
+
+        await updateTokenCount(contentDiv, true);
+        await selectCell(contentDiv);
+        updateTokenCost();
+        showSaveLoadMessage(`Loaded prompt: ${name}`);
+    }
+
+    // Delete a prompt
+    function deletePrompt(name) {
+        delete savedPrompts[name];
+        saveSavedPrompts();
+        updatePromptMenu();
+        showSaveLoadMessage(`Deleted prompt: ${name}`);
+    }
+
+    // Auto-title an existing prompt
+    async function titlePrompt(name) {
+        const prompt = savedPrompts[name];
+        if (!prompt) return;
+        showSaveLoadMessage(`Generating title for prompt ${name}...`, false, -1);
+        const autoTitle = await autoSummarize({data:{messages:[prompt]}});
+        if (autoTitle.success) {
+            savedPrompts[autoTitle.content] = prompt;
+            if (autoTitle.content !== name) delete savedPrompts[name];
+            saveSavedPrompts();
+            updatePromptMenu();
+            showSaveLoadMessage(`Saved prompt: ${autoTitle.content}`, false, 5000);
+        } else {
+            showSaveLoadMessage(`Auto-title failed: ${autoTitle.content}`, true);
+        }
+    }
+
+    // Persist prompts to localStorage
+    function saveSavedPrompts() {
+        setLocal('savedPrompts', savedPrompts);
+    }
+
+    // Load prompts from localStorage
+    function loadSavedPrompts() {
+        savedPrompts = JSON.parse(getLocal('savedPrompts')) || {};
+        updatePromptMenu();
+    }
+
 /******************** IMPORT-EXPORT ********************/
 
     /**
@@ -4976,10 +5406,18 @@ const MsgBlock = {
             block = messageBlock.parentNode;
         }
 
-        if (block.previousElementSibling.querySelector('.message-content')) {
-            await selectCell(Array.from(block.previousElementSibling.querySelectorAll('.message-content')).slice(-1)[0]);
-        } else if (block.nextElementSibling.querySelector('.message-content')) {
-            await selectCell(Array.from(block.nextElementSibling.querySelectorAll('.message-content'))[0]);
+        if (block?.previousElementSibling) {
+            if (block.previousElementSibling.querySelector('.message-content')) {
+                await selectCell(Array.from(block.previousElementSibling.querySelectorAll('.message-content')).slice(-1)[0]);
+            } else {
+                // ?
+            }
+        } else if (block?.nextElementSibling) {
+            if (block.nextElementSibling.querySelector('.message-content')) {
+                await selectCell(Array.from(block.nextElementSibling.querySelectorAll('.message-content'))[0]);
+            } else {
+                // ?
+            }
         }
 
         messageBlock.remove();
@@ -5265,13 +5703,13 @@ const MsgBlock = {
     function getApiKeyAndUrl(provider) {
         const key = getId($inputs.providerKeyId(provider))?.value;
         if (!key) {
-            return { key: null, url: $models?.providerBaseURLs[provider] };
+            return { key: null, url: $models.providers[provider.toLowerCase()].baseURL };
         }
         let url;
         if (key === $inputs.providerKeyId("Custom")) {
             url = getId("customUrl")?.value;
         } else {
-            url = $models.providerBaseURLs[provider];
+            url = $models.providers[provider.toLowerCase()].baseURL;
         }
         return { key, url };
     }
@@ -6562,6 +7000,7 @@ const MsgBlock = {
         ]).then(() => {
             // These synchronous operations can run after keys/inputs are loaded
             loadSavedStates();
+            loadSavedPrompts();
             loadGlobalVariables();
             stateHistory = JSON.parse(getLocal('stateHistory')) || stateHistory || [];
         });
@@ -6622,3 +7061,4 @@ const MsgBlock = {
 </body>
 
 </html>
+
