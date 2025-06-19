@@ -110,6 +110,8 @@
                 --button-filter: saturate(250%) brightness(100%);
                 --button-filter-hover: saturate(750%) brightness(100%);
                 --compact-options-filter: saturate(750%) contrast(110%) brightness(110%);
+
+                --message-block-max-height: 500px;
         }
         html {
             --button-text-color-main: var(--color-text-hard);
@@ -188,6 +190,7 @@
         }
         button {
             font-size: 1em;
+            font-family: var(--fonts-sans-main);
             overflow-x: clip;
             cursor: pointer;
             padding: 4px 8px;
@@ -276,9 +279,10 @@
         }
         .message-row .message-block {
             --block-leftmost-side-width: 5px;
-            --block-inner-side-width: 0px;
-            max-height: 500px;
+            --block-inner-side-width: 2px;
+            max-height: var(--message-block-max-height);
             overflow-y: scroll;
+            display: inline-flex;
             &:has(.selected) {
                 --block-inner-side-width: 2px;
             }
@@ -286,6 +290,7 @@
                 border-left-width: var(--block-leftmost-side-width);
             }
             &:not(:last-child) {
+                border-right-width: 0px;  /* so we have |msg|msg| instead of |msg||msg| */
                 border-right-width: var(--block-inner-side-width);
             }
             &:not(:first-child) {
@@ -325,7 +330,7 @@
                 border-top-color: var(--role-color-main);
                 color: var(--role-color-heavy);
             }
-            &:has(.condensed) {
+            &:has(.condensed) .message-content {
                 max-height: 144px;
                 font-size: 0.95em;
                 line-height: 1em;
@@ -357,10 +362,12 @@
                     background-color: var(--role-color-accent);
                     z-index: 100;
                     padding: 1px 8px 0px 8px;
-                    margin: -1px 0px 0px -3px;
+                    margin: -1px 0px -1px -3px;
                 }
             }
             &:has(.collapsed:not(.editing)) {
+                border-bottom-style: dashed;
+                border-bottom-width: 2px;
                 & .message-content {
                     display: none;
                 }
@@ -474,8 +481,8 @@
         .message-control {
             width: auto;
             font-size: 0.9em;
-            margin: -1px 0px -4px -3px;
-            padding: 0px 8px 1px 8px;
+            margin: -1px 0px -1px -3px;
+            padding: 1px 8px 0px 8px;
             background-color: var(--role-color-accent);
         }
         .message-control button {
@@ -489,15 +496,15 @@
             font-size: 1.0em;
             transition: all 0.0s ease-in-out;
             &.role-button {
-                top: -2px;
-            }
-            &.role-button[data-role] {
-                color: var(--role-color-main);
+                top: -1px;
+                grid-row: 1;
+                grid-column: 2;
+                color: var(--role-color-main, var(--color-text-medium));
             }
         }
+
         .message-block:hover .message-control button {
-            /* opacity: 1;
-            text-shadow: 0px 0px 2px var(--role-color-light); */
+            opacity: 1;
         }
         .control-row {
             display: grid;
@@ -515,6 +522,7 @@
             padding-right: 2em;
             font-size: 1em;
             opacity: 0.5;
+            margin-top: -1px;
         }
         .author-info {
             grid-column-start: 3;
@@ -541,13 +549,10 @@
             grid-row: 1;
             grid-column: 1;
             align-self: center;
-            top: -2px;
+            top: -1px;
         }
-        .role-button {
-            grid-row: 1;
-            grid-column: 2;
-        }
-        .token-info {
+
+        .tokens-info {
             grid-row: 1;
             grid-column: 5;
             align-self: center;
@@ -586,7 +591,8 @@
             }
         }
         .message-block:has(.selected) {
-            &:is(.token-info, .control-button) {
+            /* border-left-color: var(--role-color-heavy); */
+            &:is(.tokens-info, .control-button) {
                 color: var(--color-text-medium);
             }
             & .control-row-text-field {
@@ -609,10 +615,10 @@
         .control-row-text-field {
             scrollbar-width: none;
         }
-        .tokens-disabled .token-info {
+        .tokens-disabled .tokens-info {
             opacity: 0; pointer-events: none;
         }
-        .tokens-enabled .token-info {
+        .tokens-enabled .tokens-info {
             opacity: 1; pointer-events: auto;
         }
 
@@ -704,7 +710,7 @@
         }
         .inline-input {
             width: auto;
-/*            margin: auto;*/
+            /*margin: auto;*/
             border: none;
             border-bottom: 1px solid var(--color-section-inline);
         }
@@ -752,10 +758,6 @@
             border-right-width: 3px;
             /* border-radius: 8px; */
             transition: all 0.15s ease-in-out;
-            &:not(.generating) {
-                /* border: 2px solid var(--role-color-main);
-                background-color: var(--role-color-light); */
-            }
             &.generating {
                 border-color: var(--role-color-shadow);
                 background-color: var(--role-color-light);
@@ -830,9 +832,7 @@
                 background-color: rgb(from var(--color-saves-delete-heavy) r g b/0.5);
             }
         }
-        .save-box:has(button:hover) {
 
-        }
         .save-box.immutable {
             color: var(--color-text-light);
             border-radius: 0px;
@@ -1018,6 +1018,19 @@
                 padding-left: 0px;
                 padding-right: 24px;}
         }
+        #duplicateOptions {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            & select, input {
+                display: inline;
+            }
+        }
+        #duplicateOptions .compact-options {
+            margin-top: 1px;
+            margin-bottom: 1px;
+            justify-content: center;
+        }
         #main-container {
             display: flex;
             flex-direction: row;
@@ -1144,7 +1157,7 @@
         }
 
         /* Token count visualization */
-        .token-info {
+        .tokens-info {
             position: relative;
 
             &::before {
@@ -1190,6 +1203,75 @@
                     background-color: rgba(var(--color-highlight-rgb), 0.6);
                 }
             }
+        }
+        .seamless {
+            &.message-row {
+                gap: 0px;
+                margin-top: 0px;
+                &:not(:has(.selected)) .message-control {
+                    /* only show controls for the selected cell */
+                    display: none;
+                }
+            }
+            & .message-block {
+                &:not(:has(.condensed, .collapsed)) {
+                    max-height: unset !important;
+                }
+                &:has(.condensed) {
+                    border-top-width: 4px !important;
+                    border-bottom-width: 4px !important;
+                    border-top-color: var(--role-color-shadow) !important;
+                    border-bottom-color: var(--role-color-shadow) !important;
+                    border-top-style: double !important;
+                    border-bottom-style: double !important;
+                    & .message-content {
+                        font-size: 0.9em;
+                        line-height: 0.9em;
+                        padding-bottom: 6px !important;
+                        border-bottom: 4px double var(--role-color-shadow) !important;
+                        margin-bottom: -2px !important;
+                    }
+                }
+                &:not(:has(.condensed, .collapsed)) {
+                    border-top-width: 0px !important;
+                    border-bottom-width: 0px !important;
+                }
+                &:has(.collapsed) {
+                    border-top-width: 4px !important;
+                    border-bottom-width: 4px !important;
+                    border-top-color: var(--role-color-shadow) !important;
+                    border-bottom-color: var(--role-color-shadow) !important;
+                    border-top-style: double !important;
+                    border-bottom-style: double !important;
+                    & .message-content {
+                        display: none;
+                    }
+                    & .message-control {
+                        display: initial !important;
+                    }
+                }
+                background-color: unset !important;
+            }
+            & .message-content {
+                padding-top: 2px;
+                padding-bottom: 2px;
+                border-top-width: 0px !important;
+                border-bottom-width: 0px !important;
+                background-color: color-mix(in srgb, var(--background-axis), var(--transparent) 75%);
+                background-image: none !important;
+                color: var(--role-color-heavy);
+                font-family: var(--fonts-mono-main);
+            }
+        }
+        #messages:has(.seamless) {
+            border: 2px inset color-mix(in srgb, color-mix(in srgb, var(--color-main-border-heavy), var(--background-axis) 55%), var(--transparent) 15%);
+            border-left: 1px solid var(--color-main-border-heavy);
+            border-right: 1px solid var(--color-main-border-heavy);
+            box-shadow: 1px 1px 6px color-mix(in srgb, color-mix(in srgb, var(--foreground-axis), var(--background-axis) 35%), var(--transparent) 15%);
+            background-color: color-mix(in srgb, var(--background-axis), var(--transparent) 75%);
+            font-family: var(--fonts-mono-alt);
+
+
         }
         body.theme-default, body.theme-1 {
             /* from https://doodad.dev/pattern-generator/ */
@@ -1454,66 +1536,138 @@
                         <h3>LLM Settings</h3>
                         <ul>
                             <li>
-                                <b>Stream</b>
-                                <input class="option" type="checkbox" id="streaming" checked onchange="$inputs.saveAllOptions()">
+                                Stream
+                                <input
+                                    class="option"
+                                    type="checkbox"
+                                    id="streaming"
+                                    checked
+                                    onchange="$inputs.saveAllOptions()"
+                                />
                             </li>
                             <li>
-                                <b>Temperature</b>
-                                <input style="margin-left: 0.5em;" class="inline-input option" type="text" id="temperature" min="0.0" max="2.0" value="0.7" placeholder="0.0 to 2.0" onchange="$inputs.saveAllOptions()">
+                                Temperature
+                                <input
+                                    style="margin-left: 0.5em;"
+                                    class="inline-input option temperature"
+                                    id="temperature"
+                                    type="text" min="0.0" max="2.0" value="0.7"
+                                    placeholder="0.0 to 2.0"
+                                    onchange="document.querySelectorAll('.temperature').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions()"
+                                />
                             </li>
                             <li>
-                                <b>Top p</b>
-                                <input style="margin-left: 0.5em;" class="inline-input option" type="text" id="top_p" min="0.0" max="1.0" value="1.0" placeholder="0.0 to 1.0" onchange="$inputs.saveAllOptions()">
+                                Top p
+                                <input
+                                    style="margin-left: 0.5em;"
+                                    class="inline-input option top_p"
+                                    id="top_p"
+                                    type="text" min="0.0" max="1.0" value="1.0"
+                                    placeholder="0.0 to 1.0"
+                                    onchange="document.querySelectorAll('.top_p').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions()"
+                                />
                             </li>
                             <li>
-                                <b>Top k</b>
-                                <input style="margin-left: 0.5em;" class="inline-input option" type="text" id="top_k" min="0" value="" placeholder = "10 to 40ish" onchange="$inputs.saveAllOptions()">
+                                Top k
+                                <input
+                                    style="margin-left: 0.5em;"
+                                    class="inline-input option top_k" id="top_k"
+                                    type="text" min="0" value=""
+                                    placeholder = "10 to 40ish"
+                                    onchange="document.querySelectorAll('.top_k').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions()"
+                                />
                             </li>
                             <li>
-                                <b>Frequency penalty</b>
-                                <input style="margin-left: 0.5em;" class="inline-input option" type="text" id="frequency_penalty" value="" placeholder = "-2.0 to 2.0" onchange="$inputs.saveAllOptions()">
+                                Frequency penalty
+                                <input
+                                    style="margin-left: 0.5em;"
+                                    class="inline-input option frequency_penalty"
+                                    type="text" id="frequency_penalty"
+                                    value="" placeholder = "-2.0 to 2.0"
+                                    onchange="document.querySelectorAll('.frequency_penalty').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions()"
+                                />
                             </li>
                             <li>
-                                <b>Presence penalty</b>
-                                <input style="margin-left: 0.5em;" class="inline-input option" type="text" id="presence_penalty" value="" placeholder = "-2.0 to 2.0" onchange="$inputs.saveAllOptions()">
+                                Presence penalty
+                                <input
+                                    style="margin-left: 0.5em;"
+                                    class="inline-input option presence_penalty"
+                                    type="text" id="presence_penalty"
+                                    value="" placeholder = "-2.0 to 2.0"
+                                    onchange="document.querySelectorAll('.presence_penalty').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions()"
+                                />
                             </li>
                             <li>
-                                <b>Repetition penalty</b>
-                                <input style="margin-left: 0.5em;" class="inline-input option" type="text" id="repetition_penalty" placeholder = "-2.0 to 2.0" value="" onchange="$inputs.saveAllOptions()">
+                                Repetition penalty
+                                <input
+                                    style="margin-left: 0.5em;"
+                                    class="inline-input option repetition_penalty"
+                                    type="text" id="repetition_penalty"
+                                    placeholder = "-2.0 to 2.0" value=""
+                                    onchange="document.querySelectorAll('.repetition_penalty').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions()"
+                                />
                             </li>
                             <li>
-                                <b>Seed</b>
-                                <input style="margin-left: 0.5em;" class="inline-input option" type="text" id="seed" value="" placeholder = "any integer" onchange="$inputs.saveAllOptions()">
+                                Seed
+                                <input
+                                    style="margin-left: 0.5em;"
+                                    class="inline-input option" type="text" id="seed"
+                                    value="" placeholder = "any integer"
+                                    onchange="$inputs.saveAllOptions()"
+                                />
+                            </li>
+                            <li>
+                                Min Tokens (FW, Chutes)
+                                <input
+                                    style="margin-left: 0.5em;"
+                                    class="inline-input option min_tokens"
+                                    type="text" id="min_tokens"
+                                    placeholder = "" value=""
+                                    onchange="document.querySelectorAll('.min_tokens').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions()"
+                                />
                             </li>
                             <li>
                                 (Parameters left blank will not be passed to the API)
                             </li>
                             <li>
-                                <b>Other params</b> (enter as JSON)
+                                Other params (enter as JSON)
                                 <br>
                                 <input class="option" type="text" id="otherParams" placeholder='{"stop": ["\n"]}' value="" onchange="$inputs.saveAllOptions()">
                             </li>
                             <li>
-                                <b>Custom Model Name</b>
+                                Custom Model Name
                                 <br>
                                 <input class="option" type="text" id="customModel" placeholder="modelname" onchange="$inputs.saveAllOptions()">
                             </li>
                             <li>
-                                <b>Use Custom Model</b>
+                                Use Custom Model
                                 <input class="option" type="checkbox" id="useCustomModel" onchange="$inputs.saveAllOptions()">
                             </li>
                             <li>
-                                Note: To use a custom model from a specific provider, select a model from the dropdown <em>belonging to that provider</em>. E.g. to use an OpenAI fine-tune, enter its name above (ft:whatever), check the box, and select an OpenAI model (say "GPT-4o (OAI)") from the dropdown.
+                                <span style="font-size: 0.8em; margin-left: 1em; color: var(--text-color-secondary);">
+                                    Note: To use a custom model from a specific provider, select a model from the dropdown <em>belonging to that provider</em>. E.g. to use an OpenAI fine-tune, enter its name above (ft:whatever), check the box, and select an OpenAI model (say "GPT-4o (OAI)") from the dropdown.
+                                </span>
                             </li>
                             <li>
                                 <br>
                                 <button onclick="addLiteLLMModels()" style="border: 1px solid var(--button-text-color-main); background-color: var(--button-bg-color-main);">
                                     Get more models
                                 </button>
-                                <br>
-                                Click this button to (attempt to) add the very large and continually updated list of LLMs <a href="https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json">here</a> with this page's model selection options. You'll very likely need to provide a CORS proxy (in the Keys section) for the fetch request to work; if it does, the (over 200) new models in the dropdown list will be prefixed with a '+'.
-                                <br>
-                                Note that there are <em>lots</em> of untied loose ends and weird edge cases brought up by the expanded selection range, so you may need to use the console to manually check the requests being sent and responses being received.
+                            </li>
+                            <li>
+                                <span style="font-size: 0.8em; margin-left: 1em; color: var(--text-color-secondary);">
+                                    Click this button to (attempt to) add the very large and continually updated list of LLMs <a href="https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json">here</a> with this page's model selection options. You'll very likely need to provide a CORS proxy (in the Keys section) for the fetch request to work; if it does, the (over 200) new models in the dropdown list will be prefixed with a '+'.
+                                    <br>
+                                    Note that there are <em>lots</em> of untied loose ends and weird edge cases brought up by the expanded selection range, so you may need to use the console to manually check the requests being sent and responses being received.
+                                    <br>
+                                </span>
+                            </li>
+                            <li>
+                                Show Only Models on Pareto Frontier
+                                <input class="option" type="checkbox" id="paretoFrontier" onchange="$inputs.saveAllOptions(); $inputs.checkAvailability()">
+                                <span style="font-size: 0.8em; padding-left: 1em; color: var(--text-color-secondary);">
+                                    (subjective determination of brute utility as a fn of speed/cost; doesn't mean anything rigorous)
+                                </span>
                             </li>
                         </ul>
                         <h3>Tokenization</h3>
@@ -1521,11 +1675,15 @@
                                 <li>
                                     <input class="option" type="checkbox" id="jinaAllowTokenize" onchange="$inputs.saveAllOptions()">
                                     <label for="jinaAllowTokenize">
-                                        <b>Get token counts via Jina</b>
+                                        Get token counts via Jina
                                     </label>
                                 </li>
-                                <li>Note: Enabling this option with a valid Jina API key will start sending your messages to Jina after you edit them.</li>
-                                <li>Else, we approximate token count by dividing character count by 4 (accurate for typical English text, not so much for code or other languages)</li>
+                                <li>
+                                    <span style="font-size: 0.8em; margin-left: 1em; color: var(--text-color-secondary);">
+                                        Note: Enabling this option with a valid Jina API key will start sending your messages to Jina after you edit them.
+                                        <br> Else, we approximate token count by dividing character count by 4 (accurate for typical English text, not so much for code or other languages)
+                                    </span>
+                                </li>
                             </ul>
 
                         <h3>Scraping</h3>
@@ -1533,26 +1691,30 @@
                                 <li>
                                     <input class="option" type="checkbox" id="scrapeAllowJina" onchange="$inputs.saveAllOptions()">
                                     <label for="scrapeAllowJina">
-                                        <b>Get URL text via Jina</b>
+                                        Get URL text via Jina
                                     </label>
                                 </li>
                                 <li>
                                     <input class="option" type="checkbox" id="scrapeAllowExa" onchange="$inputs.saveAllOptions()">
                                     <label for="scrapeAllowExa">
-                                        <b>Get URL text via Exa</b>
+                                        Get URL text via Exa
                                     </label>
                                 </li>
-                                <li>(if neither, gets raw HTML via fetch)</li>
+                                <li>
+                                    <span style="font-size: 0.8em; margin-left: 1em; color: var(--text-color-secondary);">
+                                        (if neither, gets raw HTML via fetch)
+                                    </span>
+                                </li>
                                 <li>
                                     <input class="option" type="checkbox" id="scrapeIgnoreCache" onchange="$inputs.saveAllOptions()">
                                     <label for="scrapeIgnoreCache">
-                                        <b>Don't cache URL contents</b>
+                                        Don't cache URL contents
                                     </label>
                                 </li>
                                 <li>
                                     <input class="option" type="checkbox" id="scrapeForceHTML" onchange="$inputs.saveAllOptions()">
                                     <label for="scrapeForceHTML">
-                                        <b>Get URL as raw HTML, not text</b>
+                                        Get URL as raw HTML, not text
                                     </label>
                                 </li>
                             </ul>
@@ -1562,37 +1724,37 @@
                                 <li>
                                     <input class="option" type="checkbox" id="autoSummarizeNewSaves" onchange="$inputs.saveAllOptions()">
                                     <label for="autoSummarizeNewSaves">
-                                        <b>Enable auto-summarization for new saves</b>
+                                        Enable auto-summarization for new saves
                                     </label>
                                 </li>
                                 <li>
                                     <input class="option" type="checkbox" id="autoSummarizeQuicksaves" onchange="$inputs.saveAllOptions()">
                                     <label for="autoSummarizeQuicksaves">
-                                        <b>Enable auto-summarization for quicksaves</b>
+                                        Enable auto-summarization for quicksaves
                                     </label>
                                 </li>
                                 <li>
                                     <input class="option" type="checkbox" id="autoSummarizeLimit" onchange="$inputs.saveAllOptions()">
                                     <label for="autoSummarizeLimit">
-                                        <b>Don't auto-summarize conversations over 100,000 characters</b>
+                                        Don't auto-summarize conversations over 100,000 characters
                                     </label>
                                 </li>
                                 <li>
                                     <input class="option" type="radio" id="autoSummarizeGPT" name="autoSummarizeModel" onchange="$inputs.saveAllOptions()">
                                     <label for="autoSummarizeGPT">
-                                        <b>Auto-summarize via GPT-4o Mini</b>
+                                        Auto-summarize via GPT-4o Mini
                                     </label>
                                 </li>
                                 <li>
                                     <input class="option" type="radio" id="autoSummarizeLlama3B" name="autoSummarizeModel" onchange="$inputs.saveAllOptions()">
                                     <label for="autoSummarizeLlama3B">
-                                        <b>Auto-summarize via Llama 3.2 3B</b>
+                                        Auto-summarize via Llama 3.2 3B
                                     </label>
                                 </li>
                                 <li>
                                     <input class="option" type="radio" id="autoSummarizeGemini" name="autoSummarizeModel" onchange="$inputs.saveAllOptions()">
                                     <label for="autoSummarizeGemini">
-                                        <b>Auto-summarize via Gemini 1.5 Flash 8B</b>
+                                        Auto-summarize via Gemini 1.5 Flash 8B
                                     </label>
                                 </li>
                             </ul>
@@ -1600,25 +1762,25 @@
                         <h3>Exa.AI Parameters</h3>
                             <div>
                                 <label for="numSitesFind">
-                                    <b>Find Similar Sites (Total Results):</b>
+                                    Find Similar Sites (Total Results):
                                 </label>
                                 <input class="inline-input option" type="number" id="numSitesFind" value="3" style="width: 50px;" onchange="$inputs.saveAllOptions()">
                             </div>
                             <div>
                                 <label for="numSitesSearch">
-                                    <b>Exa Search (Total Results):</b>
+                                    Exa Search (Total Results):
                                 </label>
                                 <input class="inline-input option" type="number" id="numSitesSearch" value="5" style="width: 50px;" onchange="$inputs.saveAllOptions()">
                             </div>
                             <div>
                                 <label for="numHighlightsSearch">
-                                    <b>Highlights per result:</b>
+                                    Highlights per result:
                                 </label>
                                 <input class="inline-input option" type="number" id="numHighlightsSearch" value="3" style="width: 50px;" onchange="$inputs.saveAllOptions()">
                             </div>
                             <div>
                                 <label for="numSentencesSearch">
-                                    <b>Sentences per highlight:</b>
+                                    Sentences per highlight:
                                 </label>
                                 <input class="inline-input option" type="number" id="numSentencesSearch" value="2" style="width: 50px;" onchange="$inputs.saveAllOptions()">
                             </div>
@@ -1627,25 +1789,25 @@
                             <li>
                                 <input class="option" type="checkbox" id="generateInNewBlock" onchange="$inputs.saveAllOptions();">
                                 <label for="generateInNewBlock">
-                                    <b>Generate completion in new block</b>
+                                    Generate completion in new block
                                 </label>
                             </li>
                             <li style="display: none;">
                                 <input class="option" type="checkbox" id="generateAtSelected" onchange="$inputs.saveAllOptions()">
                                 <label for="generateAtSelected">
-                                    <b>Generate at Selected</b>
+                                    Generate at Selected
                                 </label>
                             </li>
                             <li>
                                 <input class="option" type="checkbox" id="disableMarkdown" onchange="$inputs.saveAllOptions(); toggleMarkdown()">
                                 <label for="disableMarkdown">
-                                    <b>Disable Markdown rendering</b>
+                                    Disable Markdown rendering
                                 </label>
                             </li>
                             <li>
                                 <input class="option" type="checkbox" id="hideSidebar" onchange="$inputs.saveAllOptions(); toggleSidebar()">
                                 <label for="hideSidebar">
-                                    <b>Hide sidebar by default</b>
+                                    Hide sidebar by default
                                 </label>
                             </li>
                         </ul>
@@ -1653,7 +1815,7 @@
                         <ul>
                             <li>
                                 <label for="themeChoice">
-                                    <b>Theme choice</b>
+                                    Theme choice
                                 </label>
                                 <select class="option" id="themeChoice" onchange="$inputs.saveAllOptions(); document.body.classList = [this.value];">
                                 <optgroup label="Light">
@@ -1765,8 +1927,19 @@
                         <div id="save-load-message">Local data loaded</div>
                     </div>
                 </div>
+                <div id="stateToggles">
+                    <div id="stateToggle-seamless">
+                        <input class="option" type="checkbox" id="seamlessMode" onchange="toggleSeamless(this.checked);">
+                        <label for="seamlessMode">
+                            Seamless mode
+                        </label>
+                    </div>
+                </div>
+                <br>
                 <div id="shamelessSelfPromotion">
                     <a href="https://n.cohomology.group/chat.html">chat.html</a> by <a href="https://n.cohomology.group">Mariven</a> (<a href="https://x.com/psychiel">@psychiel</a>)
+                    <br>
+                    <span style="font-size:0.9em;">typos? bugs? style ideas? feature requests? add them on <a href="https://github.com/Mariven/chat.html">Github</a>!</span>
                 </div>
                 <div id="versionHash">
                     Script hash:
@@ -1782,11 +1955,20 @@
                     <div class="compact-options" style="margin-left:0px;">
                         <span>
                             Chat model:
-                            <select class="option" id="modelChat" onchange="$inputs.saveAllOptions(); updateTokenCost()"></select>
+                            <select
+                                class="option modelChat"
+                                id="modelChat"
+                                onchange="document.querySelectorAll('.modelChat').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); updateTokenCost()">
+                            </select>
                         </span>
                         <span>
                             Max tokens:
-                            <input class="option" type="text" id="maxTokensChat" value="2048" size="4" onchange="$inputs.saveAllOptions(); updateTokenCost()">
+                            <input
+                                class="option maxTokensChat"
+                                id="maxTokensChat"
+                                type="text" value="2048" size="4"
+                                onchange="document.querySelectorAll('.maxTokensChat').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); updateTokenCost()"
+                            />
                         </span>
                     </div>
                     <div id="modelChatDescription"></div>
@@ -1795,11 +1977,19 @@
                     <div class="compact-options" style="margin-left:0px;">
                         <span>
                             Text model:
-                            <select class="option" id="modelText" onchange="$inputs.saveAllOptions(); updateTokenCost()"></select>
+                            <select
+                                class="option modelText"
+                                id="modelText"
+                                onchange="document.querySelectorAll('.modelText').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); updateTokenCost()">
+                            </select>
                         </span>
                         <span>
                             Max tokens:
-                            <input class="option" type="text" id="maxTokensText" value="128" size="4" onchange="$inputs.saveAllOptions(); updateTokenCost()">
+                            <input
+                                class="option maxTokensText"
+                                type="text" id="maxTokensText" value="128" size="4"
+                                onchange="document.querySelectorAll('.maxTokensText').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); updateTokenCost();"
+                            />
                         </span>
                     </div>
                     <div id="modelTextDescription"></div>
@@ -1828,6 +2018,91 @@
                     Text cost:
                     <span id="textCompletionCost"></span>
                 </span>
+            </div>
+
+            <div id="duplicateOptions">
+                <div class="compact-options">
+                    <select
+                        class="duplicateOption modelChat"
+                        onchange="document.querySelectorAll('.modelChat').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); updateTokenCost()">
+                    </select>
+                    <input
+                        class="duplicateOption maxTokensChat"
+                        type="text" value="2048" size="4"
+                        onchange="document.querySelectorAll('.maxTokensChat').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); updateTokenCost()"
+                    />
+                    <select
+                        class="duplicateOption modelText"
+                        onchange="document.querySelectorAll('.modelText').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); updateTokenCost()">
+                    </select>
+                    <input
+                        class="duplicateOption maxTokensText"
+                        type="text" value="128" size="4"
+                        onchange="document.querySelectorAll('.maxTokensText').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); updateTokenCost()"
+                    />
+                </div>
+                <div class="compact-options">
+                    <span>
+                         <em>T</em> =
+                        <input
+                            style="width: 2em; padding-left: 0px;"
+                            class="inline-input duplicateOption temperature"
+                            type="text" min="0.0" max="2.0"
+                            value="0.7" placeholder="null"
+                            onchange="document.querySelectorAll('.temperature').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions()"
+                        />
+                    </span>
+                    <span>
+                         <em>p</em> =
+                        <input
+                            style="width: 2em; padding-left: 0px;"
+                            class="inline-input duplicateOption top_p"
+                            type="text" min="0.0" max="1.0"
+                            value="1.0" placeholder="null"
+                            onchange="document.querySelectorAll('.top_p').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions()"
+                        />
+                    </span>
+                    <span>
+                         <em>k</em> =
+                        <input
+                            style="width: 2em; padding-left: 0px;"
+                            class="inline-input duplicateOption top_k"
+                            type="text" min="0"
+                            value="" placeholder="null"
+                            onchange="document.querySelectorAll('.top_k').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions()"
+                        />
+                    </span>
+                    <span>
+                         <em>F<sub>p</sub></em> =
+                        <input
+                            style="width: 2em; padding-left: 0px;"
+                            class="inline-input duplicateOption frequency_penalty"
+                            type="text"
+                            value="" placeholder="null"
+                            onchange="document.querySelectorAll('.frequency_penalty').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions()"
+                        />
+                    </span>
+                    <span>
+                         <em>P<sub>p</sub></em> =
+                        <input
+                            style="width: 2em; padding-left: 0px;"
+                            class="inline-input duplicateOption presence_penalty"
+                            type="text"
+                            value="" placeholder="null"
+                            onchange="document.querySelectorAll('.presence_penalty').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions()"
+                        />
+                    </span>
+                    <span>
+                         <em>R<sub>p</sub></em> =
+                        <input
+                            style="width: 2em; padding-left: 0px;"
+                            class="inline-input duplicateOption repetition_penalty"
+                            type="text"
+                            value="" placeholder="null"
+                            onchange="document.querySelectorAll('.repetition_penalty').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions()"
+                        />
+                    </span>
+                </div>
             </div>
             <div id="button-container">
                 <button id="chatCompletionBtn" onclick="generate('chat')">
@@ -2014,14 +2289,25 @@
                 cost: { in: 1.10, out: 4.40 },
                 max: { in: 200000, out: 100000 },
                 extra: ["developer"],
+                pareto: true,
+            },
+            "openai/o3-pro": {
+                short: "o3 Pro (OR)",
+                class: "o3-pro",
+                provider: "OpenRouter",
+                cost: { in: 20.0, out: 80.0 },
+                max: { in: 200000, out: 100000 },
+                extra: ["developer"],
+                pareto: true,
             },
             "openai/o3": {
                 short: "o3 (OR)",
                 class: "o3",
                 provider: "OpenRouter",
-                cost: { in: 10.0, out: 40.0 },
+                cost: { in: 2.0, out: 8.0 },
                 max: { in: 200000, out: 100000 },
                 extra: ["developer"],
+                pareto: true,
             },
             "openai/o3-mini-high": {
                 short: "o3 Mini High (OR)",
@@ -2045,13 +2331,15 @@
                 provider: "OpenRouter",
                 cost: { in: 75.00, out: 150.00 },
                 max: { in: 128000, out: 16384 },
+                pareto: true,
             },
             "openai/gpt-4.1": {
                 short: "GPT-4.1 (OR)",
                 class: "gpt-4.1",
                 provider: "OpenRouter",
                 cost: { in: 2.0, out: 8.0 },
-                max: { in: 1048576, out: 32768 }
+                max: { in: 1048576, out: 32768 },
+                pareto: true,
             },
             "openai/gpt-4.1-mini": {
                 short: "GPT-4.1 Mini (OR)",
@@ -2072,28 +2360,29 @@
                 class: "gpt-4.1",
                 provider: "OpenAI",
                 cost: { in: 2.0, out: 8.0 },
-                max: { in: 1048576, out: 32768 }
+                max: { in: 1048576, out: 32768 },
+                pareto: true,
             },
             "gpt-4.1-mini": {
                 short: "GPT-4.1 Mini (OAI)",
                 class: "gpt-4.1-mini",
                 provider: "OpenAI",
                 cost: { in: 0.40, out: 1.60 },
-                max: { in: 1048576, out: 32768 }
+                max: { in: 1048576, out: 32768 },
             },
             "gpt-4.1-nano": {
                 short: "GPT-4.1 Nano (OAI)",
                 class: "gpt-4.1-nano",
                 provider: "OpenAI",
                 cost: { in: 0.10, out: 0.40 },
-                max: { in: 1048576, out: 32768 }
+                max: { in: 1048576, out: 32768 },
             },
             "gpt-4o": {
                 short: "GPT-4o (OAI)",
                 class: "gpt-4o",
                 provider: "OpenAI",
                 cost: { in: 5.0, out: 15.0 },
-                max: { in: 128000, out: 16384 }
+                max: { in: 128000, out: 16384 },
             },
             "o4-mini": {
                 short: "o4 Mini (OAI)",
@@ -2102,14 +2391,25 @@
                 cost: { in: 1.10, out: 4.40 },
                 max: { in: 200000, out: 100000 },
                 extra: ["developer"],
+                pareto: true,
+            },
+            "o3-pro": {
+                short: "o3 Pro (OAI)",
+                class: "o3-pro",
+                provider: "OpenAI",
+                cost: { in: 20.0, out: 80.0 },
+                max: { in: 200000, out: 100000 },
+                extra: ["developer"],
+                pareto: true,
             },
             "o3": {
                 short: "o3 (OAI)",
                 class: "o3",
                 provider: "OpenAI",
-                cost: { in: 10.0, out: 40.0 },
+                cost: { in: 2.0, out: 8.0 },
                 max: { in: 200000, out: 100000 },
                 extra: ["developer"],
+                pareto: true,
             },
             "o3-mini": {
                 short: "o3-mini (OAI)",
@@ -2127,6 +2427,24 @@
                 cost: { in: 15.00, out: 60.00 },
                 max: { in: 200000, out: 100000 },
                 extra: ["developer"],
+            },
+            "claude-opus-4": {
+                short: "Claude 4 Opus (Ant)",
+                class: "claude-4-opus",
+                provider: "Anthropic",
+                cost: { in: 15.0, out: 75.0 },
+                max: { in: 200000, out: 32000 },
+                extra: ["prefix"],
+                pareto: true,
+            },
+            "claude-sonnet-4": {
+                short: "Claude 4 Sonnet (Ant)",
+                class: "claude-4-sonnet",
+                provider: "Anthropic",
+                cost: { in: 3.0, out: 15.0 },
+                max: { in: 200000, out: 32000 },
+                extra: ["prefix"],
+                pareto: true,
             },
             "claude-3-7-sonnet-latest": {
                 short: "Claude 3.7 Sonnet (Ant)",
@@ -2152,6 +2470,24 @@
                 max: { in: 200000, out: 8192 },
                 extra: ["prefix"],
             },
+            "anthropic/claude-opus-4": {
+                short: "Claude 4 Opus (OR)",
+                class: "claude-4-opus",
+                provider: "OpenRouter",
+                cost: { in: 15.0, out: 75.0 },
+                max: { in: 200000, out: 32000 },
+                extra: ["prefix"],
+                pareto: true,
+            },
+            "anthropic/claude-sonnet-4": {
+                short: "Claude 4 Sonnet (OR)",
+                class: "claude-4-sonnet",
+                provider: "OpenRouter",
+                cost: { in: 3.0, out: 15.0 },
+                max: { in: 200000, out: 32000 },
+                extra: ["prefix"],
+                pareto: true,
+            },
             "anthropic/claude-3.7-sonnet": {
                 short: "Claude 3.7 Sonnet (OR)",
                 class: "claude-3.7-sonnet",
@@ -2168,26 +2504,37 @@
                 max: { in: 200000, out: 8192 },
                 extra: ["prefix"],
             },
-            "google/gemini-2.5-pro-preview-03-25": {
-                short: "Gemini 2.5 Pro 3-25 (OR)",
+            "google/gemini-2.5-pro-preview": {
+                short: "Gemini 2.5 Pro (OR)",
                 class: "gemini-2.5-pro",
                 provider: "OpenRouter",
                 cost: { in: 1.25, out: 10.00 },
-                max: { in: 1048576, out: 65536 }
+                max: { in: 1048576, out: 65536 },
+                pareto: true,
             },
             "google/gemini-2.5-flash-preview": {
                 short: "Gemini 2.5 Flash Preview (OR)",
                 class: "gemini-2.5-flash",
                 provider: "OpenRouter",
                 cost: { in: 0.15, out: 0.60 },
-                max: { in: 1048576, out: 65536 }
+                max: { in: 1048576, out: 65536 },
+                pareto: true,
             },
             "google/gemini-2.5-flash-preview:thinking": {
                 short: "Gemini 2.5 Flash Preview (thinking) (OR)",
                 class: "gemini-2.5-flash",
                 provider: "OpenRouter",
                 cost: { in: 0.15, out: 3.50 },
-                max: { in: 1048576, out: 65536 }
+                max: { in: 1048576, out: 65536 },
+                pareto: true,
+            },
+            "google/gemini-2.5-flash-lite-preview-06-17": {
+                short: "Gemini 2.5 Flash Lite Preview (06-17) (OR)",
+                class: "gemini-2.5-flash",
+                provider: "OpenRouter",
+                cost: { in: 0.10, out: 0.40 },
+                max: { in: 1048576, out: 65536 },
+                pareto: true,
             },
             "gemini-2.5-pro-exp-03-25": {
                 short: "Gemini 2.5 Pro 3-25 (Gem)",
@@ -2236,7 +2583,8 @@
                 class: "grok-3",
                 provider: "OpenRouter",
                 cost: { in: 3.00, out: 15.00 },
-                max: { in: 131072, out: 131072 }
+                max: { in: 131072, out: 131072 },
+                pareto: true,
             },
             "x-ai/grok-3-mini-beta": {
                 short: "Grok 3 Mini Beta (OR)",
@@ -2294,6 +2642,7 @@
                 cost: { in: 0.55, out: 2.19 },
                 max: { in: 64000, out: 8000 },
                 extra: ["prefix"],
+                pareto: true,
             },
             "deepseek-ai/DeepSeek-R1": {
                 short: "DeepSeek R1 (Hyp)",
@@ -2302,13 +2651,15 @@
                 cost: { in: 2.00, out: 2.00 },
                 max: { in: 131072, out: 131072 },
                 extra: ["prefix"],
+                pareto: true,
             },
             "deepseek-ai/DeepSeek-R1-Zero": {
                 short: "DeepSeek R1 Zero (Hyp)",
                 class: "deepseek-r1-zero",
                 provider: "Hyperbolic",
                 cost: { in: 2.00, out: 2.00 },
-                max: { in: 131072, out: 131072 }
+                max: { in: 131072, out: 131072 },
+                pareto: true,
             },
             "deepseek/deepseek-chat": {
                 short: "DeepSeek V3 (OR)",
@@ -2317,6 +2668,7 @@
                 cost: { in: 0.9, out: 0.9 },
                 max: { in: 128000, out: 128000 },
                 extra: ["prefix"],
+                pareto: true,
             },
             "DeepSeek-V3-0324": {
                 short: "DeepSeek V3-0324 (SN)",
@@ -2333,6 +2685,7 @@
                 cost: { in: 0.14, out: 0.28 },
                 max: { in: 64000, out: 8000 },
                 extra: ["prefix"],
+                pareto: true,
             },
             "deepseek-reasoner": {
                 short: "DeepSeek R1 (DS)",
@@ -2341,6 +2694,7 @@
                 cost: { in: 0.55, out: 2.19 },
                 max: { in: 64000, out: 8000 },
                 extra: ["prefix", "reasoning_content"],
+                pareto: true,
             },
             "DeepSeek-R1": {
                 short: "DeepSeek R1 (SN)",
@@ -2348,6 +2702,7 @@
                 provider: "SambaNova",
                 cost: { in: 5.0, out: 7.0 },
                 max: { in: 16000, out: 4000 },
+                pareto: true,
             },
             "google/gemma-3-27b-it": {
                 short: "Gemma 3 27B Instruct (OR)",
@@ -2376,6 +2731,7 @@
                 provider: "Fireworks",
                 cost: { in: 0.15, out: 0.6 },
                 max: { in: 128000, out: 16384 },
+                params: ["min_tokens"],
             },
             "accounts/fireworks/models/llama4-maverick-instruct-basic": {
                 short: "Llama 4 Maverick Instruct Basic (FW)",
@@ -2383,6 +2739,8 @@
                 provider: "Fireworks",
                 cost: { in: 0.22, out: 0.88 },
                 max: { in: 1000000, out: 131072 },
+                params: ["min_tokens"],
+                pareto: true,
             },
             "meta-llama/llama-3.1-405b-instruct": {
                 short: "Llama 3.1 405B Inst (OR)",
@@ -2473,7 +2831,8 @@
                 class: "qwen3-235b-a22b",
                 provider: "OpenRouter",
                 cost: { in: 0.10, out: 2.00 },
-                max: { in: 32768, out: 32768 }
+                max: { in: 32768, out: 32768 },
+                pareto: true,
             },
             "qwen/qwen3-30b-a3b": {
                 short: "Qwen3 30B A3B (OR)",
@@ -2663,6 +3022,7 @@
                 provider: "none",
                 cost: {in: 0, out: 0},
                 max: {in: -1, out: -1},
+                pareto: true,
             },
             "none": {
                 short: "No model",
@@ -2670,6 +3030,7 @@
                 provider: "none",
                 cost: {in: 0, out: 0},
                 max: {in: -1, out: -1},
+                pareto: true,
             },
         },
         text: {
@@ -2687,7 +3048,9 @@
                 provider: "OpenRouter",
                 cost: { in: 0.0, out: 0.0 },
                 max: { in: 131072, out: 131072 },
+                params: ["min_tokens"],
                 defaults: { temperature: 1.5, repetition_penalty: 0.5, presence_penalty: 0.5, frequency_penalty: 0.5 },
+                pareto: true,
             },
             "davinci-002": {
                 short: "davinci-002 (OAI)",
@@ -2711,6 +3074,8 @@
                 provider: "Fireworks",
                 cost: { in: 0.22, out: 0.88 },
                 max: { in: 1000000, out: 131072 },
+                params: ["min_tokens"],
+                pareto: true,
             },
             "accounts/fireworks/models/llama4-scout-instruct-basic": {
                 short: "Llama 4 Scout Instruct Basic (FW)",
@@ -2718,6 +3083,7 @@
                 provider: "Fireworks",
                 cost: { in: 0.15, out: 0.6 },
                 max: { in: 128000, out: 16384 },
+                params: ["min_tokens"],
             },
             "accounts/fireworks/models/deepseek-v3-0324": {
                 short: "DeepSeek V3-0324 (FW)",
@@ -2726,6 +3092,8 @@
                 cost: { in: 0.9, out: 0.9 },
                 max: { in: 160000, out: 160000 },
                 defaults: { temperature: 1.5, },
+                params: ["min_tokens"],
+                pareto: true,
             },
             "accounts/fireworks/models/deepseek-v3": {
                 short: "DeepSeek V3 (FW)",
@@ -2734,6 +3102,8 @@
                 cost: { in: 0.9, out: 0.9 },
                 max: { in: 128000, out: 128000 },
                 defaults: { temperature: 1.5,  },
+                params: ["min_tokens"],
+                pareto: true,
             },
             "accounts/fireworks/models/deepseek-r1": {
                 short: "DeepSeek R1 (FW)",
@@ -2741,6 +3111,8 @@
                 provider: "Fireworks",
                 cost: { in: 8.00, out: 8.00 },
                 max: { in: 20480, out: 20480 },
+                params: ["min_tokens"],
+                pareto: true,
             },
             "deepseek-chat": {
                 short: "DeepSeek V3 (DS)",
@@ -2748,8 +3120,9 @@
                 provider: "DeepSeek_Beta",
                 cost: { in: 0.14, out: 0.28 },
                 max: { in: 64000, out: 8000 },
-                extra: ["suffix"],
                 defaults: { temperature: 1.5, },
+                extra: ["suffix"],
+                pareto: true,
             },
             "codestral-latest": {
                 short: "Codestral (Mistral)",
@@ -2765,6 +3138,7 @@
                 provider: "Fireworks",
                 cost: { in: 0.2, out: 0.6 },
                 max: {in: 32768, out: 32768 },
+                params: ["min_tokens"],
             },
             "accounts/fireworks/models/qwen2p5-coder-32b-instruct": {
                 short: "Qwen 2.5 Coder 32B (FW)",
@@ -2772,6 +3146,7 @@
                 provider: "Fireworks",
                 cost: { in: 0.9, out: 0.9 },
                 max: {in: 32768, out: 32768 },
+                params: ["min_tokens"],
             },
             "accounts/fireworks/models/qwen2p5-72b-instruct": {
                 short: "Qwen 2.5 72B Inst (FW)",
@@ -2779,6 +3154,7 @@
                 provider: "Fireworks",
                 cost: { in: 0.9, out: 0.9 },
                 max: {in: 32768, out: 32768 },
+                params: ["min_tokens"],
             },
             "accounts/fireworks/models/llama-v3p2-90b-vision-instruct": {
                 short: "Llama 3.2 90B Inst (FW)",
@@ -2786,6 +3162,7 @@
                 provider: "Fireworks",
                 cost: { in: 0.9, out: 0.9 },
                 max: { in: 131072, out: 131072 },
+                params: ["min_tokens"],
             },
             "accounts/fireworks/models/llama-v3p2-11b-vision-instruct": {
                 short: "Llama 3.2 11B Inst (FW)",
@@ -2793,6 +3170,7 @@
                 provider: "Fireworks",
                 cost: { in: 0.2, out: 0.2 },
                 max: { in: 131072, out: 131072 },
+                params: ["min_tokens"],
             },
             "accounts/fireworks/models/llama-v3p2-3b-instruct": {
                 short: "Llama 3.2 3B Inst (FW)",
@@ -2800,6 +3178,7 @@
                 provider: "Fireworks",
                 cost: { in: 0.1, out: 0.1 },
                 max: { in: 131072, out: 131072 },
+                params: ["min_tokens"],
             },
             "accounts/fireworks/models/llama-v3p2-1b-instruct": {
                 short: "Llama 3.2 1B Inst (FW)",
@@ -2807,6 +3186,7 @@
                 provider: "Fireworks",
                 cost: { in: 0.1, out: 0.1 },
                 max: { in: 131072, out: 131072 },
+                params: ["min_tokens"],
             },
             "meta-llama/Meta-Llama-3.1-405B": {
                 short: "Llama 3.1 405B Base (Hyp)",
@@ -2821,6 +3201,7 @@
                 provider: "Fireworks",
                 cost: { in: 1.79, out: 1.79 },
                 max: { in: 131072, out: 4096 },
+                params: ["min_tokens"],
             },
             "accounts/fireworks/models/llama-v3p1-70b-instruct": {
                 short: "Llama 3.1 70B Inst (FW)",
@@ -2828,6 +3209,7 @@
                 provider: "Fireworks",
                 cost: { in: 0.3, out: 0.3 },
                 max: { in: 131072, out: 4096 },
+                params: ["min_tokens"],
             },
             "accounts/fireworks/models/llama-v3p1-8b-instruct": {
                 short: "Llama 3.1 8B Inst (FW)",
@@ -2835,6 +3217,7 @@
                 provider: "Fireworks",
                 cost: { in: 0.055, out: 0.055 },
                 max: { in: 131072, out: 4096 },
+                params: ["min_tokens"],
             },
             "accounts/fireworks/models/mixtral-8x22b-instruct": {
                 short: "Mixtral 8x22B Inst (FW)",
@@ -2842,6 +3225,7 @@
                 provider: "Fireworks",
                 cost: { in: 0.65, out: 0.65 },
                 max: { in: 65536, out: 4096 },
+                params: ["min_tokens"],
             },
             "accounts/fireworks/models/mixtral-8x7b-instruct": {
                 short: "Mixtral 8x7B Inst (FW)",
@@ -2849,6 +3233,7 @@
                 provider: "Fireworks",
                 cost: { in: 0.24, out: 0.24 },
                 max: { in: 32768, out: 4096 },
+                params: ["min_tokens"],
             },
             "accounts/fireworks/models/gemma2-9b-it": {
                 short: "Gemma 2 9B Inst (FW)",
@@ -2856,6 +3241,7 @@
                 provider: "Fireworks",
                 cost: { in: 0.2, out: 0.2 },
                 max: { in: 8192, out: 4096 },
+                params: ["min_tokens"],
             },
             "accounts/fireworks/models/phi-3-vision-128k-instruct": {
                 short: "Phi 3.5V Inst (FW)",
@@ -2863,6 +3249,7 @@
                 provider: "Fireworks",
                 cost: { in: 0.0, out: 0.0 },
                 max: { in: 32064, out: 4096 },
+                params: ["min_tokens"],
             },
             "accounts/yi-01-ai/models/yi-large": {
                 short: "Yi Large (FW)",
@@ -2877,6 +3264,7 @@
                 provider: "none",
                 cost: {in: 0, out: 0},
                 max: {in: -1, out: -1},
+                pareto: true,
             },
             "none": {
                 short: "No model",
@@ -2884,6 +3272,7 @@
                 provider: "none",
                 cost: {in: 0, out: 0},
                 max: {in: -1, out: -1},
+                pareto: true,
             }
         }
     };
@@ -2954,11 +3343,20 @@
             }
         );
         availableModels = {
-            chat: Object.fromEntries(parsedModels.filter(
-                ([name, data]) => data?.mode == "chat" && !Object.keys($models.chat).includes(name))
+            chat: Object.fromEntries(
+                parsedModels.filter(
+                ([name, data]) =>
+                    data?.mode == "chat"
+                    && !Object.keys($models.chat).includes(name)
+                    && (!$inputs.get("paretoFrontier") || data?.pareto)
+                )
             ),
-            text: Object.fromEntries(parsedModels.filter(
-                ([name, data]) => data?.mode == "completion" && !Object.keys($models.text).includes(name))
+            text: Object.fromEntries(
+                parsedModels.filter(
+                    ([name, data]) => data?.mode == "completion"
+                    && !Object.keys($models.text).includes(name)
+                    && (!$inputs.get("paretoFrontier") || data?.pareto)
+                )
             ),
         };
         Object.assign($models.chat, availableModels.chat);
@@ -2966,20 +3364,25 @@
 
         ["chat", "text"].forEach(type => {
             const typeId = type == "chat" ? "modelChat" : "modelText";
-            const modelSelect = getId(typeId);
-            modelSelect.innerText = '';
-            // add all models for given type to appropriate dropdown
-            Object.entries($models[type]).forEach(([key, model]) => {
-                let prefix = '';
-                if (Object.keys(availableModels[type]).includes(key)) {
-                    prefix = ' + ';
-                }
-                const option = document.createElement('option');
-                option.value = key;
-                option.textContent = prefix + model.short;
-                modelSelect.appendChild(option);
+            // const modelSelect = getId(typeId);
+            const value = getLocal(typeId) || Object.keys($models[type])[0];
+            queryAll("." + typeId).forEach(modelSelect => {
+                modelSelect.innerText = '';
+                // add all models for given type to appropriate dropdown
+                Object.entries($models[type]).forEach(([key, model]) => {
+                    let prefix = '';
+                    if (Object.keys(availableModels[type]).includes(key)) {
+                        prefix = ' + ';
+                    }
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = prefix + model.short;
+                    modelSelect.appendChild(option);
+                });
             });
-            modelSelect.value = getLocal(typeId) || Object.keys($models[type])[0];
+            queryAll("." + typeId).forEach(modelSelect => {
+                modelSelect.value = value;
+            });
         });
     }
 
@@ -2991,58 +3394,58 @@
                 settings: {},
                 data: {
                     messages: [
-                        { role: "comment", tokenCount: '3', content:
+                        { role: "comment", tokens: '3', content:
                             "On chat completions"
                         },
-                        { role: "system", tokenCount: '66', content:
+                        { role: "system", tokens: '66', content:
                             "Messages with the (S)ystem role are not part of the conversation per se, but are used to shape the assistant's identity, instructions, and manner of interaction. They can be used to dictate everything from persona to formatting to task-specific instructions. Best practice is to use only one system message at the beginning of a conversation."
                         },
-                        { role: "user", tokenCount: '39', content:
+                        { role: "user", tokens: '39', content:
                             "The (U)ser role is used to tag messages as the user's input, e.g. a question or directive. These messages represent what a human interacting with the AI would say or ask."
                         },
-                        { role: "assistant", tokenCount: '39', content:
+                        { role: "assistant", tokens: '39', content:
                             "The (A)ssistant role is used to tag the LLM's provided completions, e.g. answers or completed tasks. These messages represent the AI's responses to the user's inputs."
                         },
-                        { role: "comment", tokenCount: '39', content:
+                        { role: "comment", tokens: '39', content:
                             "The (C)omment role isn't actually a real role. It's here as an easy way to annotate conversations and store text, and doesn't get used for API calls."
                         },
-                        { role: "user", tokenCount: '58', content:
+                        { role: "user", tokens: '58', content:
                             "Chat apps typically restrict you to the format S-U-A-U-A-U-A..., with each assistant message coming automatically and immutably. This tool directly interfaces with the LLM provider API to allow you to manually craft entire conversations, edit any message, and generate chat completions at will."
                         },
-                        { role: "comment", tokenCount: '5', content:
+                        { role: "comment", tokens: '5', content:
                             "How to generate completions"
                         },
-                        { role: "user", tokenCount: '48', content:
+                        { role: "user", tokens: '48', content:
                             "Several provider APIs are accessible, so long as you have API keys. After entering your key for a provider on the left, you can choose a model belonging to that provider. Different models have different capabilities, token limits, and pricing structures."
                         },
-                        { role: "assistant", tokenCount: '67', content:
+                        { role: "assistant", tokens: '67', content:
                             "Any completion you call for will be streamed to the bottom panel. Once complete, you can either overwrite this output by calling for another completion, or press 'f' to append it to the conversation as an assistant message. This allows for fine-grained control over the conversation flow and the ability to experiment with different prompts and completions."
                         },
-                        { role: "user", tokenCount: '51', content:
+                        { role: "user", tokens: '51', content:
                             "You can also generate text completions, which directly continue the content of the selected cell. For instance, you can write the first half of a Python function, poem, or 100-word essay, then use a text completion to fill in the rest."
                         },
-                        { role: "comment", tokenCount: '3', content:
+                        { role: "comment", tokens: '3', content:
                             "Additional utilities"
                         },
-                        { role: "assistant", tokenCount: '83', content:
+                        { role: "assistant", tokens: '83', content:
                             "Use the Jina.AI API (free, and very generously so) to enable the automatic tokenizer; use Exa.AI (paid, usage-dependent cost) for the Exa Search (shows websites related to the selected cell's content) and Find Similar Sites (shows websites related to the selected cell's URL). You may need a CORS proxy for Exa to work; one can be entered alongside the rest of these keys, in the dropdown section labeled 'Keys'."
                         },
-                        { role: "comment", tokenCount: '3', content:
+                        { role: "comment", tokens: '3', content:
                             "Provider-specific details"
                         },
-                        { role: "user", tokenCount: '127', content:
+                        { role: "user", tokens: '127', content:
                             "Note: the automatic tokenization feature relies on tokenizer model o200k_base, which is ONLY accurate for 4o-series models; Llama, Claude, and other models have their own tokenizers, for which o200k_base can only provide an approximate count.\nAlso, be aware that different providers have different API structures and require different formats. For instance, Anthropic gets mad if you have two assistant messages in a row, and only lets one system message pass; accessing their models via OpenRouter means that your requests automatically get formatted in the right structure, but won't provide a completion free from these inherent restrictions."
                         },
-                        { role: "user", tokenCount: '59', content:
+                        { role: "user", tokens: '59', content:
                             "Yet other models will throw errors if you give them inputs they don't want, e.g. a \"suffix\" parameter to a chat completion model. In general, whenever a completion no longer triggers properly, or triggers for a brief moment before ending without output, you should check the browser console for an error, since there's often something you can do to fix it."
                         },
-                        { role: "user", tokenCount: '89', content:
+                        { role: "user", tokens: '89', content:
                             "Many models appear multiple times in the dropdowns; this is because different providers offer qualitatively different versions of the same model. Groq's thing is offering extremely fast completions, for instance, while Hyperbolic's thing is not quantizing its models, running them at full (FP16) resolution for slightly higher completion quality, and Fireworks' thing is making lots of models available for text completions as well as chat completions."
                         },
-                        { role: "comment", tokenCount: '3', content:
+                        { role: "comment", tokens: '3', content:
                             "About this file"
                         },
-                        { role: "assistant", tokenCount: '59', content:
+                        { role: "assistant", tokens: '59', content:
                             "This is a standalone HTML file; you can download it and use it anywhere. However, it relies (exclusively) on your browser's localStorage to store API keys and saved chats. The most up-to-date version will remain at https://n.cohomology.group/chat.html."
                         }
                     ],
@@ -3058,10 +3461,10 @@
                 data: {
                     completion: { type: "chat", content: "" },
                     messages: [
-                        { role: "system", tokenCount: '74', content:
+                        { role: "system", tokens: '74', content:
                             "You are an intelligent, proactive, and insightful AI assistant. Your thought process quickly identifies the right information and ideas to be exchanged, allowing you to speak precisely without repetition, restatement, or overexplanation, and your casual yet precise register ensures that communication is open and easy."
                         },
-                        { role: "user", tokenCount: '8', content:
+                        { role: "user", tokens: '8', content:
                             "How do you milk an almond?"
                         }
                     ]
@@ -3076,10 +3479,10 @@
                 data: {
                     completion: { type: "chat", content: "" },
                     messages: [
-                        { role: "system", tokenCount: '239', content:
+                        { role: "system", tokens: '239', content:
                             `You are an AI designed to help people with tasks in all known programming languages. When given a language and an objective, reply with the idiomatic means of achieving the objective in the language. For instance, given "iterate over a list in C", reply with\n\`\`\`c\nfor (int i = 0; i < list_length; i++){\n    do_something(list[i]);\n}\n\`\`\`\nGiven "begin a latex document", reply with\n\`\`\`latex\n\\documentclass{article}\n\\begin{document}\n\n\\end{document}\n\`\`\`\nGiven "read a file in Javascript", reply with\n\`\`\`javascript\nvar fs = require('fs');\nfs.readFile('filename', 'utf8', function(err, data) {\n    do_something(data);\n});\n\`\`\`\nConcision is vital, so reply only with the code in a codebox of the appropriate language; do not explain what the code does or how to use it if the user does not ask. Assume they have a strong programming background and understand metasyntactic variables. When there is ambiguity concerning what the user wants to do, cover multiple cases if you can do so concisely, otherwise pointing out the ambiguity and asking the user to specify.`
                         },
-                        { role: "user", tokenCount: '12', content:
+                        { role: "user", tokens: '12', content:
                             "How do you initialize a const as an async lambda function?"
                         }
                     ]
@@ -3094,11 +3497,31 @@
                 data: {
                     completion: { type: "chat", content: "" },
                     messages: [
-                        { role: "system", tokenCount: '191', content:
+                        { role: "system", tokens: '191', content:
                             `You are a digital assistant and helper process designed by Anthropic, operating as an intelligent search engine, with the goal of solving a problem for a user. If possible, infer what the user is trying to figure out from their search query and provide the direct solution they're looking for.\nFor instance, the search query "python datetime set timezone" may be met with "Import \`pytz\` and set the \`tzinfo\` field of a \`datetime.datetime\` object to say \`pytz.timezone('Europe/Berlin')\`.". Be concise, imperative, and to-the-point, do not repeat the user's query, and do not mention obvious things such as "Remember to replace 'Europe/Berlin' with your actual timezone". Should the user initiate further conversation and ask for more details, stay concise at first, listing solutions rather than background info until the user themselves broadens the conversation.\n\nYou are now connected with a user.\nSearch query:`
                         },
-                        { role: "user", tokenCount: '7', content:
+                        { role: "user", tokens: '7', content:
                             "unescape and parse json from stdin"
+                        }
+                    ]
+                }
+            }
+        },
+        "Sample Prompts": {
+            immutable: true,
+            order: 4,
+            state: {
+                settings: {},
+                data: {
+                    completion: { type: "chat", content: "" },
+                    messages: [
+                        { role: "system", tokens: '10', content:
+                            `
+                            `
+                        },
+                        { role: "user", tokens: '10', content:
+                            `
+                            `
                         }
                     ]
                 }
@@ -3107,9 +3530,18 @@
     };
 
 /**                STATES AND CONSTANTS                **/
+    const dict = Object.fromEntries;
+    const list = (X) => isObject(X) ? Object.entries(X) : X;
 
     Object.prototype.items = function() {
-        return Object.entries(this);
+        return list(this);
+    }
+
+    Object.prototype.filter = function(fn) {
+        return dict(list(this).filter(([k, v]) => fn(k, v)));
+    }
+    Object.prototype.map = function(fn) {
+        return dict(list(this).map(([k, v]) => [k, fn(k, v)]));
     }
 
     Array.prototype.last = function() {
@@ -3117,14 +3549,13 @@
     }
 
     Array.prototype.mapping = function(fn) {
-        return Object.fromEntries(this.map((key) => [key, fn(key)]));
+        return dict(this.map((key) => [key, fn(key)]));
     }
 
     const constant = (x) => (...args) => x;
     let selectedCell = null;
     let didLastSave = true;
     let editMode = false;
-
     let stateHistory = [];
     let maxHistoryLength = 5; // Maximum states to keep in history
 
@@ -3165,6 +3596,252 @@
         renderMathInElement(elem, {delimiters: mathDelimiters});
     };
 
+
+/**                UTILITIES                **/
+
+    const Seq = (fn) =>
+        (x, ...args) => args.length === 0 ? fn(x) : Seq(fn(x))(args[0], ...args.slice(1));
+
+    const Id = (x) => x;
+    const log = (x) => { console.log(x); return x; }
+	const Prod = Seq( (fs) => (xs) => Object.entries(xs).filter(([i, x]) => fs[i] !== undefined).map(([i, x]) => fs[i](x)) );
+
+	// const getitem = (i) => (xs) => xs[i];
+
+	function getItem(xs, idx) {
+		// Returns the item at index idx of xs. Handles negative indices, returns null if out of bounds.
+		if (typeof xs === "string") {
+			return getItem(xs.split(''), idx);
+		}
+		if (idx < 0) {
+			idx = xs.length + idx;
+		}
+		if (xs.length === 0 || idx < 0 || idx >= xs.length) {
+			return null;
+		}
+		return xs[idx];
+	}
+
+	const apply = Seq( (f) => (x) => f(x) );
+	const applyTo = Seq( (x) => (f) => f(x) );
+	const map = Seq( (f) => (xs) => xs?.map !== null ? xs.map(f) : f(xs) );
+	const filter = Seq( (f) => (xs) => xs.filter(f) );
+
+	const objMap = Seq( (f) => (obj) => Object.fromEntries(Object.entries(obj).map(Prod([Id, f]))) );
+
+	const zip = (xs, ys) => xs.map((x, i) => [x, ys[i]]);
+	const unzip = (xs) => [ xs.map(x => x[0]), xs.map(x => x[1]) ];
+
+	const zipObj = (ks, vs) => Object.fromEntries(zip(ks, vs));
+	const unzipObj = (kvs) => [Object.keys(k), Object.values(v)];
+
+    const isArray = Array.isArray;
+    const isString = (x) => typeof x === 'string';
+    const isFunc = (x) => typeof x === 'function';
+    const isObject = (x) => typeof x === 'object' && !isArray(x) && !isFunc(x);
+
+    const getId = (id) => document.getElementById(id) || null;
+    const getValue = (inputId) => {
+        // handle text inputs, textareas, selects, checkboxes, and radio buttons
+        const input = getId(inputId);
+        if (!input) return null;
+        if (input.tagName === 'INPUT' && input.type === 'text') return input.value;
+        if (input.tagName === 'TEXTAREA') return input.value;
+        if (input.tagName === 'SELECT') return input.value;
+        if (input.tagName === 'INPUT' && ['checkbox', 'radio'].includes(input.type)) return input.checked;
+        return null;
+    }
+
+    const queryAll = (selector) => Array.from(document.querySelectorAll(selector));
+    const query = (selector) => document.querySelector(selector);
+    const forEach = (obj, fn, filter = (...args) => true) => {
+        if (isArray(obj))
+            return obj.filter(x => filter(x)).forEach(x => fn(x));
+
+        if (isObject(obj)) {
+            return Object.entries(obj)
+                .filter(([k, v]) => filter(k, v))
+                .forEach(([k, v]) => fn(k, v));
+        }
+    }
+
+    const applyPatches = (el, patches) =>
+        Object.entries(patches).forEach(([k, v]) =>
+            Object.defineProperty(el.prototype, k,
+                typeof v === 'string' ? {
+                    get: () => this[v],
+                    set: (newVal) => { this[v] = newVal; }
+                } : {
+                    value: (...args) => v(this, ...args)
+                }
+            )
+        );
+    const inheritStatic = (el, staticFn, newKey = null) =>
+        applyPatches(el, {[newKey || staticFn]: el[staticFn]});
+
+    // Make static methods available as instance methods
+    inheritStatic(Object, 'entries');  // obj.entries()
+    inheritStatic(Object, 'keys');     // obj.keys()
+    inheritStatic(Object, 'values');   // obj.values()
+
+    function chain(x) {
+        /* A generalized map function that works on arrays, objects, and single values */
+        /* Determines the type of x and applies the appropriate chain function */
+        const chainFn = fn => ((arg) => isArray(arg) ? arg.map(fn) : fn(arg));
+        if(isObject(x)) return objMap(chainFn, x);
+        if(isArray(x)) return x.map(chainFn);
+        return chainFn(x);
+    }
+
+    const Poly = Seq( (f) => (X) => {
+        // we think of Poly as making a function run in parallel on an indexed collection of inputs via postcomposition
+        if(isArray(X)) return X.map(f);
+        if(isObject(X)) return objMap(f, X);
+        if(isFunc(X)) return (Y) => f(X(Y));
+        return f(X);
+    } );
+
+    const objectify = Seq(
+        (defaultObj) => (objFn) => Object.assign(objFn, objFn(defaultObj))
+    );
+
+    const parameterize = (objFnFn) => Object.assign(
+        (param) => chain( objMap(applyTo(param), objFnFn) ),
+        objMap(Seq, objFnFn)
+    );
+
+    function getItem(arr, idx) {
+        // Returns the item at index idx of arr. Handles negative indices, returns null if out of bounds.
+        if (isArray(idx)) { // nested lookups
+            if (idx.length === 0)
+                return arr;
+            return getItem(getItem(arr, idx[0]), idx.slice(1));
+        }
+        if (isObject(idx)) { // treat object as mapping from strings to keys of arr, and replace each key with its value
+            return objMap((key) => getItem(arr, key), idx);
+        }
+        if (arr === null || arr === undefined) {
+            return arr;
+        }
+        if (typeof arr === "string") {
+            return getItem(arr.split(''), idx);
+        }
+        if (idx < 0) {
+            idx = arr.length + idx;
+        }
+        if (arr.length === 0 || idx < 0 || idx >= arr.length) {
+            return null;
+        }
+        return arr[idx];
+    }
+
+    const localPatches = {
+        Element: {
+            prev: "previousElementSibling",
+            next: "nextElementSibling",
+            parent: "parentNode",
+            first: "firstElementChild",
+            last: "lastElementChild",
+            query: "querySelector",
+            queryAll: "querySelectorAll",
+            getId: "getElementById",
+            // Viewport coordinates (getBoundingClientRect)
+            x0: el => el.getBoundingClientRect().left,
+            y0: el => el.getBoundingClientRect().top,
+            w0: el => el.getBoundingClientRect().width,
+            h0: el => el.getBoundingClientRect().height,
+
+            // Document coordinates (including scroll)
+            x: el => el.getBoundingClientRect().left + window.scrollX,
+            y: el => el.getBoundingClientRect().top + window.scrollY,
+
+            // Relative to parent (offset)
+            dx: "offsetLeft",
+            dy: "offsetTop",
+            dw: "offsetWidth",
+            dh: "offsetHeight",
+
+            // Client area
+            cx: "clientLeft",
+            cy: "clientTop",
+            cw: "clientWidth",
+            ch: "clientHeight"
+        },
+    };
+    applyPatches(Element, localPatches.Element);
+
+    const addClass = (selector, cls) => {
+        if (isArray(cls)) {
+            cls.forEach(c => addClass(selector, c));
+            return;
+        }
+        if (selector instanceof HTMLElement) {
+            selector.classList.add(cls);
+            return;
+        }
+        queryAll(selector).forEach(el => el.classList.add(cls));
+    }
+
+    const removeClass = (selector, cls) => {
+        if (isArray(cls)) {
+            cls.forEach(c => removeClass(selector, c));
+            return;
+        }
+        if (selector instanceof HTMLElement) {
+            selector.classList.remove(cls);
+            return;
+        }
+        queryAll(selector).forEach(el => el.classList.remove(cls));
+    }
+
+    const toggleClass = (selector, cls) => {
+        if (isArray(cls)) {
+            cls.forEach(c => toggleClass(selector, c));
+            return;
+        }
+        if (selector instanceof HTMLElement) {
+            selector.classList.toggle(cls);
+            return;
+        }
+        queryAll(selector).forEach(el => el.classList.toggle(cls));
+    }
+
+    function getLocal(key) {
+        if (isString(key))
+            return localStorage.getItem(key);
+        if (isArray(key) && key.length > 0) {
+            let obj = JSON.parse(localStorage.getItem(key[0]));
+            for (let i = 1; i < key.length; i++) {
+                if (obj === null || typeof obj !== 'object')
+                    return null;
+                obj = obj[key[i]];
+            }
+            return obj;
+        }
+    }
+
+    function setLocal(key, value) {
+        if (isString(key)) {
+            if (isArray(value) || isObject(value))
+                localStorage.setItem(key, JSON.stringify(value));
+            else
+                localStorage.setItem(key, value);
+        }
+        else if (isArray(key) && key.length > 0) {
+            let obj = JSON.parse(localStorage.getItem(key[0])) || {};
+            let current = obj;
+            for (let i = 1; i < key.length - 1; i++) {
+                if (!(key[i] in current))
+                    current[key[i]] = {};
+                current = current[key[i]];
+            }
+            current[key[key.length - 1]] = value;
+            localStorage.setItem(key[0], JSON.stringify(obj));
+        }
+        return value;
+    }
+
+
     const $inputs = {
         get: (id) => {
             let el = getId(id);
@@ -3174,66 +3851,76 @@
         },
         set: (id, value) => {
             if (value === undefined || value === null) return;
-            let el = getId(id);
-            if (el.type == 'checkbox' || el.type == 'radio')
-                el.checked = (value == 'true' || value == true);
-            else
-                el.value = value;
+            // let el = getId(id);
+            queryAll("#" + id + ", ." + id).forEach(el => {
+                if (el.type == 'checkbox' || el.type == 'radio')
+                    el.checked = (value == 'true' || value == true);
+                else
+                    el.value = value;
+            })
         },
         saveAllOptions: () => {
-            const options = queryAll(".option").map(x=>x.getAttribute("id"));
-            options.forEach(id => {
-                setLocal(id, $inputs.get(id));
-            });
+            queryAll(".option")
+                .map(x=>x.id)
+                .forEach(id => setLocal(id, $inputs.get(id)));
         },
         checkAvailability: () => {
-            const keyList = queryAll(".secret.key").map(x=>x.getAttribute("id"));
+            const keyList = queryAll(".secret.key").map(x=>x.id);
             const available = keyList.mapping(id => $inputs.get(id).trim());
             available["customKey"] = true;
             const hidden = keyList.mapping(id => $inputs.get(id) == "hide");
             const selectedModels = ["chat", "text"].map(type => {
                 const typeId = type == "chat" ? "modelChat" : "modelText";
-                const modelSelect = getId(typeId);
-                Array.from(modelSelect.children).forEach(option => {
-                    const keyId = $inputs.providerKeyId(
-                        $models[type][option.value].provider
-                    );
-                    option.disabled = !available[keyId];
-                    option.hidden = hidden[keyId];
+                let value = null;
+                queryAll("." + typeId).forEach(modelSelect => {
+                    Array.from(modelSelect.children).forEach(option => {
+                        let data = $models[type][option.value];
+                        const keyId = $inputs.providerKeyId(
+                            data.provider
+                        );
+                        option.disabled = !available[keyId];
+                        option.hidden = hidden[keyId] || ($inputs.get("paretoFrontier") && !data.pareto);
+                    });
+                    if ((value === null) && modelSelect?.value) {
+                        value = modelSelect.value;
+                    }
                 });
-                return modelSelect?.value;
+                return (value === null ? undefined : value);
             });
 
             ["exaSearchBtn", "findSimilarSitesBtn"].forEach(id => {
-                getId(id).disabled = !available["exaKey"];
-                getId(id).inert = !available["exaKey"];
-                getId(id).hidden = hidden["exaKey"];
+                let obj = getId(id);
+                obj.disabled = !available["exaKey"];
+                obj.inert = !available["exaKey"];
+                obj.hidden = hidden["exaKey"];
             });
 
             const fimAvailable = $models["text"][selectedModels[1]]?.extra?.includes("suffix");
-            getId("fimCompletionBtn").disabled = !fimAvailable;
-            getId("fimCompletionBtn").inert = !fimAvailable;
+            let obj = getId("fimCompletionBtn");
+            obj.disabled = !fimAvailable;
+            obj.inert = !fimAvailable;
 
         },
         loadAllOptions: async () => {
-            const options = queryAll(".option").map(x=>x.getAttribute("id"));
-            options.forEach(id => {
-                $inputs.set(id, getLocal(id));
-            });
+            queryAll(".option")
+                .map(x=>x.id)
+                .forEach(id => $inputs.set(id, getLocal(id)));
             // set default values for radio buttons
             if (!autosummarizers.some(id => getId(id)?.checked)) {
                 getId('autoSummarizeGPT').checked = true;
             }
             $inputs.checkAvailability();
             toggleTokenVisibility();
+            if ($inputs.get('seamlessMode'))
+                await toggleSeamless(true); // the ui is initiated in non-seamless mode by default, so no point setting it to false
         },
         saveAllApiKeys: () => {
-            const secretList = queryAll(".secret").map(x=>x.getAttribute(("id")));
+            const secretList = queryAll(".secret").map(x=>x.id);
             setLocal('keys', secretList.mapping($inputs.get));
             $inputs.checkAvailability();
         },
         loadAllApiKeys: async () => {
-            const secretList = queryAll(".secret").map(x=>x.getAttribute(("id")));
+            const secretList = queryAll(".secret").map(x=>x.id);
             if(!getLocal('keys')) {
                 return setLocal('keys', secretList.mapping(constant('')));
             }
@@ -3250,38 +3937,94 @@
                 "content",
                 "author",
                 "label",
-                "tokenCount",
+                "tokens",
                 "data",
                 "id",
+                "toolId",
+                "toolChoice",
+                "schema",
+                "swipe",
                 "up",
                 "down",
                 "left",
                 "right",
             ],
+            visible: [
+                "author",
+                "label",
+                "tokens",
+            ],
+            editable: [
+                "author",
+                "label",
+            ],
         },
         attrDefaults: {
             messages: {
-                "role": "user",
-                "content": "",
-                "author": "",
-                "label": "",
-                "tokenCount": "",
-                "data": "",
-                "id": "",
-                "up": "",
-                "down": "",
-                "left": "",
-                "right": "",
+
             },
         },
         classes: {
             messages: [
                 "disabled",
+                "enabled",
                 "condensed",
                 "expanded",
-                "selected",
                 "collapsed",
+                "uncollapsed",
+                "selected",
+                "tool-message",
+                "structured-output",
             ],
+            operations: {
+                delete: { icon: 'circleX', snapshot: true, effect: 'active' },
+                disable: {
+                    icon: 'eye',
+                    opposite: 'enable',
+                    default: false,
+                    effect: 'active',
+                },
+                enable: {
+                    icon: 'eyeOff',
+                    opposite: 'disable',
+                    default: true,
+                    effect: 'active',
+                },
+                condense: {
+                    icon: 'chevronsUpDown',
+                    opposite: 'expand',
+                    default: false,
+                    effect: 'passive',
+                },
+                expand: {
+                    icon: 'chevronsDownUp',
+                    opposite: 'condense',
+                    default: true,
+                    effect: 'passive',
+                },
+                collapse: {
+                    icon: 'chevronDown',
+                    opposite: 'uncollapse',
+                    default: false,
+                    effect: 'passive',
+                },
+                uncollapse: {
+                    icon: 'chevronUp',
+                    opposite: 'collapse',
+                    default: true,
+                    effect: 'passive',
+                },
+                up: {
+                    icon: 'chevronUp',
+                    snapshot: true,
+                    effect: 'active',
+                },
+                down: {
+                    icon: 'chevronDown',
+                    snapshot: true,
+                    effect: 'active',
+                },
+            }
         },
         defaults: {
             temperature: 0.5,
@@ -3306,6 +4049,12 @@
                 return "customKey";
             return provider.toLowerCase().split("_")[0] + "Key";
         },
+    };
+
+    $inputs.attrDefaults.messages = {
+        ...Object.fromEntries($inputs.attributes.messages.map(p => [p, ''])),
+        role: 'user',
+        data: '{}',
     };
 
 /**                CONSTANT STRINGS                **/
@@ -3590,113 +4339,65 @@
             },
 
             messageBlock: (options) => {
-                const role = options.role || 'user';
-                const author = options.author || '';
-                const label = options.label || '';
-                const content = options.content || '';
-                const tokenCount = options.tokenCount || '';
-                const data = options.data || {};
-                const id = options.id || '';
-                const up = options.up || '';
-                const down = options.down || '';
-                const left = options.left || '';
-                const right = options.right || '';
+                const attrValues = Object.fromEntries(
+                    $inputs.attributes.messages.map(p =>
+                        [p, options[p] || $inputs.attrDefaults.messages[p]]
+                    )
+                );
                 const messageBlock = create('div', { class: 'message-block' });
                 const controlDiv = create('div', { class: 'message-control' });
-                const contentDiv = create('div', {
-                    class: 'message-content',
-                    role: role,
-                    tokenCount: tokenCount,
-                    content: content,
-                    author: author,
-                    label: label,
-                    data: data,
-                    id: id,
-                    up: up,
-                    down: down,
-                    left: left,
-                    right: right,
-                });
-                contentDiv.innerHTML = renderMarked(content);
+                const contentDiv = create('div', { class: 'message-content', ...attrValues });
+
+                contentDiv.innerHTML = renderMarked(attrValues.content);
                 renderMath(contentDiv);
-                const classesToAdd = ["disabled", "enabled", "condensed", "expanded", "collapsed", "uncollapsed", "selected"].filter(cls => options[cls]);
+                const classesToAdd = $inputs.classes.messages.filter(cls => options[cls]);
                 if (classesToAdd.length)
                     contentDiv.classList.add(...classesToAdd);
 
-                const swipeLeft = createButton(
-                    constants.symbols.chevronLeft,
-                    () => swipeLeft(contentDiv),
-                    ['swipe-button']
-                );
-                const swipeRight = createButton(
-                    constants.symbols.chevronRight,
-                    () => swipeRight(contentDiv),
-                    ['swipe-button']
-                );
-                const swipeNum = create('span', { class: 'swipe-number' });
-                swipeNum.textContent = contentDiv.getAttribute('swipe') || '';
-                const swipeDiv = create('div', { class: 'swipe-container' }, [swipeLeft, swipeNum, swipeRight]);
-                contentDiv.appendChild(swipeDiv);
+                const sym = (name) => constants.symbols[name];
+                const arm = (input) => (fn, ...args) => {return () => fn(input, ...args)};
+                const divOpn = arm(contentDiv);
+                const blockOpn = arm(messageBlock);
 
-                const roleButton = createButton(
-                    contentDiv.getAttribute('role'),
-                    () => cycleRole(contentDiv),
-                    ['role-button']
-                );
-                roleButton.dataset.role = contentDiv.getAttribute('role');
-                const deleteButton = createButton(
-                    constants.symbols.circleX,
-                    () => deleteCell(contentDiv),
-                    ['control-button', 'delete-button']
-                );
-                const moveUpButton = createButton(
-                    constants.symbols.chevronUp,
-                    () => moveNode(messageBlock, 'up'),
-                    ['control-button', 'move-up-button']
-                );
-                const moveDownButton = createButton(
-                    constants.symbols.chevronDown,
-                    () => moveNode(messageBlock, 'down'),
-                    ['control-button', 'move-down-button']
-                );
-                const condenseButton = createButton(
-                    constants.symbols.chevronsDownUp,
-                    () => toggleCondense(contentDiv, condenseButton),
-                    ['control-button', 'condense-button']
-                );
-                const enableButton = createButton(
-                    constants.symbols.eyeOff,
-                    () => toggleEnable(contentDiv, enableButton),
-                    ['control-button', 'enable-button']
-                );
-                const collapseButton = createButton(
-                    constants.symbols.chevronUp,
-                    () => toggleCollapse(contentDiv, collapseButton),
-                    ['control-button', 'collapse-button']
-                );
-                const authorDiv = create(
-                    'div',
-                    { class: 'control-row-text-field author-info' },
-                );
-                authorDiv.textContent = author || '';
-                authorDiv.contentEditable = true;
-                const labelDiv = create(
-                    'div',
-                    { class: 'control-row-text-field label-info' },
-                );
-                labelDiv.textContent = label || '';
-                labelDiv.contentEditable = true;
-                const tokenDiv = create(
-                    'div',
-                    { class: 'token-info' }
-                );
-                tokenDiv.textContent = contentDiv.tokenCount || '';
+                // const swipeLeft = createButton(':chevronLeft', () => swipeLeft(contentDiv), ['swipe-button']);
+                // const swipeRight = createButton(':chevronRight', () => swipeRight(contentDiv), ['swipe-button']);
+                // const swipeNum = create('span', { class: 'swipe-number' });
+                // swipeNum.textContent = attrValues.swipe || '';
+
+                // const swipeDiv = create('div', { class: 'swipe-container' }, [swipeLeft, swipeNum, swipeRight]);
+                // contentDiv.appendChild(swipeDiv);
+
+                const roleButton = createButton(attrValues.role, (button) => () => cycleRole(contentDiv), ['role-button']);
+                const deleteButton = createButton(':circleX', (button) => async () => await deleteCell(contentDiv), ['control-button', 'delete-button']);
+                $inputs.classes.operations
+                    .filter(opn => opn?.default === false)
+                    .map(opn => {
+                        const button = createButton(':' + opn.icon, (button) => () => toggleOperation(contentDiv, opn.opposite), ['control-button', opn.name + '-button']);
+                        button.dataset.operation = opn.opposite;
+                        return button;
+                    });
+
+                const moveUpButton = createButton(':chevronUp', (button) => () => moveNode(contentDiv, 'up'), ['control-button', 'move-up-button']);
+                const moveDownButton = createButton(':chevronDown', (button) => () => moveNode(contentDiv, 'down'), ['control-button', 'move-down-button']);
+                const condenseButton = createButton(':chevronsDownUp', (button) => () => toggleCondense(contentDiv, button), ['control-button', 'condense-button']);
+                const enableButton = createButton(':eye', (button) => () => toggleEnable(contentDiv, button), ['control-button', 'enable-button']);
+                const collapseButton = createButton(':chevronUp', (button) => () => toggleCollapse(contentDiv, button), ['control-button', 'collapse-button']);
+                const divs = $inputs.attributes.visible.map( (param) => {
+                    const editable = $inputs.attributes.editable.includes(param);
+                    const div = create('div', {
+                        class: (editable ? 'control-row-text-field ' : '') + param + '-info'
+                    });
+                    div.textContent = attrValues[param] || '';
+                    div.contentEditable = editable;
+                    return div;
+                });
+
                 const row1 = create(
                     'div',
                     { class: 'control-row' },
                     [
                         roleButton,
-                        authorDiv, labelDiv, tokenDiv,
+                        ...divs,
                         moveUpButton, moveDownButton,
                         collapseButton, condenseButton, enableButton,
                         deleteButton
@@ -3705,9 +4406,9 @@
                 controlDiv.appendChild(row1);
 
                 messageBlock.append(controlDiv, contentDiv);
-                requestAnimationFrame(() => {
+                requestAnimationFrame(async () => {
                     addEventListeners(messageBlock);
-                    updateTokenCount(messageBlock);
+                    await updateTokenCount(messageBlock, true, attrValues.tokens);
                 });
                 return messageBlock;
             },
@@ -3743,220 +4444,6 @@
             .map(x => String.fromCharCode(x + (x < 97 ? 65 : 0)))
             .join("").slice(-n);
     };
-
-/**                UTILITIES                **/
-
-    const collapse = (fn) => (a, b=null) => b===null ? fn(a) : fn(a)(b);
-    const id = (x) => x;
-    const log = (x) => { console.log(x); return x; }
-
-    const isArray = Array.isArray;
-    const isString = (x) => typeof x === 'string';
-    const isFunc = (x) => typeof x === 'function';
-    const isObject = (x) => typeof x === 'object' && !isArray(x) && !isFunc(x);
-
-    const getId = (id) => document.getElementById(id) || null;
-    const getValue = (inputId) => {
-        // handle text inputs, textareas, selects, checkboxes, and radio buttons
-        const input = getId(inputId);
-        if (!input) return null;
-        if (input.tagName === 'INPUT' && input.type === 'text') return input.value;
-        if (input.tagName === 'TEXTAREA') return input.value;
-        if (input.tagName === 'SELECT') return input.value;
-        if (input.tagName === 'INPUT' && ['checkbox', 'radio'].includes(input.type)) return input.checked;
-        return null;
-    }
-
-    const queryAll = (selector) => Array.from(document.querySelectorAll(selector));
-    const query = (selector) => document.querySelector(selector);
-    const forEach = (obj, fn, filter = null) => {
-        if (filter === null) {
-            filter = (...args) => true;
-        }
-
-        if (isObject(obj)) {
-            Object.entries(obj)
-                .filter(([k, v]) => filter(k, v))
-                .forEach(([k, v]) => fn(k, v));
-            return;
-        }
-
-        if (isArray(obj)) {
-            obj
-                .filter(x => filter(x))
-                .forEach(x => fn(x));
-            return;
-        }
-    }
-
-    const applyPatches = (elem, patches) =>
-        Object.entries(patches).forEach(([k,v]) =>
-            Object.defineProperty(elem.prototype, k,
-                typeof v === 'string' ?
-                    {
-                        get() { return this[v]; },
-                        set(newVal) { this[v] = newVal; }
-                    } :
-                    {
-                        value: function(...args) { return v(this, ...args); }
-                    }
-            )
-        );
-    const inheritStatic = (elem, fnAttr, as = null) =>
-        applyPatches(elem, {[as || fnAttr]: elem[fnAttr]});
-
-    // Make static methods available as instance methods
-    inheritStatic(Object, 'entries');  // obj.entries()
-    inheritStatic(Object, 'keys');     // obj.keys()
-    inheritStatic(Object, 'values');   // obj.values()
-
-    const localPatches = {
-        Element: {
-            prev: "previousElementSibling",
-            next: "nextElementSibling",
-            parent: "parentNode",
-            first: "firstElementChild",
-            last: "lastElementChild",
-            query: "querySelector",
-            queryAll: "querySelectorAll",
-            getId: "getElementById",
-            // Viewport coordinates (getBoundingClientRect)
-            x0: el => el.getBoundingClientRect().left,
-            y0: el => el.getBoundingClientRect().top,
-            w0: el => el.getBoundingClientRect().width,
-            h0: el => el.getBoundingClientRect().height,
-
-            // Document coordinates (including scroll)
-            x: el => el.getBoundingClientRect().left + window.scrollX,
-            y: el => el.getBoundingClientRect().top + window.scrollY,
-
-            // Relative to parent (offset)
-            dx: "offsetLeft",
-            dy: "offsetTop",
-            dw: "offsetWidth",
-            dh: "offsetHeight",
-
-            // Client area
-            cx: "clientLeft",
-            cy: "clientTop",
-            cw: "clientWidth",
-            ch: "clientHeight"
-        }
-    };
-    applyPatches(Element, localPatches.Element);
-
-    const addClass = (selector, cls) => {
-        if (isArray(cls)) {
-            cls.forEach(c => addClass(selector, c));
-            return;
-        }
-        if (selector instanceof HTMLElement) {
-            selector.classList.add(cls);
-            return;
-        }
-        queryAll(selector).forEach(el => el.classList.add(cls));
-    }
-
-    const removeClass = (selector, cls) => {
-        if (isArray(cls)) {
-            cls.forEach(c => removeClass(selector, c));
-            return;
-        }
-        if (selector instanceof HTMLElement) {
-            selector.classList.remove(cls);
-            return;
-        }
-        queryAll(selector).forEach(el => el.classList.remove(cls));
-    }
-
-    const toggleClass = (selector, cls) => {
-        if (isArray(cls)) {
-            cls.forEach(c => toggleClass(selector, c));
-            return;
-        }
-        if (selector instanceof HTMLElement) {
-            selector.classList.toggle(cls);
-            return;
-        }
-        queryAll(selector).forEach(el => el.classList.toggle(cls));
-    }
-
-    function chain(x) {
-        /* Determines the type of x and applies the appropriate chain function */
-        const chainFn = fn => ((arg) => isArray(arg) ? arg.map(fn) : fn(arg));
-        if(isObject(x)) return objMap(chainFn, x);
-        if(isArray(x)) return x.map(chainFn);
-        return chainFn(x);
-    }
-
-    const objectify = collapse(
-        (defaultObj) => (objFn) => Object.assign(objFn, objFn(defaultObj))
-    );
-
-    const parameterize = (objFnFn) => Object.assign(
-        (param) => chain( objMap(applyTo(param), objFnFn) ),
-        objMap(collapse, objFnFn)
-    );
-
-    function getItem(arr, idx) {
-        // Returns the item at index idx of arr. Handles negative indices, returns null if out of bounds.
-        if (isArray(idx)) { // nested lookups
-            if (idx.length === 0)
-                return arr;
-            return getItem(getItem(arr, idx[0]), idx.slice(1));
-        }
-        if (isObject(idx)) { // treat object as mapping from strings to keys of arr, and replace each key with its value
-            return objMap((key) => getItem(arr, key), idx);
-        }
-        if (arr === null || arr === undefined) {
-            return arr;
-        }
-        if (typeof arr === "string") {
-            return getItem(arr.split(''), idx);
-        }
-        if (idx < 0) {
-            idx = arr.length + idx;
-        }
-        if (arr.length === 0 || idx < 0 || idx >= arr.length) {
-            return null;
-        }
-        return arr[idx];
-    }
-
-    function getLocal(key) {
-        if (isString(key))
-            return localStorage.getItem(key);
-        if (isArray(key) && key.length > 0) {
-            let obj = JSON.parse(localStorage.getItem(key[0]));
-            for (let i = 1; i < key.length; i++) {
-                if (obj === null || typeof obj !== 'object')
-                    return null;
-                obj = obj[key[i]];
-            }
-            return obj;
-        }
-    }
-
-    function setLocal(key, value) {
-        if (isString(key)) {
-            if (isArray(value) || isObject(value))
-                localStorage.setItem(key, JSON.stringify(value));
-            else
-                localStorage.setItem(key, value);
-        }
-        else if (isArray(key) && key.length > 0) {
-            let obj = JSON.parse(localStorage.getItem(key[0])) || {};
-            let current = obj;
-            for (let i = 1; i < key.length - 1; i++) {
-                if (!(key[i] in current))
-                    current[key[i]] = {};
-                current = current[key[i]];
-            }
-            current[key[key.length - 1]] = value;
-            localStorage.setItem(key[0], JSON.stringify(obj));
-        }
-        return value;
-    }
 
     const tree = {
         parent: ((node) => { return node.parentNode }),
@@ -4010,13 +4497,13 @@
 
 /**            DATA MODELS             **/
 
-const MsgBlock = {
+const Message = {
     // Selectors for different parts of the message block
     selectors: {
         block: '.message-block',
         content: '.message-content',
         control: '.message-control',
-        tokenInfo: '.token-info',
+        tokensInfo: '.tokens-info',
         roleButton: '.role-button'
     },
     // Data accessors
@@ -4024,13 +4511,13 @@ const MsgBlock = {
         ...Object.fromEntries(
                 $inputs.attributes.messages.map((attr) => [
                     attr,
-                    (element) => MsgBlock.get.contentDiv(element).getAttribute(attr)
+                    (element) => Message.get.contentDiv(element).getAttribute(attr)
                 ])
             ),
         ...Object.fromEntries(
                 $inputs.classes.messages.map((cls) => [
                     cls,
-                    (element) => MsgBlock.get.contentDiv(element).classList.contains(cls)
+                    (element) => Message.get.contentDiv(element).classList.contains(cls)
                 ])
             ),
         ...{
@@ -4038,19 +4525,19 @@ const MsgBlock = {
             contentDiv: (element) => {
                 if (element.classList.contains('message-content'))
                     return element;
-                return element.querySelector(MsgBlock.selectors.content);
+                return element.querySelector(Message.selectors.content);
             },
 
             // Get the block from a block, content div, or control div
             block: (element) => {
                 if (element.classList.contains('message-block'))
                     return element;
-                return element.closest(MsgBlock.selectors.block);
+                return element.closest(Message.selectors.block);
             },
             // Get content
-            content: (element) => MsgBlock.get.contentDiv(element).getAttribute('content') || buildText(MsgBlock.get.contentDiv(element)),
+            content: (element) => Message.get.contentDiv(element).getAttribute('content') || buildText(Message.get.contentDiv(element)),
 
-            text: (element) => MsgBlock.get.contentDiv(element).textContent,
+            text: (element) => Message.get.contentDiv(element).textContent,
         }
     },
 
@@ -4060,64 +4547,61 @@ const MsgBlock = {
             $inputs.attributes.messages.map(
             (attr) => [
                 attr,
-                (element, value) => MsgBlock.get.contentDiv(element).setAttribute(attr, value)
+                (element, value) => Message.get.contentDiv(element).setAttribute(attr, value)
             ])),
         ...Object.fromEntries(
             $inputs.classes.messages.map(
             (cls) => [
                 cls,
-                (element, value) => MsgBlock.get.contentDiv(element).classList.toggle(cls, value)
+                (element, value) => Message.get.contentDiv(element).classList.toggle(cls, value)
             ])),
         ...{
             role: (element, role) => {
-                const contentDiv = MsgBlock.get.contentDiv(element);
+                const contentDiv = Message.get.contentDiv(element);
                 contentDiv.setAttribute('role', role);
-                const roleButton = contentDiv.previousElementSibling.querySelector(MsgBlock.selectors.roleButton);
+                const roleButton = contentDiv.previousElementSibling.querySelector(Message.selectors.roleButton);
                 roleButton.textContent = role.charAt(0).toUpperCase();
-                roleButton.dataset.role = role;
             },
-            tokenCount: async (element, count) => {
-                const contentDiv = MsgBlock.get.contentDiv(element);
-                contentDiv.setAttribute('tokenCount', count);
-                const tokenInfo = contentDiv.previousElementSibling.querySelector(MsgBlock.selectors.tokenInfo);
-                if (tokenInfo)
-                    tokenInfo.textContent = count;
+            tokens: async (element, count) => {
+                const contentDiv = Message.get.contentDiv(element);
+                contentDiv.setAttribute('tokens', count);
+                const tokensInfo = contentDiv.previousElementSibling.querySelector(Message.selectors.tokensInfo);
+                if (tokensInfo)
+                    tokensInfo.textContent = count;
                 await updateTokenCost();
             },
             text: (element, value) => {
-                MsgBlock.get.contentDiv(element).textContent = value;
+                Message.get.contentDiv(element).textContent = value;
             },
             disabled: (element, value) => {
-                MsgBlock.get.contentDiv(element).classList.toggle('disabled', value);
+                Message.get.contentDiv(element).classList.toggle('disabled', value);
                 updateTokenCost();
             },
             selected: (element, value) => {
                 queryAll('.selected').forEach(el => el.classList.remove('selected'));
-                MsgBlock.get.contentDiv(element).classList.toggle('selected', value);
+                Message.get.contentDiv(element).classList.toggle('selected', value);
             },
             editing: (element, value) => {
-                MsgBlock.get.contentDiv(element).classList.toggle('editing', value);
-                MsgBlock.get.contentDiv(element).contentEditable = value;
+                Message.get.contentDiv(element).classList.toggle('editing', value);
+                Message.get.contentDiv(element).contentEditable = value;
             },
         }
     },
 
     // Operations
     operations: {
-        create: (options) => {
-            return constants.html.messageBlock(options);
-        },
+        create: (options) => constants.html.messageBlock(options),
         delete: async (element) => {
-            const block = MsgBlock.get.block(element);
+            const block = Message.get.block(element);
             if (block.previousElementSibling)
-                await selectCell(block.previousElementSibling.querySelector(MsgBlock.selectors.content));
+                await selectCell(block.previousElementSibling.querySelector(Message.selectors.content));
             else if (block.nextElementSibling)
-                await selectCell(block.nextElementSibling.querySelector(MsgBlock.selectors.content));
+                await selectCell(block.nextElementSibling.querySelector(Message.selectors.content));
             block.remove();
             updateTokenCost();
         },
         move: (element, direction) => {
-            const block = MsgBlock.get.block(element);
+            const block = Message.get.block(element);
             const sibling = direction === 'up' ? block.previousElementSibling : block.nextElementSibling;
             if (sibling) {
                 if (direction === 'up') {
@@ -4128,22 +4612,22 @@ const MsgBlock = {
             }
         },
         serialize: (element) => {
-            const contentDiv = MsgBlock.get.contentDiv(element);
+            const contentDiv = Message.get.contentDiv(element);
             return {
                 ...Object.fromEntries(
                     $inputs.attributes.messages.map(
-                    (attr) => [attr, MsgBlock.get[attr](element)]
+                    (attr) => [attr, Message.get[attr](element)]
                 )),
                 ...Object.fromEntries(
                     $inputs.classes.messages.map(
-                    (cls) => [cls, MsgBlock.get[cls](element)]
+                    (cls) => [cls, Message.get[cls](element)]
                 )),
             };
         },
         group: (elements) => {
             const row = constants.html.messageRow();
             elements.forEach(el => {
-                const block = MsgBlock.get.block(el);
+                const block = Message.get.block(el);
                 row.appendChild(block);
             });
             getId('messages')?.appendChild(row);
@@ -4160,7 +4644,7 @@ const MsgBlock = {
             row.remove();
         },
         format: (element, format) => {
-            const contentDiv = MsgBlock.get.contentDiv(element);
+            const contentDiv = Message.get.contentDiv(element);
             const range = window.getSelection().getRangeAt(0);
             if (range.commonAncestorContainer.parentNode !== contentDiv)
                 return;
@@ -4170,7 +4654,7 @@ const MsgBlock = {
             contentDiv.setAttribute('content', buildText(contentDiv));
         },
         indent: (element, direction = 'right') => {
-            const contentDiv = MsgBlock.get.contentDiv(element);
+            const contentDiv = Message.get.contentDiv(element);
             const lines = contentDiv.innerHTML.split('\n');
             const indentedLines = lines.map(line =>
                 direction === 'right' ?
@@ -4182,13 +4666,13 @@ const MsgBlock = {
         }
     },
     shortcuts: {
-        'Alt+G': (element) => MsgBlock.operations.group([element]),
-        'Alt+U': (element) => MsgBlock.operations.ungroup(element.closest('.message-row')),
-        'Tab': (element) => MsgBlock.operations.indent(element, 'right'),
-        'Shift+Tab': (element) => MsgBlock.operations.indent(element, 'left'),
-        'Ctrl+B': (element) => MsgBlock.operations.format(element, 'strong'),
-        'Ctrl+I': (element) => MsgBlock.operations.format(element, 'em'),
-        'Ctrl+`': (element) => MsgBlock.operations.format(element, 'code')
+        'Alt+G': (element) => Message.operations.group([element]),
+        'Alt+U': (element) => Message.operations.ungroup(element.closest('.message-row')),
+        //'Tab': (element) => Message.operations.indent(element, 'right'),
+        //'Shift+Tab': (element) => Message.operations.indent(element, 'left'),
+        'Ctrl+B': (element) => Message.operations.format(element, 'strong'),
+        'Ctrl+I': (element) => Message.operations.format(element, 'em'),
+        'Ctrl+`': (element) => Message.operations.format(element, 'code')
     }
 };
 
@@ -4224,38 +4708,42 @@ const MsgBlock = {
      */
     function serializeState() {
         const settings = {};
-        const options = queryAll(".option").map(x=>x.getAttribute("id"));
+        const options = queryAll(".option").map(x=>x.id);
         options.forEach(id => {
             const el = getId(id);
             settings[id] = $inputs.get(id);
         });
 
-        const messageArray = queryAll('#messages .message-content')
-            .map(el => {
-                if (!el.id)
-                    el.id = 'M' + randStr(4);
-                return ({
-                    ...Object.fromEntries(
-                        $inputs.attributes.messages.map(
-                            attr => [attr, el.getAttribute(attr)?.trim()]
-                    )),
-                    ...{ // special attribute serialization methods
-                        content: el.getAttribute('content') || buildText(el),
-                    },
-                    ...Object.fromEntries(
-                        $inputs.classes.messages.map(
-                            cls => [cls, el.classList.contains(cls)]
-                    )),
-                    ...{ // extra data
-                        classes: Array.from(el.classList),
-                        rowLabel: el.closest('.message-row').getAttribute('label'),
-                    }
-                });
+        const serializeMessage = (el) => {
+            if (el.classList.contains('message-block'))
+                el = el.querySelector('.message-content');
+            if (!el.id)
+                el.id = 'M' + randStr(4);
+            return ({
+                ...Object.fromEntries( // values of all generic message attributes (as defined by $inputs.attributes.messages)
+                    $inputs.attributes.messages.map(
+                        attr => [attr, el.getAttribute(attr)?.trim()]
+                )),
+                ...{ // special attribute serialization methods
+                    content: el.getAttribute('content') || buildText(el),
+                },
+                ...Object.fromEntries( // membership status for each generic message class (as defined by $inputs.classes.messages)
+                    $inputs.classes.messages.map(
+                        cls => [cls, el.classList.contains(cls)]
+                )),
+                ...{ // extra data
+                    classes: Array.from(el.classList),
+                    rowLabel: el.closest('.message-row')?.getAttribute('label'),
+                }
             });
+        };
+
+        const messageArray = queryAll('#messages .message-content')
+            .map(serializeMessage);
 
         const completion = {
             type: getId('modelChat')?.value ? 'chat' : 'text',
-            content: queryAll('#outputs .output')[0].getAttribute('content') || buildText(queryAll('#outputs .output')[0])
+            ...serializeMessage(queryAll('#outputs .output')[0])
         };
 
         const localVariables = queryAll('.variable-block.local')
@@ -4299,13 +4787,27 @@ const MsgBlock = {
                 row = constants.html.messageRow();
             }
 
+            const opnData = $inputs.classes.operations;
             const messageBlock = constants.html.messageBlock(msg);
             const contentDiv = messageBlock.querySelector('.message-content');
 
             $inputs.attributes.messages.forEach(attr => {
                 let value = msg[attr] || $inputs.attrDefaults.messages[attr];
                 contentDiv.setAttribute(attr, value);
-            })
+            });
+
+            Object.entries(opnData).filter(([k, v]) => v?.opposite).forEach(([name, data]) => {
+                const tense = name + (name.endsWith('d') ? 'ed' : 'd');
+                const oppName = data.opposite;
+                const oppTense = oppName + (name.endsWith('d') ? 'ed' : 'd');
+                const button = messageBlock.querySelector(`.${name}-button`);
+                const valid = data?.default === true && !contentDiv.classList.contains(oppTense) || contentDiv.classList.contains(tense);
+                if (button) {
+                    button.innerHTML = valid ?
+                        constants.symbols[opnData[oppName].icon] :
+                        constants.symbols[data.icon];
+                }
+            });
 
             contentDiv.innerHTML = renderMarked(msg.content);
             renderMath(contentDiv);
@@ -4318,8 +4820,12 @@ const MsgBlock = {
         const outputBlock = getId('outputs')?.querySelector(".output");
         outputBlock.setAttribute('content', data.completion.content);
         outputBlock.innerHTML = renderMarked(data.completion.content);
-        renderMath(outputBlock);
-        hljs.highlightAll();
+        if (Array.from(data.completion.content.matchAll(/\$/g)).length > 1) {
+            renderMath(outputBlock);
+        }
+        if (Array.from(data.completion.content.matchAll(/\`/g)).length > 1) {
+            hljs.highlightAll();
+        }
 
         // Clear existing variables
         const variablesList = getId('variables-list');
@@ -4340,6 +4846,7 @@ const MsgBlock = {
         const selectedCell = query(".selected") || query(".message-content");
         if (selectedCell)
             await selectCell(selectedCell);
+        await exitEditMode();
         // Defer snapshot to next frame
         requestAnimationFrame(() => snapshotState());
     }
@@ -4804,7 +5311,7 @@ const MsgBlock = {
     */
     function exportAll() {
         const exportData = {};
-        const options = queryAll(".option").map(x=>x.getAttribute("id"));
+        const options = queryAll(".option").map(x=>x.id);
         options.forEach(key => {
             exportData[key] = getLocal(key);
         });
@@ -5070,7 +5577,7 @@ const MsgBlock = {
             await selectCell(this.parentNode.querySelector('.message-content'));
         });
         contentDiv.ondblclick = async function(e) {
-            if (!editMode)
+            if (!editMode && !this.closest(".seamless"))
                 await enterEditMode(this);
         };
         contentDiv.onlostpointercapture = async function() {
@@ -5083,12 +5590,12 @@ const MsgBlock = {
      */
     function disableButtons() {
         completionLockedButtons.forEach(button => {
-                if ( !(
-                    getId("generateInNewBlock") &&
-                    ["chatCompletionBtn", "textCompletionBtn"].includes(button)
-                )) {
-                    getId(button).disabled = true;
-                }
+            if ( !(
+                getId("generateInNewBlock") &&
+                ["chatCompletionBtn", "textCompletionBtn"].includes(button)
+            )) {
+                getId(button).disabled = true;
+            }
         });
         completionShownButtons.forEach(button => {getId(button).style.display = 'inline-block';});
     }
@@ -5106,7 +5613,7 @@ const MsgBlock = {
      */
     async function stopCompletion(destination=null) {
         if (destination === null) {
-            queryAll(".generating").forEach(dest => stopCompletion(dest));
+            queryAll(".generating").forEach(async (dest) => await stopCompletion(dest));
             return;
         }
         if (destination.controller) {
@@ -5156,15 +5663,9 @@ const MsgBlock = {
         const messageBlock = constants.html.messageBlock(
             {
                 ...Object.fromEntries(
-                    $inputs.attributes.messages.map((attr) => [
-                        attr,
-                        options[attr] || '',
-                    ])
+                    $inputs.attributes.messages.map((attr) => [attr, options[attr] || ''])
                 ),
-                ...{
-                    role,
-                    content,
-                }
+                ...{role, content}
             }
         );
         if (after && after?.classList.contains("message-row")) {
@@ -5195,12 +5696,16 @@ const MsgBlock = {
      * @returns {HTMLButtonElement} - The created button element.
      */
     function createButton(content, onClick, classes = ['control-button']) {
+        if (typeof content === 'string' && content.startsWith(":") && constants.symbols[content.slice(1)]) {
+            // convention: if the content starts with a colon, it's a symbol name
+            content = constants.symbols[content.slice(1)];
+        }
         const button = document.createElement('button');
         for (let className of classes) {
             button.classList.add(className);
         }
         button.innerHTML = content;
-        button.onclick = onClick;
+        button.onclick = onClick(button);
         return button;
     }
 
@@ -5241,8 +5746,8 @@ const MsgBlock = {
         if (!reset) contentDiv.classList.toggle('condensed');
         if (button) {
             button.innerHTML = contentDiv.classList.contains('condensed') ?
-                constants.symbols.chevronsUpDown :
-                constants.symbols.chevronsDownUp;
+                constants.symbols.chevronsDownUp :
+                constants.symbols.chevronsUpDown;
         }
     }
 
@@ -5253,13 +5758,15 @@ const MsgBlock = {
      * @param {boolean} reset - Whether to force a specific state (true for disabled, false for enabled).
      */
     function toggleEnable(contentDiv, button, reset = false) {
-        snapshotState();
-        if (!reset) contentDiv.classList.toggle('disabled');
+        if (!reset) {
+            contentDiv.classList.toggle('disabled');
+        }
         if (button) {
             button.innerHTML = contentDiv.classList.contains('disabled') ?
                 constants.symbols.eyeOff :
                 constants.symbols.eye;
         }
+        updateTokenCount(contentDiv);
         updateTokenCost();
     }
 
@@ -5269,13 +5776,30 @@ const MsgBlock = {
      * @param {HTMLElement} button - The button element associated with the toggle.
      * @param {boolean} reset - Whether to force a specific state (true for collapsed, false for uncollapsed).
      */
+    ['collapse', 'uncollapse', 'disable', 'enable', 'condense', 'expand'].map( (opname) => {
+        const opfn = (contentDiv, button, reset = false) => {
+            const opnData = $inputs.classes.operations;
+            const tense = opname + (opname.endsWith('d') ? 'ed' : 'd');  // collapse -> collapsed, expand -> expanded
+            if (!reset) contentDiv.classList.toggle(tense);
+            if (button) {
+                button.innerHTML = contentDiv.classList.contains(tense) ?
+                    constants.symbols[opnData[opnData[opname].opposite].icon] :
+                    constants.symbols[opnData[opname].icon];
+            }
+            if (opnData[opname].effect === 'active') {
+                updateTokenCost();
+            }
+        };
+        return opfn;
+    });
+
     function toggleCollapse(contentDiv, button, reset = false) {
         if (!reset)
             contentDiv.classList.toggle('collapsed');
         if (button) {
             button.innerHTML = contentDiv.classList.contains('collapsed') ?
-                constants.symbols.chevronDown :
-                constants.symbols.chevronUp;
+                constants.symbols.chevronUp :
+                constants.symbols.chevronDown;
         }
     }
 
@@ -5286,16 +5810,27 @@ const MsgBlock = {
     async function selectCell(cell) {
         if (!queryAll('.message-content').length || !cell || selectedCell == cell)
             return;
-        if (cell.classList.contains('message-block') || cell.classList.contains('message-row'))
-            return selectCell(cell.querySelector('.message-content'));
+        if (cell.classList.contains('message-block') || cell.classList.contains('message-row')) {
+            let newCell = await selectCell(cell.querySelector('.message-content'));
+            return newCell;
+        }
         await exitEditMode();
         if (selectedCell) {
             selectedCell.classList.remove('selected');
-            selectedCell.removeAttribute('contenteditable');
+            if (!selectedCell.closest(".seamless")) {
+                selectedCell.removeAttribute('contenteditable');
+            } else {
+                selectedCell.contentEditable = true;
+            }
         }
         selectedCell = cell;
         queryAll('.selected').forEach(el => el.classList.remove('selected'));
         selectedCell.classList.add('selected');
+        if (!selectedCell.closest(".seamless")) {
+            selectedCell.setAttribute('contenteditable', 'false');
+        } else {
+            selectedCell.contentEditable = true;
+        }
         updateTextTokenCost(); // Update text token cost when a new cell is selected
     }
 
@@ -5311,7 +5846,6 @@ const MsgBlock = {
         cell.setAttribute('role', roles[nextIndex]);
         const roleButton = cell.previousElementSibling.querySelector('.role-button');
         roleButton.textContent = roles[nextIndex];
-        roleButton.dataset.role = roles[nextIndex];
     }
 
     /**
@@ -5431,17 +5965,22 @@ const MsgBlock = {
      * Enters edit mode for a cell, allowing the user to modify its content.
      * @param {HTMLElement} cell - The cell to enter edit mode for.
      */
-    async function enterEditMode(cell) {
-        snapshotState();
-        if (cell.classList.contains('message-block'))
-            return enterEditMode(cell.querySelector('.message-content'));
-        await selectCell(cell);
+    async function enterEditMode(cell, seamless = false) {
+        if (!seamless) snapshotState();
+        if (cell.classList.contains('message-block')) {
+            let newCell = await enterEditMode(cell.querySelector('.message-content'), seamless);
+            return newCell;
+        }
+        if (!seamless) await selectCell(cell);
         cell.innerText = cell.getAttribute('content') || buildText(cell);
-        editMode = true;
         cell.contentEditable = true;
-        cell.classList.add("editing");
+        editMode = true;
         cell.classList.remove("collapsed");  // trying to edit collapsed blocks messes up whitespace when they're rendered while being collapsed again
-        cell.focus();
+        if (!seamless) {
+            // happens by default; but if seamless is true, this function is called from toggleSeamless, and we don't want to single out a cell for editing
+            cell.classList.add("editing");
+            cell.focus();
+        }
     }
 
     /**
@@ -5449,19 +5988,56 @@ const MsgBlock = {
      * @param {HTMLElement} cell - The cell to exit edit mode for.
      */
     async function exitEditMode(cell = null) {
-        editMode = false;
-        let cur = cell ? [cell] : document.getElementsByClassName("editing");
-        for (let i = 0; i < cur.length; i++) {
-            const elem = cur[i];
-            elem.contentEditable = false;
-            elem.classList.remove("editing");
-            elem.setAttribute('content', elem.innerText);
-            elem.innerHTML = renderMarked(elem.innerText);
-            renderMath(elem);
-            hljs.highlightAll();
+        let cur = cell ? [cell] : queryAll(".editing, .message-content[contenteditable='true']");
+        // elements in seamless rows are always editable
+        // but we still need to update their content etc.
+        for (const elem of Array.from(cur)) {
+            if (elem.classList.contains("editing")) {
+                elem.classList.remove("editing");
+                elem.setAttribute('content', elem.innerText);
+            }
+            if (!elem.closest(".seamless")) {
+                editMode = false;
+                elem.contentEditable = false;
+                elem.innerHTML = renderMarked(elem.innerText);
+                if (Array.from(elem.innerText.matchAll(/\$/g)).length > 1) {
+                    renderMath(elem);
+                }
+                if (Array.from(elem.innerText.matchAll(/\`/g)).length > 1) {
+                    hljs.highlightAll();
+                }
+            } else {
+                elem.contentEditable = true;
+            }
             await updateTokenCount(elem, true);
         }
         snapshotState();
+    }
+
+    async function toggleSeamless(value) {
+        // toggle seamless mode for all message rows
+        let messageRows = queryAll('.message-row');
+        for (const row of messageRows) {
+            if (value) {
+                row.classList.add('seamless');
+            } else {
+                row.classList.remove('seamless');
+            }
+            const contents = row.querySelectorAll('.message-content');
+            for (const content of contents) {
+                if (value) {
+                    await enterEditMode(content, value);
+                } else {
+                    await exitEditMode(content);
+                }
+            }
+        }
+        if (value) {
+            editMode = true;
+        } else if (!query(".editing")) {
+            editMode = false;
+            await exitEditMode();
+        }
     }
 
     document.addEventListener('keydown', async function(e) {
@@ -5512,7 +6088,7 @@ const MsgBlock = {
                         e.preventDefault();
                         if (e.altKey) {
                             // shift + alt + arrow: join message
-                            joinNodes(selectedCell, up);
+                            await joinNodes(selectedCell, up);
                         } else {
                             // shift + arrow: move message
                             moveNode(selectedCell, up ? 'up' : 'down');
@@ -5655,7 +6231,9 @@ const MsgBlock = {
                     // enter: edit cell
                     case 'Enter':
                         e.preventDefault();
-                        enterEditMode(selectedCell);
+                        if (!selectedCell.closest(".seamless")) {
+                            await enterEditMode(selectedCell);
+                        }
                         break;
 
                     // letter: add message of given role
@@ -5751,7 +6329,8 @@ const MsgBlock = {
      */
     async function formMessageObject(contentDiv) {
         if (contentDiv?.classList.contains("message-block")) {  // we were given the block, so pick out the content div
-            return formMessageObject(contentDiv.querySelector(".message-content"));
+            let newMessageObject = await formMessageObject(contentDiv.querySelector(".message-content"));
+            return newMessageObject;
         }
         const validRoles = ["system", "developer", "assistant", "user", "tool"];
         const role = contentDiv.getAttribute('role');
@@ -5821,7 +6400,7 @@ const MsgBlock = {
                 doSnapshot = false,
                 after = after,
             );
-            destination = MsgBlock.get.contentDiv(msgBlock);
+            destination = Message.get.contentDiv(msgBlock);
         }
         return destination;
     }
@@ -5880,7 +6459,7 @@ const MsgBlock = {
         if (!key && info.provider != 'none') {
             destination.setAttribute('content', constants.text.enterAPIKey(info.provider));
             destination.innerHTML = renderMarked(constants.text.enterAPIKey(info.provider));
-            stopCompletion(destination);
+            await stopCompletion(destination);
             return;
         }
         try {
@@ -5914,6 +6493,7 @@ const MsgBlock = {
                 // repetition_penalty: parseFloat(getId('repetition_penalty')?.value),
                 // seed: parseInt(getId('seed')?.value),
             };
+
             ["temperature", "top_p", "top_k", "frequency_penalty", "presence_penalty", "repetition_penalty", "seed"].forEach(param => {
                 let value = getId(param)?.value;
                 if (value && value.trim() !== "") {
@@ -5928,6 +6508,23 @@ const MsgBlock = {
                     }
                 }
             });
+
+            // model-specified optional params
+            ["min_tokens"].forEach(param => {
+                let value = getId(param)?.value;
+                if (value && info.params && info.params.includes(param)) {
+                    try {
+                        if (["min_tokens"].includes(param)) {
+                            idParams[param] = parseInt(value);
+                        } else {
+                            idParams[param] = parseFloat(value);
+                        }
+                    } catch (e) {
+                        console.log(`Error parsing ${param}: ${e}`);
+                    }
+                }
+            });
+
             const payload = {
                 ...(info?.defaults || {}),
                 ...{
@@ -5972,7 +6569,7 @@ const MsgBlock = {
                 if (lastMsg.content == constants.text.roleDefaults[lastMsg.role]) {
                     destination.setAttribute(content, constants.text.errors.removeDefaultMessages);
                     destination.innerHTML = constants.text.errors.removeDefaultMessages;
-                    stopCompletion(destination);
+                    await stopCompletion(destination);
                     return;
                 }
                 if (lastMsg.role == "assistant" && info.provider.toLowerCase().includes("deepseek")) {
@@ -5986,7 +6583,7 @@ const MsgBlock = {
                 if (!payload.prompt) {
                     destination.setAttribute('content', constants.text.errors.noPrompt);
                     destination.innerHTML = renderMarked(constants.text.errors.noPrompt);
-                    stopCompletion(destination);
+                    await stopCompletion(destination);
                     return;
                 }
                 console.log(payload);
@@ -5996,13 +6593,13 @@ const MsgBlock = {
                     if (selectionIndex == -1) {
                         destination.setAttribute('content', constants.text.errors.noSelection);
                         destination.innerHTML = renderMarked(constants.text.errors.noSelection);
-                        stopCompletion(destination);
+                        await stopCompletion(destination);
                         return;
                     }
                     if (selectionIndex == enabledBlocks.length - 1) {
                         destination.setAttribute('content', constants.text.errors.fimNoSuffix);
                         destination.innerHTML = renderMarked(constants.text.errors.fimNoSuffix);
-                        stopCompletion(destination);
+                        await stopCompletion(destination);
                         return;
                     }
                     const suffixBlock = enabledBlocks[selectionIndex + 1];
@@ -6012,7 +6609,7 @@ const MsgBlock = {
                     if (payload.suffix == "") {
                         destination.setAttribute('content', constants.text.errors.fimNoSuffix);
                         destination.innerHTML = renderMarked(constants.text.errors.fimNoSuffix);
-                        stopCompletion(destination);
+                        await stopCompletion(destination);
                         return;
                     }
                 }
@@ -6058,7 +6655,10 @@ const MsgBlock = {
                     const lines = chunk.split('\n');
                     let next = '';
                     for (const line of lines) {
-                        if (line.startsWith('data:') && !line.includes('data: [DONE]')) {
+                        if (line.startsWith('data: [DONE]')) {
+                            continue;
+                        }
+                        if (line.startsWith('data:')) {
                             try {
                                 next = '';
                                 const data = JSON.parse(line.slice(5));
@@ -6099,10 +6699,10 @@ const MsgBlock = {
                                     //process.stdout.write(next || '');
                                     if (reasoningBlock) {
                                         // console.log(next);
-                                        MsgBlock.set.text(reasoningBlock, MsgBlock.get.text(reasoningBlock) + next || '');
-                                        // console.log(MsgBlock.get.text(reasoningBlock));
-                                        MsgBlock.set.content(reasoningBlock, MsgBlock.get.content(reasoningBlock) + next || '');
-                                        // console.log(MsgBlock.get.content(reasoningBlock));
+                                        Message.set.text(reasoningBlock, Message.get.text(reasoningBlock) + next || '');
+                                        // console.log(Message.get.text(reasoningBlock));
+                                        Message.set.content(reasoningBlock, Message.get.content(reasoningBlock) + next || '');
+                                        // console.log(Message.get.content(reasoningBlock));
                                     }
                                 }
                                 if (data?.usage) {
@@ -6118,11 +6718,13 @@ const MsgBlock = {
 
                                 // unprincipled hack to make models output parseable latex
                                 [
-                                    [/(\n+\s*\$\$\s*\n+)?(.*?)\n+\s*\$\$\s*\n+/g, "\n$1$2$$$$\n"],
+                                    [/(\n+\s*\$\$\s*?\n+)?(.*?)\n+\s*\$\$\s*?\n+/g, "\n$1$2$$$$\n"],
                                     [/\n\$ /g, "\n$$"],
                                     [/ \$\n/g, "$$\n"],
-                                    [/\n\s*\\\[\s/g, "\n$$$$"],
-                                    [/\n*\s\\\]\s*\n/g, "$$$$\n"],
+                                    [/\n\s*\\\[\s/g, " $$$$"],
+                                    [/\n*\s\\\]\s*\n/g, "$$$$ "],
+                                    [/\n\\\[\s*/g, " $$$$"],
+                                    [/\n*\s*\\\]\n/g, "$$$$ "],
                                     [/\s*\\\(\s/g, " $$"],
                                     [/\s\\\)\s*/g, "$$ "],
                                     [/\\\(\s*/g, " $$"],
@@ -6149,9 +6751,14 @@ const MsgBlock = {
                                     } catch {
                                         console.log("Incomplete event data: " + line);
                                         let content = '\n```\n' + line.slice(5) + '\n```\n';
-                                        const salvageIdx = line.search(/"content":/);
+                                        let salvageIdx = line.search(/"content":/);
+                                        let offsetIdx = '"content":'.length;
+                                        if (salvageIdx === 1) {
+                                            salvageIdx = line.search(/"text":/);
+                                            offsetIdx = '"text":'.length;
+                                        }
                                         if (salvageIdx !== -1) {
-                                            content = line.slice(salvageIdx + '"content":'.length);
+                                            content = line.slice(salvageIdx + offsetIdx);
                                             content = content.slice(content.search('"'));
                                             const endIdx = content.search(/[^\\]"/);
                                             if (endIdx !== -1) {
@@ -6184,9 +6791,14 @@ const MsgBlock = {
                             } catch {
                                 console.log("Incomplete event data: " + line);
                                 let content = '\n```\n' + line.slice(5) + '\n```\n';
-                                const salvageIdx = line.search(/"content":/);
+                                let salvageIdx = line.search(/"content":/);
+                                let offsetIdx = '"content":'.length;
+                                if (salvageIdx === 1) {
+                                    salvageIdx = line.search(/"text":/);
+                                    offsetIdx = '"text":'.length;
+                                }
                                 if (salvageIdx !== -1) {
-                                    content = line.slice(salvageIdx + '"content":'.length);
+                                    content = line.slice(salvageIdx + offsetIdx);
                                     content = content.slice(content.search('"'));
                                     const endIdx = content.search(/[^\\]"/);
                                     if (endIdx !== -1) {
@@ -6226,8 +6838,12 @@ const MsgBlock = {
                     output = data;
                 destination.setAttribute('content', output);
                 destination.innerHTML = renderMarked(output);
-                renderMath(destination);
-                hljs.highlightAll();
+                if (Array.from(output.matchAll(/\$/g)).length > 1) {
+                    renderMath(destination);
+                }
+                if (Array.from(output.matchAll(/\`/g)).length > 1) {
+                    hljs.highlightAll();
+                }
             }
 
         } catch (error) {
@@ -6235,18 +6851,22 @@ const MsgBlock = {
                 output += '\n\n' + constants.text.generationStopped;
             } else {
                 console.log(error);
-                output = constants.text.errors.generic(error.message);
+                output += '\n\n' + constants.text.errors.generic(error.message);
             }
         } finally {
-            stopCompletion(destination);
+            await stopCompletion(destination);
             destination.controller = null;
         }
         destination.setAttribute("content", output);
         destination.setAttribute("author", modelKey);
         destination.setAttribute("label", "");
         destination.innerHTML = renderMarked(output);
-        renderMath(destination);
-        hljs.highlightAll();
+        if (Array.from(output.matchAll(/\$/g)).length > 1) {
+            renderMath(destination);
+        }
+        if (Array.from(output.matchAll(/\`/g)).length > 1) {
+            hljs.highlightAll();
+        }
         destination.classList.remove("generating");
         snapshotState();
     }
@@ -6484,7 +7104,7 @@ const MsgBlock = {
             contentDiv = contentDiv.querySelector(".message-content");
         }
         let tokens, txt;
-        if (!contentDiv.tokenCount || refresh || forceTo) {
+        if (!contentDiv.tokens || refresh || forceTo) {
             if (forceTo !== null) {
                 tokens = parseInt(forceTo);
             } else {
@@ -6497,14 +7117,14 @@ const MsgBlock = {
                 tokens = await countTokens(txt);
             }
         } else {
-            tokens = parseInt(contentDiv.tokenCount);
+            tokens = parseInt(contentDiv.tokens);
         }
         if (typeof tokens == typeof 1 && tokens > 0) {
-            contentDiv.tokenCount = tokens;
-            contentDiv.setAttribute("tokenCount", tokens);
-            const tokenInfo = contentDiv.previousElementSibling.querySelector('.token-info');
-            if (tokenInfo) {
-                tokenInfo.textContent = tokens;
+            contentDiv.tokens = tokens;
+            contentDiv.setAttribute("tokens", tokens);
+            const tokensInfo = contentDiv.previousElementSibling?.querySelector('.tokens-info');
+            if (tokensInfo) {
+                tokensInfo.textContent = tokens;
             }
         }
         updateTokenCost();
@@ -6513,9 +7133,12 @@ const MsgBlock = {
     function updateChatTokenCost() {
         // sum up all valid token counts
         let total = 0;
+        let blocks = 0;
         queryAll('.message-content:not(.disabled, [role="comment"])').forEach(contentDiv => {
-            if (contentDiv.tokenCount)
-                total += parseInt(contentDiv.tokenCount);
+            blocks += 1;
+            if (contentDiv.tokens) {
+                total += parseInt(contentDiv.tokens);
+            }
         });
         // set the total token count in the UI
 
@@ -6539,7 +7162,7 @@ const MsgBlock = {
             const maxIn = info.max.in;
             const maxOut = info.max.out >= 0 ? Math.min(maxT, info.max.out) : maxT;
             const tokMult = info?.tokMult ?? 1;
-            getId('totalTokens').innerHTML += ` / ${maxIn}`;
+            getId('totalTokens').innerHTML += ` / ${maxIn} (${blocks} block${ blocks!==1 ? 's' : '' })`;
             if (total > maxIn) {
                 // context exceeded, make token count red
                 getId('totalTokens').innerHTML = constants.html.tokensExceeded(total, maxIn);
@@ -6550,7 +7173,7 @@ const MsgBlock = {
             // compute arithmetic mean of all assistant token lengths, geometric mean of all token lengths
             let totProd = 1, totSum = 0, totCount = 0, astProd = 1, astSum = 0, astCount = 0;
             queryAll('.message-content:not(.disabled, [role="comment"])').forEach(contentDiv => {
-                let thisCount = contentDiv.getAttribute('tokenCount');
+                let thisCount = contentDiv.getAttribute('tokens');
                 let thisRole = contentDiv.getAttribute('role');
                 if (thisCount && thisRole != 'comment') {
                     let t = parseInt(thisCount);
@@ -6585,7 +7208,7 @@ const MsgBlock = {
         if (info) {
             const tCost = info.cost;
             const cell = query('.selected');
-            const tokens = cell ? parseInt(cell.getAttribute('tokenCount')) || 0 : 0;
+            const tokens = cell ? parseInt(cell.getAttribute('tokens')) || 0 : 0;
             const inCost = parseFloat(((tokens * tCost.in) / 1000000));
             const maxTRaw = getId('maxTokensText')?.value;
             let maxT = parseInt(maxTRaw);
@@ -6864,7 +7487,12 @@ const MsgBlock = {
         // memoize text building
         let memoKey;
         try {
-            memoKey = element.getAttribute('content');
+            if (element.hasAttribute('content'))
+                memoKey = element.getAttribute('content');
+            else if (element.querySelector('[content]'))
+                memoKey = element.querySelector('[content]').getAttribute('content');
+            else
+                memoKey = element.textContent;
         } catch {
             memoKey = element?.textContent;
         }
@@ -6892,7 +7520,7 @@ const MsgBlock = {
                 else if (tag === 'div')
                     whitespace = '\n';
 
-                result = whitespace + (element.getAttribute('content') || '');
+                result = whitespace + (element.getAttribute('content') || element.textContent);
                 let substituteNext = element.hasAttribute('content');
 
                 if (!element.classList?.contains('opaque')) {
@@ -6916,10 +7544,12 @@ const MsgBlock = {
         document.body.classList.toggle('markdown-disabled', disabled);
         // Re-render all messages if enabling markdown
         if (!disabled) {
-            queryAll('.message-content').forEach(content => {
-                const text = content.getAttribute('content') || buildText(content);
-                content.innerHTML = marked.parse(text);
-                renderMath(content);
+            queryAll('.message-content').forEach(contentDiv => {
+                const text = contentDiv.getAttribute('content') || buildText(contentDiv);
+                contentDiv.innerHTML = marked.parse(text);
+                if (Array.from(text.matchAll(/\$/g)).length > 1) {
+                    renderMath(contentDiv);
+                }
             });
             hljs.highlightAll();
         }
@@ -6948,7 +7578,7 @@ const MsgBlock = {
             e.key
         ].filter(Boolean).join('+');
 
-        const shortcut = MsgBlock.shortcuts[shortcutKey];
+        const shortcut = Message.shortcuts[shortcutKey];
         if (shortcut) {
             e.preventDefault();
             shortcut(selectedCell);
@@ -6964,16 +7594,16 @@ const MsgBlock = {
         const hexColor = Math.abs(hash).toString(16).padStart(6, '0').slice(0, 6);
         const output = document.getElementById('hashOutput');
         output.innerHTML = `<span style="color: #${hexColor};">${hexColor.toUpperCase()}</span>`;
-        lastVersionHash = localStorage.getItem("versionHash");
+        lastVersionHash = getLocal("versionHash");
         if (!lastVersionHash || hexColor != lastVersionHash) {
             document.getElementById('hashOutput').innerHTML += ` <span style="font-weight:600;color:red;"> (!)</span>`;
-            localStorage.setItem("versionHash", hexColor);
+            setLocal("versionHash", hexColor);
         }
     }
 
 /** Start doing things **/
 
-    quickHash();
+    let hash = quickHash();  // cannot await here
 
     marked.use({
         breaks: true,
@@ -7042,19 +7672,21 @@ const MsgBlock = {
     });
 
     ["chat", "text"].forEach(type => {
-        const typeId = type == "chat" ? "modelChat" : "modelText";
-        const modelSelect = getId(typeId);
-        modelSelect.innerText = '';
-        // add all models for given type to appropriate dropdown
-        Object.entries($models[type]).forEach(([key, model]) => {
-            const option = document.createElement('option');
-            option.value = key;
-            option.textContent = model.short;
-            modelSelect.appendChild(option);
+        const typeId = "model" + type.charAt(0).toUpperCase() + type.slice(1);
+        const value = getLocal(typeId) || Object.keys($models[type])[0];
+        queryAll("." + typeId).forEach(modelSelect => {
+            modelSelect.innerText = '';
+            // add all models for given type to appropriate dropdown
+            Object.entries($models[type]).forEach(([key, model]) => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = model.short;
+                modelSelect.appendChild(option);
+            });
         });
-
-        // actually select the option corresponding to modelChat or modelText
-        modelSelect.value = getLocal(typeId) || Object.keys($models[type])[0];
+        queryAll("." + typeId).forEach(modelSelect => {
+            modelSelect.value = value;
+        });
     });
 
 </script>
