@@ -111,7 +111,11 @@
                 --button-filter-hover: saturate(750%) brightness(100%);
                 --compact-options-filter: saturate(750%) contrast(110%) brightness(110%);
 
-                --message-block-max-height: 500px;
+                --message-max-height: 500px;
+                --message-item-vpad: 1px;
+                --message-item-vpad-strong: 3px;
+                --message-item-hpad: 1px;
+                --message-codeblock-vmar: 2px;
         }
         html {
             --button-text-color-main: var(--color-text-hard);
@@ -144,15 +148,19 @@
             }
         }
         #middle-column :is(p, pre, ol, li, ul, h1, h2, h3, h4, h5, h6, dl, dt, dd) {
-            margin: 0px;
-            padding: 1px 0px 1px 0px;
+            margin: initial;
+            padding-top: var(--message-item-vpad, 0px);
+            padding-bottom: var(--message-item-vpad, 0px);
+            padding-left: var(--message-item-hpad, 0px);
+            padding-right: var(--message-item-hpad, 0px);
             &:has(strong:first-child) {
-                padding-top: 3px;
+                padding-top: var(--message-item-vpad-strong);
             }
         }
         #middle-column pre {
-            margin: 2px 0px;
-            padding: 2px 2px;
+            margin: var(--message-codeblock-vmar, 0px) var(--message-codeblock-hmar, 0px);
+            --message-item-vpad: 2px;
+            --message-item-hpad: 2px;
         }
         textarea {
             font-size: 1em;
@@ -255,17 +263,7 @@
         h3 {
             margin: 0px;
         }
-        .message-content {
-            padding: 8px;
-            margin-bottom: 10px;
-            background: var(--role-color-light);
-            border-radius: 4px;
-            word-wrap: break-word;       /* Ensures long words don't overflow */
-            word-break: break-word;      /* Allows breaking of long words */
-            overflow-wrap: break-word;   /* Modern version of word-wrap */
-            tab-size: 4;                 /* Standardizes tab width */
-            -moz-tab-size: 4;            /* Firefox support */
-        }
+
         #modelChatDescription, #modelTextDescription {
             font-size: 0.9em;
             font-family: var(--fonts-mono-main);
@@ -277,10 +275,10 @@
             margin-top: 4px;
             gap: 4px;
         }
-        .message-row .message-block {
+        .message-block {
             --block-leftmost-side-width: 5px;
             --block-inner-side-width: 2px;
-            max-height: var(--message-block-max-height);
+            max-height: var(--message-max-height);
             overflow-y: scroll;
             display: inline-flex;
             &:has(.selected) {
@@ -329,26 +327,6 @@
                 box-shadow: 0px 0px 0px var(--role-color-shadow);
                 border-top-color: var(--role-color-main);
                 color: var(--role-color-heavy);
-            }
-            &:has(.condensed) .message-content {
-                max-height: 144px;
-                font-size: 0.95em;
-                line-height: 1em;
-                overflow-y: scroll;
-                scrollbar-gutter: stable;
-                scrollbar-color: var(--color-scroll-main) var(--color-main-bg-light);
-                & ::-webkit-scrollbar {
-                    -webkit-appearance: none;
-                    width: 7px;
-                }
-                & ::-webkit-scrollbar-thumb {
-                    border-radius: 2px;
-                    background-color: var(--color-scroll-main);
-                    box-shadow: 0 0 1px var(--color-scroll-shadow);
-                }
-            }
-            &:has(.condensed:not(.editing)) .message-content{
-                background-image: linear-gradient(180deg, var(--transparent) 0%, var(--role-color-light) 60%, var(--role-color-accent) 100%)
             }
             &:has(:is(.selected, .collapsed):not(.editing)) {
                 box-shadow: 0px 0px 0px var(--role-color-main);
@@ -418,33 +396,49 @@
                 }
             }
         }
-        .message-block .selected {
-            z-index: 20;
-            border-bottom: 1px solid var(--role-color-main);
-            &:not(:is(.editing, .disabled)) {
-                opacity: 1.0;
-            }
-        }
-        .message-block.editing {
-            &:has(.message-content[role="comment"]) {
-                opacity: 1.0;
-                /* border-color: var(--role-color-heavy); */
-                box-shadow: 0px 0px 0px var(--role-color-main);
-            }
-        }
-        .message-content {
+
+        .message-content, .output {
+            background: var(--role-color-light);
+            word-wrap: break-word;       /* Ensures long words don't overflow */
+            word-break: break-word;      /* Allows breaking of long words */
+            overflow-wrap: break-word;   /* Modern version of word-wrap */
+            tab-size: 4;                 /* Standardizes tab width */
             flex: 1;
             /* white-space: break-spaces; */
             overflow-x: clip;
             overflow-y: scroll;
             margin-bottom: 0px;
             padding: 4px 8px 4px 8px;
-            border-radius: 0px;
-            border-left: none;
-            outline: none;
             &.disabled {opacity: 0.5;}
+            &.selected {
+                z-index: 20;
+                border-bottom: 1px solid var(--role-color-main);
+                &:not(:is(.editing, .disabled)) {
+                    opacity: 1.0;
+                }
+            }
+            &.condensed {
+                max-height: 144px;
+                font-size: 0.95em;
+                line-height: 1em;
+                overflow-y: scroll;
+                scrollbar-gutter: stable;
+                scrollbar-color: var(--color-scroll-main) var(--color-main-bg-light);
+                & ::-webkit-scrollbar {
+                    -webkit-appearance: none;
+                    width: 7px;
+                }
+                & ::-webkit-scrollbar-thumb {
+                    border-radius: 2px;
+                    background-color: var(--color-scroll-main);
+                    box-shadow: 0 0 1px var(--color-scroll-shadow);
+                }
+            }
+            &.condensed:not(.editing) {
+                background-image: linear-gradient(180deg, var(--transparent) 0%, var(--role-color-light) 60%, var(--role-color-accent) 100%)
+            }
         }
-        #middle-column .message-content, #outputs .output {
+        .message-content, #outputs .output {
             & h1 {
                 font-size: 1.5em;
                 font-weight: 600;
@@ -478,28 +472,84 @@
                 margin-left: 1em;
             }
         }
+        .output {
+            /* white-space: pre-wrap; */
+            --role-color: var(--color-roles-asst-main);
+            border: 1px solid var(--role-color-main);
+            min-height: 1em;
+            margin-top: 4px;
+            margin-bottom: 40px;
+            border-left-width: 5px;
+            border-right-width: 3px;
+            /* border-radius: 8px; */
+            transition: all 0.15s ease-in-out;
+            &.generating {
+                border-color: var(--role-color-shadow);
+                background-color: var(--role-color-light);
+                box-shadow: 0px 0px 10px var(--role-color-shadow), 0px 0px 2px var(--role-color-main);
+            }
+        }
         .message-control {
             width: auto;
             font-size: 0.9em;
             margin: -1px 0px -1px -3px;
             padding: 1px 8px 0px 8px;
             background-color: var(--role-color-accent);
-        }
-        .message-control button {
-            background: none;
-            border: none;
-            color: var(--color-text-hard);
-            align-self: center;
-            padding: 0px;
-            margin: 0px;
-            position: relative;
-            font-size: 1.0em;
-            transition: all 0.0s ease-in-out;
-            &.role-button {
-                top: -1px;
-                grid-row: 1;
-                grid-column: 2;
-                color: var(--role-color-main, var(--color-text-medium));
+            & button {
+                background: none;
+                border: none;
+                color: var(--color-text-hard);
+                align-self: center;
+                padding: 0px;
+                margin: 0px;
+                position: relative;
+                font-size: 1.0em;
+                transition: all 0.0s ease-in-out;
+                &.role-button {
+                    top: -1px;
+                    grid-row: 1;
+                    grid-column: 2;
+                    color: var(--role-color-main, var(--color-text-medium));
+                }
+                &.move-up-button {
+                    --order: 10;
+                }
+                &.move-down-button {
+                    --order: 9;
+                }
+                &.collapse-button {
+                    --order: 8;
+                }
+                &.condense-button {
+                    --order: 7;
+                }
+                &.enable-button {
+                    --order: 6;
+                }
+                &.delete-button {
+                    --order: 5;
+                }
+                &.chat-completion-button {
+                    --order: 4;
+                }
+                &.text-completion-button {
+                    --order: 3;
+                }
+                &.textwchat-completion-button {
+                    --order: 2;
+                }
+                &.fim-completion-button {
+                    --order: 1;
+                }
+                &.control-button {
+                    top: 0px;
+                    grid-row: 1;
+                    grid-column: 5;
+                    align-self: center;
+                    justify-self: end;
+                    color: var(--color-text-light);
+                    margin-right: calc( (var(--order) - 1) * 2em);
+                }
             }
         }
 
@@ -523,6 +573,7 @@
             font-size: 1em;
             opacity: 0.5;
             margin-top: -1px;
+            scrollbar-width: none;
         }
         .author-info {
             grid-column-start: 3;
@@ -560,36 +611,10 @@
             color: var(--color-text-light);
             transition: opacity 0.2s ease;
             line-height: initial;
-            margin-right: 12em;
+            margin-right: calc( (var(--order) - 1) * 2em);
+            --order: 11;
         }
-        .message-control button {
-            &.move-up-button {
-                margin-right: 10em;
-            }
-            &.move-down-button {
-                margin-right: 8em;
-            }
-            &.collapse-button {
-                margin-right: 6em;
-            }
-            &.condense-button {
-                margin-right: 4em;
-            }
-            &.enable-button {
-                margin-right: 2em;
-            }
-            &.delete-button {
-                margin-right: 0em;
-            }
-            &.control-button {
-                top: 0px;
-                grid-row: 1;
-                grid-column: 5;
-                align-self: center;
-                justify-self: end;
-                color: var(--color-text-light);
-            }
-        }
+
         .message-block:has(.selected) {
             /* border-left-color: var(--role-color-heavy); */
             &:is(.tokens-info, .control-button) {
@@ -612,9 +637,7 @@
                 }
             }
         }
-        .control-row-text-field {
-            scrollbar-width: none;
-        }
+
         .tokens-disabled .tokens-info {
             opacity: 0; pointer-events: none;
         }
@@ -743,27 +766,7 @@
                 height: auto;
             }
         }
-        .output {
-            /* white-space: pre-wrap; */
-            --role-color: var(--color-roles-asst-main);
-            padding: 10px;
-            border: 1px solid var(--role-color-main);
-            position: relative;
-            min-height: 1em;
-            margin-top: 4px;
-            margin-bottom: 40px;
-            background-color: var(--role-color-light);
-            overflow-y: scroll;
-            border-left-width: 5px;
-            border-right-width: 3px;
-            /* border-radius: 8px; */
-            transition: all 0.15s ease-in-out;
-            &.generating {
-                border-color: var(--role-color-shadow);
-                background-color: var(--role-color-light);
-                box-shadow: 0px 0px 10px var(--role-color-shadow), 0px 0px 2px var(--role-color-main);
-            }
-        }
+
         #button-container #stopCompletionBtn {
             color: var(--color-text-error-main);
             border-color: var(--color-text-error-main);
@@ -831,25 +834,24 @@
             &:has(button.delete-button:hover) {
                 background-color: rgb(from var(--color-saves-delete-heavy) r g b/0.5);
             }
-        }
-
-        .save-box.immutable {
-            color: var(--color-text-light);
-            border-radius: 0px;
-            font-variant: small-caps;
-            margin-bottom: 5px;
-            align-items: center;
-            & button {
-                position: absolute;
-                margin-top: -0.8em;
-            }
-            & .save-name {flex-grow: 0;}
-            & .button-container {
-                display: flex;
-                flex-direction: row;
-                justify-content: flex-end;
-                margin-top: 4px;
-                width: auto;
+            &.immutable {
+                color: var(--color-text-light);
+                border-radius: 0px;
+                font-variant: small-caps;
+                margin-bottom: 5px;
+                align-items: center;
+                & button {
+                    position: absolute;
+                    margin-top: -0.8em;
+                }
+                & .save-name {flex-grow: 0;}
+                & .button-container {
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: flex-end;
+                    margin-top: 4px;
+                    width: auto;
+                }
             }
         }
         .save-name {
@@ -959,23 +961,25 @@
             display: flex;
             position: relative;
             width: fit-content;
-            flex-wrap: wrap;
             flex: 1 1 auto;
-            margin-bottom: 0px;
+            flex-wrap: wrap;
             margin-left: auto;
             margin-right: auto;
+
+            margin-bottom: 0px;
             border: 1px solid gray;
             border-radius: 4px;
-            /* margin-left: calc(40px + 2em); */
-            gap: 8px;
+
             & button {
+                font-family: var(--fonts-mono-main);
+                backdrop-filter: var(--button-filter);
+                flex: 1 1 auto;
+
                 font-size: 0.9em;
                 transition: all 0.1s ease-in-out;
-                backdrop-filter: var(--button-filter);
                 border-radius: 4px;
                 padding: 0px 8px;
                 margin: 2px;
-                font-family: var(--fonts-mono-main);
                 &:hover {
                     font-weight: bold;
                     backdrop-filter: var(--button-filter-hover);
@@ -1069,7 +1073,7 @@
         }
 
         button[disabled] {
-            opacity: 0.3;
+            opacity: 0.5 !important;
             cursor: not-allowed;
         }
 
@@ -1098,20 +1102,20 @@
             font-size: 0.9em;
         }
         p > code {
-            border: 1px inset var(--color-text-light);
-            background: var(--color-main-bg-light);
-            border-radius: 4px;
-            color: var(--color-text-soft);
-            font-size: 0.95em;
-            white-space: pre-wrap;
+            --inline-code-border-thickness: 1px;
+            --inline-code-border-radius: 4px;
+            --inline-code-padding: 0px 0.25em 0px 0.25em;
+            --inline-code-margin: -8px 0.1em 0px 0.1em;
+            --inline-code-font-size: 0.95em;
             position: relative;
-            padding-top: 0px;
-            padding-bottom: 0px;
-            padding-left: 0.25em;
-            padding-right: 0.25em;
-            margin-top: -8px;
-            margin-left: 0.1em;
-            margin-right: 0.1em;
+            white-space: pre-wrap;
+            margin: var(--inline-code-margin);
+            padding: var(--inline-code-padding);
+            font-size: var(--inline-code-font-size);
+            background: var(--color-main-bg-light);
+            color: var(--color-text-soft);
+            border: var(--inline-code-border-thickness) inset var(--color-text-light);
+            border-radius: var(--inline-code-border-radius);
         }
 
         .format-controls {
@@ -1937,7 +1941,10 @@
                 </div>
                 <br>
                 <div id="shamelessSelfPromotion">
-                    <a href="https://n.cohomology.group/chat.html">chat.html</a> by <a href="https://n.cohomology.group">Mariven</a> (<a href="https://x.com/psychiel">@psychiel</a>)
+                <a href="https://n.cohomology.group/chat.html" style="color:inherit;font-weight:500;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-palette-icon lucide-palette" style="position:relative;top:2px;"><path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/></svg>chat.html</a>
+                    by
+                <a href="https://n.cohomology.group" style="color:inherit;font-weight:500;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile-icon lucide-smile" style="position:relative;top:2px;"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/></svg>Mariven</a>
+                    (<a href="https://x.com/psychiel">@psychiel</a>)
                     <br>
                     <span style="font-size:0.9em;">typos? bugs? style ideas? feature requests? add them on <a href="https://github.com/Mariven/chat.html">Github</a>!</span>
                 </div>
@@ -2106,30 +2113,39 @@
             </div>
             <div id="button-container">
                 <button id="chatCompletionBtn" onclick="generate('chat')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:relative;top:3px;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     Chat Completion
                 </button>
                 <button id="textCompletionBtn" onclick="generate('text')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:relative;top:3px;"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></svg>
                     Text Completion
                 </button>
                 <button id="chatCompletionsEndpointBtn" onclick="generate('textwchat')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:relative;top:3px;"><path d="M11.5 15H7a4 4 0 0 0-4 4v2"/><path d="M21.378 16.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/><circle cx="10" cy="7" r="4"/></svg>
                     Text w/ Chat Model
                 </button>
                 <button id="findSimilarSitesBtn" onclick="findSimilarSites()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:relative;top:3px;"><path d="M19.07 4.93A10 10 0 0 0 6.99 3.34"/><path d="M4 6h.01"/><path d="M2.29 9.62A10 10 0 1 0 21.31 8.35"/><path d="M16.24 7.76A6 6 0 1 0 8.23 16.67"/><path d="M12 18h.01"/><path d="M17.99 11.66A6 6 0 0 1 15.77 16.67"/><circle cx="12" cy="12" r="2"/><path d="m13.41 10.59 5.66-5.66"/></svg>
                     Similar Sites
                 </button>
                 <button id="exaSearchBtn" onclick="exaSearch()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:relative;top:3px;"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
                     Exa Search
                 </button>
                 <button onclick="clearOutput()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:relative;top:3px;"><path d="M21 21H8a2 2 0 0 1-1.42-.587l-3.994-3.999a2 2 0 0 1 0-2.828l10-10a2 2 0 0 1 2.829 0l5.999 6a2 2 0 0 1 0 2.828L12.834 21"/><path d="m5.082 11.09 8.828 8.828"/></svg>
                     Clear Output
                 </button>
                 <button onclick="addMessage('output')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:relative;top:3px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                     Append Output
                 </button>
                 <button onclick="deserializeState(immutableConversations['Ex: Basic assistant'].state)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:relative;top:3px;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
                     New Conversation
                 </button>
                 <button id="fimCompletionBtn" onclick="generate('fim')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:relative;top:3px;"><path d="m16 16-4 4-4-4"/><path d="M3 12h18"/><path d="m8 8 4-4 4 4"/></svg>
                     Fill In Middle
                 </button>
                 <button id="stopCompletionBtn" onclick="stopCompletion()" style="display: none;">
@@ -3679,10 +3695,10 @@
     const inheritStatic = (el, staticFn, newKey = null) =>
         applyPatches(el, {[newKey || staticFn]: el[staticFn]});
 
-    // Make static methods available as instance methods
-    inheritStatic(Object, 'entries');  // obj.entries()
-    inheritStatic(Object, 'keys');     // obj.keys()
-    inheritStatic(Object, 'values');   // obj.values()
+    // // Make static methods available as instance methods
+    // inheritStatic(Object, 'entries');  // obj.entries()
+    // inheritStatic(Object, 'keys');     // obj.keys()
+    // inheritStatic(Object, 'values');   // obj.values()
 
     function chain(x) {
         /* A generalized map function that works on arrays, objects, and single values */
@@ -3896,9 +3912,10 @@
             });
 
             const fimAvailable = $models["text"][selectedModels[1]]?.extra?.includes("suffix");
-            let obj = getId("fimCompletionBtn");
-            obj.disabled = !fimAvailable;
-            obj.inert = !fimAvailable;
+            queryAll("#fimCompletionBtn, .fim-completion-button").forEach(obj => {
+                obj.disabled = !fimAvailable;
+                obj.inert = !fimAvailable;
+            });
 
         },
         loadAllOptions: async () => {
@@ -4003,13 +4020,13 @@
                     effect: 'passive',
                 },
                 collapse: {
-                    icon: 'chevronDown',
+                    icon: 'arrowDownFromLine',
                     opposite: 'uncollapse',
                     default: false,
                     effect: 'passive',
                 },
                 uncollapse: {
-                    icon: 'chevronUp',
+                    icon: 'arrowUpToLine',
                     opposite: 'collapse',
                     default: true,
                     effect: 'passive',
@@ -4149,9 +4166,109 @@
                 `chevron-down`,
                 `<path d="m6 9 6 6 6-6"/>`
             ),
+            chevronsUp: makeSVG(
+                `chevrons-up`,
+                `<path d="m17 11-5-5-5 5"/><path d="m17 18-5-5-5 5"/>`
+            ),
+            chevronsDown: makeSVG(
+                `chevrons-down`,
+                `<path d="m7 6 5 5 5-5"/><path d="m7 13 5 5 5-5"/>`
+            ),
             textSelect: makeSVG(
                 `text-select`,
                 `<path d="M5 3a2 2 0 0 0-2 2"/><path d="M19 3a2 2 0 0 1 2 2"/><path d="M21 19a2 2 0 0 1-2 2"/><path d="M5 21a2 2 0 0 1-2-2"/><path d="M9 3h1"/><path d="M9 21h1"/><path d="M14 3h1"/><path d="M14 21h1"/><path d="M3 9v1"/><path d="M21 9v1"/><path d="M3 14v1"/><path d="M21 14v1"/><line x1="7" x2="15" y1="8" y2="8"/><line x1="7" x2="17" y1="12" y2="12"/><line x1="7" x2="13" y1="16" y2="16"/>`
+            ),
+            arrowDownFromLine: makeSVG(
+                `arrow-down-from-line`,
+                `<path d="M19 5H5"/><path d="M12 21V7"/><path d="m6 15 6 6 6-6"/>`
+            ),
+            arrowUpToLine: makeSVG(
+                `arrow-up-to-line`,
+                `<path d="M5 5h14"/><path d="m18 13-6-6-6 6"/><path d="M12 7v14"/>`
+            ),
+            messagesSquare: makeSVG(
+                `messages-square`,
+                `<path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/>`
+            ),
+            messageSquareX: makeSVG(
+                `message-square-x`,
+                `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="m14.5 7.5-5 5"/><path d="m9.5 7.5 5 5"/>`
+            ),
+            messageSquareWarning: makeSVG(
+                `message-square-warning`,
+                `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v2"/><path d="M12 13h.01"/>`
+            ),
+            messageSquareText: makeSVG(
+                `message-square-text`,
+                `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M13 8H7"/><path d="M17 12H7"/>`
+            ),
+            messageSquareShare: makeSVG(
+                `message-square-share`,
+                `<path d="M21 12v3a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h7"/><path d="M16 3h5v5"/><path d="m16 8 5-5"/>`
+            ),
+            messageSquareReply: makeSVG(
+                `message-square-reply`,
+                `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="m10 7-3 3 3 3"/><path d="M17 13v-1a2 2 0 0 0-2-2H7"/>`
+            ),
+            messageSquareQuote: makeSVG(
+                `message-square-quote`,
+                `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 12a2 2 0 0 0 2-2V8H8"/><path d="M14 12a2 2 0 0 0 2-2V8h-2"/>`
+            ),
+            messageSquarePlus: makeSVG(
+                `message-square-plus`,
+                `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6"/><path d="M9 10h6"/>`
+            ),
+            messageSquareOff: makeSVG(
+                `message-square-off`,
+                `<path d="M21 15V5a2 2 0 0 0-2-2H9"/><path d="m2 2 20 20"/><path d="M3.6 3.6c-.4.3-.6.8-.6 1.4v16l4-4h10"/>`
+            ),
+            messageSquareMore: makeSVG(
+                `message-square-more`,
+                `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/>`
+            ),
+            messageSquareLock: makeSVG(
+                `message-square-lock`,
+                `<path d="M19 15v-2a2 2 0 1 0-4 0v2"/><path d="M9 17H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3.5"/><rect x="13" y="15" width="8" height="5" rx="1"/>`
+            ),
+            messageSquareHeart: makeSVG(
+                `message-square-heart`,
+                `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M14.8 7.5a1.84 1.84 0 0 0-2.6 0l-.2.3-.3-.3a1.84 1.84 0 1 0-2.4 2.8L12 13l2.7-2.7c.9-.9.8-2.1.1-2.8"/>`
+            ),
+            messageSquareDot: makeSVG(
+                `message-square-dot`,
+                `<path d="M11.7 3H5a2 2 0 0 0-2 2v16l4-4h12a2 2 0 0 0 2-2v-2.7"/><circle cx="18" cy="6" r="3"/>`
+            ),
+            messageSquareDiff: makeSVG(
+                `message-square-diff`,
+                `<path d="m5 19-2 2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2"/><path d="M9 10h6"/><path d="M12 7v6"/><path d="M9 17h6"/>`
+            ),
+            messageSquareDashed: makeSVG(
+                `message-square-dashed`,
+                `<path d="M10 17H7l-4 4v-7"/><path d="M14 17h1"/><path d="M14 3h1"/><path d="M19 3a2 2 0 0 1 2 2"/><path d="M21 14v1a2 2 0 0 1-2 2"/><path d="M21 9v1"/><path d="M3 9v1"/><path d="M5 3a2 2 0 0 0-2 2"/><path d="M9 3h1"/>`
+            ),
+            messageSquareCode: makeSVG(
+                `message-square-code`,
+                `<path d="M10 7.5 8 10l2 2.5"/><path d="m14 7.5 2 2.5-2 2.5"/><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>`
+            ),
+            messageSquare: makeSVG(
+                `message-square`,
+                `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>`
+            ),
+            userPen: makeSVG(
+                `user-pen`,
+                `<path d="M11.5 15H7a4 4 0 0 0-4 4v2"/><path d="M21.378 16.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/><circle cx="10" cy="7" r="4"/>`
+            ),
+            user: makeSVG(
+                `user`,
+                `<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>`
+            ),
+            pen: makeSVG(
+                `pen`,
+                `<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>`
+            ),
+            separatorHorizontal: makeSVG(
+                `separator-horizontal`,
+                `<path d="m16 16-4 4-4-4"/><path d="M3 12h18"/><path d="m8 8 4-4 4 4"/>`,
             ),
         },
         text: {
@@ -4379,9 +4496,24 @@
 
                 const moveUpButton = createButton(':chevronUp', (button) => () => moveNode(contentDiv, 'up'), ['control-button', 'move-up-button']);
                 const moveDownButton = createButton(':chevronDown', (button) => () => moveNode(contentDiv, 'down'), ['control-button', 'move-down-button']);
-                const condenseButton = createButton(':chevronsDownUp', (button) => () => toggleCondense(contentDiv, button), ['control-button', 'condense-button']);
+                const condenseButton = createButton(':chevronsUpDown', (button) => () => toggleCondense(contentDiv, button), ['control-button', 'condense-button']);
                 const enableButton = createButton(':eye', (button) => () => toggleEnable(contentDiv, button), ['control-button', 'enable-button']);
-                const collapseButton = createButton(':chevronUp', (button) => () => toggleCollapse(contentDiv, button), ['control-button', 'collapse-button']);
+                const collapseButton = createButton(':arrowDownFromLine', (button) => () => toggleCollapse(contentDiv, button), ['control-button', 'collapse-button']);
+
+                const textCompletionButton = createButton(':pen', (button) => async () => await generate('text', {generateInNewBlock: true, callerId: contentDiv.id}), ['control-button', 'text-completion-button']);
+                const textwchatCompletionButton = createButton(':userPen', (button) => async () => await generate('textwchat', {generateInNewBlock: true, callerId: contentDiv.id}), ['control-button', 'textwchat-completion-button']);
+                const chatCompletionButton = createButton(':user', (button) => async () => await generate('chat', {generateInNewBlock: true, callerId: contentDiv.id}), ['control-button', 'chat-completion-button']);
+                const fimCompletionButton = createButton(':separatorHorizontal', (button) => async () => await generate('fim', {generateInNewBlock: true, callerId: contentDiv.id}), ['control-button', 'fim-completion-button']);
+
+
+                $inputs.classes.operations
+                    .filter(opn => opn?.default === false)
+                    .map(opn => {
+                        const button = createButton(':' + opn.icon, (button) => () => toggleOperation(contentDiv, opn.opposite), ['control-button', opn.name + '-button']);
+                        button.dataset.operation = opn.opposite;
+                        return button;
+                    });
+
                 const divs = $inputs.attributes.visible.map( (param) => {
                     const editable = $inputs.attributes.editable.includes(param);
                     const div = create('div', {
@@ -4400,7 +4532,9 @@
                         ...divs,
                         moveUpButton, moveDownButton,
                         collapseButton, condenseButton, enableButton,
-                        deleteButton
+                        deleteButton,
+                        chatCompletionButton, textCompletionButton,
+                        textwchatCompletionButton, fimCompletionButton
                     ]
                 );
                 controlDiv.appendChild(row1);
@@ -4491,7 +4625,9 @@
     })();
 
     function renderMarked(text) {
-        if (getId('disableMarkdown')?.checked) return text;
+        if (getId('disableMarkdown')?.checked || !marked?.parse) {
+            return text;
+        }
         return marked.parse(text);
     }
 
@@ -4500,11 +4636,12 @@
 const Message = {
     // Selectors for different parts of the message block
     selectors: {
-        block: '.message-block',
-        content: '.message-content',
-        control: '.message-control',
-        tokensInfo: '.tokens-info',
-        roleButton: '.role-button'
+        block: 'message-block',
+        row: 'message-row',
+        content: 'message-content',
+        control: 'message-control',
+        tokensInfo: 'tokens-info',
+        roleButton: 'role-button'
     },
     // Data accessors
     get: {
@@ -4523,16 +4660,16 @@ const Message = {
         ...{
             // Get the content div from a block or content div
             contentDiv: (element) => {
-                if (element.classList.contains('message-content'))
+                if (element.classList.contains(Message.selectors.content))
                     return element;
-                return element.querySelector(Message.selectors.content);
+                return element.querySelector('.' + Message.selectors.content);
             },
 
             // Get the block from a block, content div, or control div
             block: (element) => {
-                if (element.classList.contains('message-block'))
+                if (element.classList.contains(Message.selectors.block))
                     return element;
-                return element.closest(Message.selectors.block);
+                return element.closest('.' + Message.selectors.block);
             },
             // Get content
             content: (element) => Message.get.contentDiv(element).getAttribute('content') || buildText(Message.get.contentDiv(element)),
@@ -4559,13 +4696,13 @@ const Message = {
             role: (element, role) => {
                 const contentDiv = Message.get.contentDiv(element);
                 contentDiv.setAttribute('role', role);
-                const roleButton = contentDiv.previousElementSibling.querySelector(Message.selectors.roleButton);
+                const roleButton = contentDiv.previousElementSibling.querySelector('.' + Message.selectors.roleButton);
                 roleButton.textContent = role.charAt(0).toUpperCase();
             },
             tokens: async (element, count) => {
                 const contentDiv = Message.get.contentDiv(element);
                 contentDiv.setAttribute('tokens', count);
-                const tokensInfo = contentDiv.previousElementSibling.querySelector(Message.selectors.tokensInfo);
+                const tokensInfo = contentDiv.previousElementSibling.querySelector('.' + Message.selectors.tokensInfo);
                 if (tokensInfo)
                     tokensInfo.textContent = count;
                 await updateTokenCost();
@@ -4594,9 +4731,9 @@ const Message = {
         delete: async (element) => {
             const block = Message.get.block(element);
             if (block.previousElementSibling)
-                await selectCell(block.previousElementSibling.querySelector(Message.selectors.content));
+                await selectCell(block.previousElementSibling.querySelector('.' + Message.selectors.content));
             else if (block.nextElementSibling)
-                await selectCell(block.nextElementSibling.querySelector(Message.selectors.content));
+                await selectCell(block.nextElementSibling.querySelector('.' + Message.selectors.content));
             block.remove();
             updateTokenCost();
         },
@@ -4667,7 +4804,7 @@ const Message = {
     },
     shortcuts: {
         'Alt+G': (element) => Message.operations.group([element]),
-        'Alt+U': (element) => Message.operations.ungroup(element.closest('.message-row')),
+        'Alt+U': (element) => Message.operations.ungroup(element.closest('.' + Message.selectors.row)),
         //'Tab': (element) => Message.operations.indent(element, 'right'),
         //'Shift+Tab': (element) => Message.operations.indent(element, 'left'),
         'Ctrl+B': (element) => Message.operations.format(element, 'strong'),
@@ -4715,8 +4852,8 @@ const Message = {
         });
 
         const serializeMessage = (el) => {
-            if (el.classList.contains('message-block'))
-                el = el.querySelector('.message-content');
+            if (el.classList.contains(Message.selectors.block))
+                el = el.querySelector('.' + Message.selectors.content);
             if (!el.id)
                 el.id = 'M' + randStr(4);
             return ({
@@ -4733,7 +4870,7 @@ const Message = {
                 )),
                 ...{ // extra data
                     classes: Array.from(el.classList),
-                    rowLabel: el.closest('.message-row')?.getAttribute('label'),
+                    rowLabel: el.closest('.' + Message.selectors.row)?.getAttribute('label'),
                 }
             });
         };
@@ -4789,7 +4926,7 @@ const Message = {
 
             const opnData = $inputs.classes.operations;
             const messageBlock = constants.html.messageBlock(msg);
-            const contentDiv = messageBlock.querySelector('.message-content');
+            const contentDiv = messageBlock.querySelector('.' + Message.selectors.content);
 
             $inputs.attributes.messages.forEach(attr => {
                 let value = msg[attr] || $inputs.attrDefaults.messages[attr];
@@ -4843,7 +4980,7 @@ const Message = {
             });
             variablesList.appendChild(varFragment);
         }
-        const selectedCell = query(".selected") || query(".message-content");
+        const selectedCell = query(".selected") || query('.' + Message.selectors.content);
         if (selectedCell)
             await selectCell(selectedCell);
         await exitEditMode();
@@ -5133,7 +5270,7 @@ const Message = {
                 $inputs.classes.messages.map(cls => [cls, el.classList.contains(cls)])
             ),
             classes: Array.from(el.classList),
-            rowLabel: el.closest('.message-row')?.getAttribute('label')
+            rowLabel: el.closest('.' + Message.selectors.row)?.getAttribute('label')
         };
     }
 
@@ -5193,7 +5330,7 @@ const Message = {
 
     // Create a new prompt from the currently selected message
     async function createNewPrompt() {
-        const selected = document.querySelector('.message-content.selected') || document.querySelector('.message-content');
+        const selected = document.querySelector('.message-content.selected') || document.querySelector('.' + Message.selectors.content);
         if (!selected) {
             showSaveLoadMessage('No message selected to save', true);
             return;
@@ -5240,10 +5377,10 @@ const Message = {
         if (!prompt) return;
         snapshotState();
         const selected = document.querySelector('.message-content.selected');
-        const afterRow = selected?.closest('.message-row');
+        const afterRow = selected?.closest('.' + Message.selectors.row);
         const newBlock = constants.html.messageBlock(prompt);
         const newRow = constants.html.messageRow();
-        const contentDiv = newBlock.querySelector('.message-content');
+        const contentDiv = newBlock.querySelector('.' + Message.selectors.content);
         $inputs.attributes.messages.forEach(attr => {
             const val = prompt[attr] ?? $inputs.attrDefaults.messages[attr];
             contentDiv.setAttribute(attr, val);
@@ -5568,13 +5705,13 @@ const Message = {
      * @param {HTMLElement} messageBlock - The message block element to which event listeners are added.
      */
     function addEventListeners(messageBlock) {
-        const contentDiv = messageBlock.querySelector('.message-content');
-        const controlDiv = messageBlock.querySelector('.message-control');
+        const contentDiv = messageBlock.querySelector('.' + Message.selectors.content);
+        const controlDiv = messageBlock.querySelector('.' + Message.selectors.control);
         contentDiv.addEventListener('click', async function(e) {
             await selectCell(this);
         });
         controlDiv.addEventListener('click', async function(e) {
-            await selectCell(this.parentNode.querySelector('.message-content'));
+            await selectCell(this.parentNode.querySelector('.' + Message.selectors.content));
         });
         contentDiv.ondblclick = async function(e) {
             if (!editMode && !this.closest(".seamless"))
@@ -5668,18 +5805,18 @@ const Message = {
                 ...{role, content}
             }
         );
-        if (after && after?.classList.contains("message-row")) {
+        if (after && after?.classList.contains(Message.selectors.row)) {
             const messageRow = constants.html.messageRow();
             messageRow.appendChild(messageBlock);
             after.after(messageRow);
             return messageBlock;
         }
-        if (after && after?.classList.contains("message-block")) {
+        if (after && after?.classList.contains(Message.selectors.block)) {
             after.after(messageBlock);
             return messageBlock;
         }
-        if (after && after?.classList.contains("message-content")) {
-            after.closest(".message-block").after(messageBlock);
+        if (after && after?.classList.contains(Message.selectors.content)) {
+            after.closest('.' + Message.selectors.block).after(messageBlock);
             return messageBlock;
         }
         const messageRow = constants.html.messageRow();
@@ -5798,8 +5935,8 @@ const Message = {
             contentDiv.classList.toggle('collapsed');
         if (button) {
             button.innerHTML = contentDiv.classList.contains('collapsed') ?
-                constants.symbols.chevronUp :
-                constants.symbols.chevronDown;
+                constants.symbols.arrowUpToLine :
+                constants.symbols.arrowDownFromLine;
         }
     }
 
@@ -5808,10 +5945,10 @@ const Message = {
      * @param {HTMLElement} cell - The cell element to select.
      */
     async function selectCell(cell) {
-        if (!queryAll('.message-content').length || !cell || selectedCell == cell)
+        if (!queryAll('.' + Message.selectors.content).length || !cell || selectedCell == cell)
             return;
-        if (cell.classList.contains('message-block') || cell.classList.contains('message-row')) {
-            let newCell = await selectCell(cell.querySelector('.message-content'));
+        if (cell.classList.contains(Message.selectors.block) || cell.classList.contains(Message.selectors.row)) {
+            let newCell = await selectCell(cell.querySelector('.' + Message.selectors.content));
             return newCell;
         }
         await exitEditMode();
@@ -5855,10 +5992,10 @@ const Message = {
      */
     function moveNode(node, direction) {
         snapshotState();
-        if (node.classList.contains('message-content') || node.classList.contains('message-control') || node.classList.contains('message-block')) {
+        if (node.classList.contains(Message.selectors.content) || node.classList.contains(Message.selectors.control) || node.classList.contains(Message.selectors.block)) {
             return moveNode(tree.parent(node), direction);
         }
-        if (node.classList.contains('message-content') || node.classList.contains('message-control')) {
+        if (node.classList.contains(Message.selectors.content) || node.classList.contains(Message.selectors.control)) {
             return moveNode(tree.parent(node), direction);
         }
         const parent = node.parentNode;
@@ -5879,7 +6016,7 @@ const Message = {
      */
     function moveNodeToExtreme(node, position) {
         snapshotState();
-        if (node.classList.contains('message-content') || node.classList.contains('message-control') || node.classList.contains('message-block')) {
+        if (node.classList.contains(Message.selectors.content) || node.classList.contains(Message.selectors.control) || node.classList.contains(Message.selectors.block)) {
             return moveNodeToExtreme(tree.parent(node), position);
         }
         const parent = node.parentNode;
@@ -5897,7 +6034,7 @@ const Message = {
      */
     async function joinNodes(cell, up) {
         snapshotState();
-        const messageBlock = cell.closest('.message-block');
+        const messageBlock = cell.closest('.' + Message.selectors.block);
         const targetBlock = up ? messageBlock.previousElementSibling : messageBlock.nextElementSibling;
 
         if (!targetBlock) {
@@ -5909,7 +6046,7 @@ const Message = {
             return;
         }
 
-        const targetCell = targetBlock.querySelector('.message-content');
+        const targetCell = targetBlock.querySelector('.' + Message.selectors.content);
         const spacing = up ? targetCell.textContent.match(/\s*$/)[0] : cell.textContent.match(/\s*$/)[0];
 
         if (up) {
@@ -5934,28 +6071,28 @@ const Message = {
             return console.log("no cell selected for deletion");
         snapshotState();
 
-        const messageBlock = cell.closest('.message-block');
+        const messageBlock = cell.closest('.' + Message.selectors.block);
         let block = messageBlock;
-        if (messageBlock.parentNode.classList.contains('message-row')) {
+        if (messageBlock.parentNode.classList.contains(Message.selectors.row)) {
             block = messageBlock.parentNode;
         }
 
         if (block?.previousElementSibling) {
-            if (block.previousElementSibling.querySelector('.message-content')) {
-                await selectCell(Array.from(block.previousElementSibling.querySelectorAll('.message-content')).slice(-1)[0]);
+            if (block.previousElementSibling.querySelector('.' + Message.selectors.content)) {
+                await selectCell(Array.from(block.previousElementSibling.querySelectorAll('.' + Message.selectors.content)).slice(-1)[0]);
             } else {
                 // ?
             }
         } else if (block?.nextElementSibling) {
-            if (block.nextElementSibling.querySelector('.message-content')) {
-                await selectCell(Array.from(block.nextElementSibling.querySelectorAll('.message-content'))[0]);
+            if (block.nextElementSibling.querySelector('.' + Message.selectors.content)) {
+                await selectCell(Array.from(block.nextElementSibling.querySelectorAll('.' + Message.selectors.content))[0]);
             } else {
                 // ?
             }
         }
 
         messageBlock.remove();
-        if (block !== messageBlock && block.querySelectorAll('.message-content').length === 0) {
+        if (block !== messageBlock && block.querySelectorAll('.' + Message.selectors.content).length === 0) {
             block.remove();
         }
         updateTokenCost();
@@ -5967,8 +6104,8 @@ const Message = {
      */
     async function enterEditMode(cell, seamless = false) {
         if (!seamless) snapshotState();
-        if (cell.classList.contains('message-block')) {
-            let newCell = await enterEditMode(cell.querySelector('.message-content'), seamless);
+        if (cell.classList.contains(Message.selectors.block)) {
+            let newCell = await enterEditMode(cell.querySelector('.' + Message.selectors.content), seamless);
             return newCell;
         }
         if (!seamless) await selectCell(cell);
@@ -6016,14 +6153,14 @@ const Message = {
 
     async function toggleSeamless(value) {
         // toggle seamless mode for all message rows
-        let messageRows = queryAll('.message-row');
+        let messageRows = queryAll('.' + Message.selectors.row);
         for (const row of messageRows) {
             if (value) {
                 row.classList.add('seamless');
             } else {
                 row.classList.remove('seamless');
             }
-            const contents = row.querySelectorAll('.message-content');
+            const contents = row.querySelectorAll('.' + Message.selectors.content);
             for (const content of contents) {
                 if (value) {
                     await enterEditMode(content, value);
@@ -6044,7 +6181,7 @@ const Message = {
         didLastSave = false;
         let block;
         if (!selectedCell) {
-            await selectCell(query('.selected') || query('.message-content'));
+            await selectCell(query('.selected') || query('.' + Message.selectors.content));
             return;
         }
 
@@ -6098,9 +6235,9 @@ const Message = {
                     // shift + horizontal arrow: move message within or across rows
                     case 'ArrowLeft':
                     case 'ArrowRight':
-                        block = selectedCell.closest('.message-block');
+                        block = selectedCell.closest('.' + Message.selectors.block);
                         let direction = e.key == 'ArrowLeft' ? 'left' : 'right';
-                        let row = block.closest('.message-row');
+                        let row = block.closest('.' + Message.selectors.row);
                         e.preventDefault();
                         if (direction == 'left') {
                             if (block.previousElementSibling) {
@@ -6189,7 +6326,7 @@ const Message = {
                     // vertical arrow: select cell above/below (move cursor)
                     case 'ArrowUp':
                         e.preventDefault();
-                        block = selectedCell.closest('.message-block');
+                        block = selectedCell.closest('.' + Message.selectors.block);
                         if (block.previousElementSibling) {
                             await selectCell(block.previousElementSibling);
                         } else if (block.parentElement.previousElementSibling) {
@@ -6200,7 +6337,7 @@ const Message = {
                         break;
                     case 'ArrowDown':
                         e.preventDefault();
-                        block = selectedCell.closest('.message-block');
+                        block = selectedCell.closest('.' + Message.selectors.block);
                         if (block.nextElementSibling) {
                             await selectCell(block.nextElementSibling);
                         } else if (block.parentElement.nextElementSibling) {
@@ -6328,8 +6465,8 @@ const Message = {
      * @returns {Promise<{role: string, content: string, name?: string}|null>} - A message object containing the role, content, and optional name of the message.
      */
     async function formMessageObject(contentDiv) {
-        if (contentDiv?.classList.contains("message-block")) {  // we were given the block, so pick out the content div
-            let newMessageObject = await formMessageObject(contentDiv.querySelector(".message-content"));
+        if (contentDiv?.classList.contains(Message.selectors.block)) {  // we were given the block, so pick out the content div
+            let newMessageObject = await formMessageObject(contentDiv.querySelector('.' + Message.selectors.content));
             return newMessageObject;
         }
         const validRoles = ["system", "developer", "assistant", "user", "tool"];
@@ -6381,17 +6518,24 @@ const Message = {
      */
     async function getDestination(data={}) {
         let destination = getId('outputs')?.querySelector(".output");
-        if (getId('generateAtSelected')?.checked) {
-            destination = query('.selected').querySelector(".message-content") || query('.selected') || destination;
+        if (getId('generateAtSelected')?.checked || data?.generateAtSelected) {
+            if (data?.callerId) {
+                destination = query("#" + data.callerId) || destination;
+            } else {
+                destination = query('.selected').querySelector('.' + Message.selectors.content) || query('.selected') || destination;
+            }
             if (destination.innerHTML.trim() !== "") {
                 destination.innerHTML = "";
             }
         }
-        if (getId('generateInNewBlock')?.checked && data?.modelKey) {
-            const current = queryAll(".generating.message-content");
+        if ((getId('generateInNewBlock')?.checked || data?.generateInNewBlock) && data?.modelKey) {
+            let current = queryAll(".generating.message-content");
             let after = null;
             if (current.length > 0) {
                 after = current[current.length - 1];
+            }
+            if (data?.callerId) {
+                after = query('#' + data.callerId).closest(".message-row");
             }
             const msgBlock = await addMessage(
                 "assistant",
@@ -6410,14 +6554,14 @@ const Message = {
      * @param {string} modelType - The type of model to use ('chat' or 'text').
      * @param {string} [model=null] - The specific model to use (optional).
      */
-    async function generate(modelType, model = null) {
+    async function generate(modelType, settings = {}) {
         const isChat = modelType === 'chat';
         const isFim = modelType === 'fim';
         if (isFim) {
             modelType = 'text';
         }
         let realModelType = modelType;
-        let modelKey = model;
+        let modelKey = settings?.model;
         if (!modelKey) {
             modelKey = getId('model' + (isChat ? 'Chat' : 'Text')).value;
             if (modelType == 'textwchat') {
@@ -6427,7 +6571,7 @@ const Message = {
             }
         }
 
-        let destination = await getDestination({modelKey});
+        let destination = await getDestination({modelKey, ...settings});
         if (destination.classList.contains("generating")) {
             console.log(constants.text.generationInProgress);
             return;
@@ -6564,6 +6708,9 @@ const Message = {
                     if (msgObj && msgObj.content) {
                         messageObjects.push(msgObj);
                     }
+                    if (settings?.callerId && settings.callerId === el.id) {
+                        break;
+                    }
                 }
                 const lastMsg = messageObjects[messageObjects.length - 1];
                 if (lastMsg.content == constants.text.roleDefaults[lastMsg.role]) {
@@ -6577,7 +6724,10 @@ const Message = {
                 }
                 payload.messages = messageObjects;
             } else {
-                const selectedMessage = query('.selected');
+                let selectedMessage = query('.selected');
+                if (settings?.callerId) {
+                    selectedMessage = query('#' + settings.callerId);
+                }
                 const msgObj = await formMessageObject(selectedMessage);
                 payload.prompt = msgObj ? msgObj.content : '';
                 if (!payload.prompt) {
@@ -6588,27 +6738,31 @@ const Message = {
                 }
                 console.log(payload);
                 if (isFim) {
-                    const enabledBlocks = queryAll(".message-block:not(:has(.disabled))");
-                    let selectionIndex = Object.entries(enabledBlocks).findIndex(([i, block]) => block.querySelector(".selected"));
+                    const enabledBlocks = queryAll(".message-block:not(:has(.disabled, .generating))");
+                    const sel = settings?.callerId ? '#' + settings.callerId : '.selected';
+                    let selectionIndex = Object.entries(enabledBlocks).findIndex(([i, block]) => block.querySelector(sel));
                     if (selectionIndex == -1) {
-                        destination.setAttribute('content', constants.text.errors.noSelection);
-                        destination.innerHTML = renderMarked(constants.text.errors.noSelection);
+                        let content = destination.getAttribute('content') || "";
+                        destination.setAttribute('content', constants.text.errors.noSelection + "\n" + content);
+                        destination.innerHTML = renderMarked(constants.text.errors.noSelection + "\n" + content);
                         await stopCompletion(destination);
                         return;
                     }
                     if (selectionIndex == enabledBlocks.length - 1) {
-                        destination.setAttribute('content', constants.text.errors.fimNoSuffix);
-                        destination.innerHTML = renderMarked(constants.text.errors.fimNoSuffix);
+                        let content = destination.getAttribute('content') || "";
+                        destination.setAttribute('content', constants.text.errors.fimNoSuffix + "\n" + content);
+                        destination.innerHTML = renderMarked(constants.text.errors.fimNoSuffix + "\n" + content);
                         await stopCompletion(destination);
                         return;
                     }
                     const suffixBlock = enabledBlocks[selectionIndex + 1];
                     console.log(suffixBlock);
-                    const suffixObj = await formMessageObject(suffixBlock.querySelector(".message-content"));
+                    const suffixObj = await formMessageObject(suffixBlock.querySelector('.' + Message.selectors.content));
                     payload.suffix = suffixObj ? suffixObj.content : "";
                     if (payload.suffix == "") {
-                        destination.setAttribute('content', constants.text.errors.fimNoSuffix);
-                        destination.innerHTML = renderMarked(constants.text.errors.fimNoSuffix);
+                        let content = destination.getAttribute('content') || "";
+                        destination.setAttribute('content', constants.text.errors.fimNoSuffix + "\n" + content);
+                        destination.innerHTML = renderMarked(constants.text.errors.fimNoSuffix + "\n" + content);
                         await stopCompletion(destination);
                         return;
                     }
@@ -7100,8 +7254,8 @@ const Message = {
 
     async function updateTokenCount(contentDiv, refresh = false, forceTo=null) {
         // if contentDiv argument is a message block, set contentDiv to the content div
-        if (contentDiv.classList.contains("message-block")) {
-            contentDiv = contentDiv.querySelector(".message-content");
+        if (contentDiv.classList.contains(Message.selectors.block)) {
+            contentDiv = contentDiv.querySelector('.' + Message.selectors.content);
         }
         let tokens, txt;
         if (!contentDiv.tokens || refresh || forceTo) {
@@ -7505,8 +7659,8 @@ const Message = {
 
         if (element.nodeType === Node.TEXT_NODE) {
             result = substituted ? '' : element.textContent;
-        } else if (element.classList?.contains("message-block")) {
-            result = buildText(element.querySelector(".message-content"));
+        } else if (element.classList?.contains(Message.selectors.block)) {
+            result = buildText(element.querySelector('.' + Message.selectors.content));
         } else {
             const tag = element.tagName?.toLowerCase();
             if (tag && ['style', 'script', 'noscript', 'template'].includes(tag)) {
@@ -7544,7 +7698,7 @@ const Message = {
         document.body.classList.toggle('markdown-disabled', disabled);
         // Re-render all messages if enabling markdown
         if (!disabled) {
-            queryAll('.message-content').forEach(contentDiv => {
+            queryAll('.' + Message.selectors.content).forEach(contentDiv => {
                 const text = contentDiv.getAttribute('content') || buildText(contentDiv);
                 contentDiv.innerHTML = marked.parse(text);
                 if (Array.from(text.matchAll(/\$/g)).length > 1) {
