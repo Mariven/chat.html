@@ -5,7 +5,7 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="document.querySelectorAll('.message-content').forEach(content=>renderMathInElement(content));"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
@@ -1974,7 +1974,7 @@
                                 class="option maxTokensChat"
                                 id="maxTokensChat"
                                 type="text" value="2048" size="4"
-                                onchange="document.querySelectorAll('.maxTokensChat').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); updateTokenCost()"
+                                onchange="document.querySelectorAll('.maxTokensChat').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); recomputeTotals()"
                             />
                         </span>
                     </div>
@@ -1995,7 +1995,7 @@
                             <input
                                 class="option maxTokensText"
                                 type="text" id="maxTokensText" value="128" size="4"
-                                onchange="document.querySelectorAll('.maxTokensText').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); updateTokenCost();"
+                                onchange="document.querySelectorAll('.maxTokensText').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); recomputeTotals();"
                             />
                         </span>
                     </div>
@@ -2036,7 +2036,7 @@
                     <input
                         class="duplicateOption maxTokensChat"
                         type="text" value="2048" size="4"
-                        onchange="document.querySelectorAll('.maxTokensChat').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); updateTokenCost()"
+                        onchange="document.querySelectorAll('.maxTokensChat').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); recomputeTotals()"
                     />
                     <select
                         class="duplicateOption modelText"
@@ -2045,7 +2045,7 @@
                     <input
                         class="duplicateOption maxTokensText"
                         type="text" value="128" size="4"
-                        onchange="document.querySelectorAll('.maxTokensText').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); updateTokenCost()"
+                        onchange="document.querySelectorAll('.maxTokensText').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); recomputeTotals()"
                     />
                 </div>
                 <div class="compact-options">
@@ -3608,10 +3608,33 @@
         {left: "\\[", right: "\\]", display: true}
     ];
 
+    // util –  1 call → next animation frame
+    const rafThrottle = (fn) => {
+        let rAF = 0;
+        return (...args) => {
+            if (rAF) return;
+            rAF = requestAnimationFrame(() => {
+                rAF = 0; fn(...args);
+            });
+        };
+    };
+
+    const debounce = (fn, wait=150) => {
+        let t; return (...a)=>(clearTimeout(t),t=setTimeout(fn,wait,...a));
+    };
     const renderMath = (elem) => {
         renderMathInElement(elem, {delimiters: mathDelimiters});
     };
+    const highlightBlock = (elem) => {
+        elem.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+    };
 
+    // wrap the heavy trio
+    const updateRender = rafThrottle((el, raw) => {
+        el.innerHTML = renderMarked(raw);
+        renderMath(el);
+        highlightBlock(el);
+    });
 
 /**                UTILITIES                **/
 
@@ -4465,8 +4488,7 @@
                 const controlDiv = create('div', { class: 'message-control' });
                 const contentDiv = create('div', { class: 'message-content', ...attrValues });
 
-                contentDiv.innerHTML = renderMarked(attrValues.content);
-                renderMath(contentDiv);
+                updateRender(contentDiv, attrValues.content);
                 const classesToAdd = $inputs.classes.messages.filter(cls => options[cls]);
                 if (classesToAdd.length)
                     contentDiv.classList.add(...classesToAdd);
@@ -4705,14 +4727,14 @@ const Message = {
                 const tokensInfo = contentDiv.previousElementSibling.querySelector('.' + Message.selectors.tokensInfo);
                 if (tokensInfo)
                     tokensInfo.textContent = count;
-                await updateTokenCost();
+                recomputeTotals();
             },
             text: (element, value) => {
                 Message.get.contentDiv(element).textContent = value;
             },
             disabled: (element, value) => {
                 Message.get.contentDiv(element).classList.toggle('disabled', value);
-                updateTokenCost();
+                recomputeTotals();
             },
             selected: (element, value) => {
                 queryAll('.selected').forEach(el => el.classList.remove('selected'));
@@ -4735,7 +4757,7 @@ const Message = {
             else if (block.nextElementSibling)
                 await selectCell(block.nextElementSibling.querySelector('.' + Message.selectors.content));
             block.remove();
-            updateTokenCost();
+            recomputeTotals();
         },
         move: (element, direction) => {
             const block = Message.get.block(element);
@@ -4945,9 +4967,10 @@ const Message = {
                         constants.symbols[data.icon];
                 }
             });
-
+            updateTokenCount(contentDiv);
             contentDiv.innerHTML = renderMarked(msg.content);
             renderMath(contentDiv);
+            highlightBlock(contentDiv);
 
             row.appendChild(messageBlock);
             messagesDiv.appendChild(row);
@@ -4956,13 +4979,7 @@ const Message = {
         // Set completion content
         const outputBlock = getId('outputs')?.querySelector(".output");
         outputBlock.setAttribute('content', data.completion.content);
-        outputBlock.innerHTML = renderMarked(data.completion.content);
-        if (Array.from(data.completion.content.matchAll(/\$/g)).length > 1) {
-            renderMath(outputBlock);
-        }
-        if (Array.from(data.completion.content.matchAll(/\`/g)).length > 1) {
-            hljs.highlightAll();
-        }
+        updateRender(outputBlock, data.completion.content);
 
         // Clear existing variables
         const variablesList = getId('variables-list');
@@ -5385,8 +5402,7 @@ const Message = {
             const val = prompt[attr] ?? $inputs.attrDefaults.messages[attr];
             contentDiv.setAttribute(attr, val);
         });
-        contentDiv.innerHTML = renderMarked(prompt.content);
-        renderMath(contentDiv);
+        updateRender(contentDiv, prompt.content);
         newRow.appendChild(newBlock);
 
         if (afterRow && afterRow.parentNode) {
@@ -5401,7 +5417,6 @@ const Message = {
 
         await updateTokenCount(contentDiv, true);
         await selectCell(contentDiv);
-        updateTokenCost();
         showSaveLoadMessage(`Loaded prompt: ${name}`);
     }
 
@@ -5904,7 +5919,6 @@ const Message = {
                 constants.symbols.eye;
         }
         updateTokenCount(contentDiv);
-        updateTokenCost();
     }
 
     /**
@@ -5924,7 +5938,7 @@ const Message = {
                     constants.symbols[opnData[opname].icon];
             }
             if (opnData[opname].effect === 'active') {
-                updateTokenCost();
+                recomputeTotals();
             }
         };
         return opfn;
@@ -6059,7 +6073,6 @@ const Message = {
         }
 
         await updateTokenCount(up ? targetCell : cell, true);
-        updateTokenCost();
     }
 
     /**
@@ -6095,7 +6108,7 @@ const Message = {
         if (block !== messageBlock && block.querySelectorAll('.' + Message.selectors.content).length === 0) {
             block.remove();
         }
-        updateTokenCost();
+        recomputeTotals();
     }
 
     /**
@@ -6136,13 +6149,7 @@ const Message = {
             if (!elem.closest(".seamless")) {
                 editMode = false;
                 elem.contentEditable = false;
-                elem.innerHTML = renderMarked(elem.innerText);
-                if (Array.from(elem.innerText.matchAll(/\$/g)).length > 1) {
-                    renderMath(elem);
-                }
-                if (Array.from(elem.innerText.matchAll(/\`/g)).length > 1) {
-                    hljs.highlightAll();
-                }
+                updateRender(elem, elem.innerText);
             } else {
                 elem.contentEditable = true;
             }
@@ -6190,7 +6197,7 @@ const Message = {
             e.preventDefault();
             toggleClass('#left-column', 'hidden');
             toggleClass('#middle-column', 'full-width');
-            updateTokenCost();
+            recomputeTotals();
         }
 
         if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
@@ -6382,7 +6389,7 @@ const Message = {
                             constants.text.roleDefaults[roleLetters[e.key]],
                             {author: '', label: ''}
                         );
-                        updateTokenCost();
+                        recomputeTotals();
                         break;
 
                     // backslash: generate chat
@@ -6812,7 +6819,7 @@ const Message = {
                         if (line.startsWith('data: [DONE]')) {
                             continue;
                         }
-                        if (line.startsWith('data:')) {
+                        if (line.startsWith('data:') && line.includes('{')) {
                             try {
                                 next = '';
                                 const data = JSON.parse(line.slice(5));
@@ -6887,11 +6894,10 @@ const Message = {
                                 // output = output.replaceAll(/\n\$\$\n(.*?)\n\$\$\n/g, "\n$$$$$1$$$$\n");
                                 // output = output.replaceAll(/\n\$ /g, "\n$$");
                                 // output = output.replaceAll(/ \$\n/g, "$$\n");
-                                destination.innerHTML = renderMarked(output);
-                                renderMath(destination);
+                                updateRender(destination, output);
                             } catch (error) {
                                 // If there's an error parsing JSON, attempt to salvage its content field, appending the raw line upon failure
-                                if (line.trim() !== '') {
+                                if (line.includes('}')) {
                                     try {
                                         const data2 = JSON.parse(line.slice(5));
                                         if (data2?.usage) {
@@ -6927,8 +6933,7 @@ const Message = {
                                         } else {
                                             console.log("Could not salvage content field of broken line.");
                                         }
-                                        destination.innerHTML = renderMarked(output);
-                                        renderMath(destination);
+                                        updateRender(destination, output);
                                     }
                                 }
                             }
@@ -6937,8 +6942,7 @@ const Message = {
                                 const data = JSON.parse(line);
                                 if (data?.error) {
                                     output += `\n<b style='color: red;'>Error</b> <span style='color: red;'>(${data.error?.code ? 'code: ' + data.error.code : data.error?.type ? 'type: ' + data.error.type : 'no code'}): ${data.error?.message ?? "no message (check console)"}</span>\n`;
-                                    destination.innerHTML = renderMarked(output);
-                                    renderMath(destination);
+                                    updateRender(destination, output);
                                 } else {
                                     console.log(line);
                                 }
@@ -6964,8 +6968,7 @@ const Message = {
                                     } else {
                                         console.log("Incompletely salvaged content field of broken line as: " + content);
                                     }
-                                    destination.innerHTML = renderMarked(output);
-                                    renderMath(destination);
+                                    updateRender(destination, output);
                                 } else {
                                     console.log("Could not salvage content field of broken line.");
                                 }
@@ -6988,16 +6991,11 @@ const Message = {
                     output = isChat ?
                         data.choices[0].message.content :
                         data.choices[0].text;
-                } else
+                } else {
                     output = data;
+                }
                 destination.setAttribute('content', output);
-                destination.innerHTML = renderMarked(output);
-                if (Array.from(output.matchAll(/\$/g)).length > 1) {
-                    renderMath(destination);
-                }
-                if (Array.from(output.matchAll(/\`/g)).length > 1) {
-                    hljs.highlightAll();
-                }
+                updateRender(destination, output);
             }
 
         } catch (error) {
@@ -7014,13 +7012,7 @@ const Message = {
         destination.setAttribute("content", output);
         destination.setAttribute("author", modelKey);
         destination.setAttribute("label", "");
-        destination.innerHTML = renderMarked(output);
-        if (Array.from(output.matchAll(/\$/g)).length > 1) {
-            renderMath(destination);
-        }
-        if (Array.from(output.matchAll(/\`/g)).length > 1) {
-            hljs.highlightAll();
-        }
+        updateRender(destination, output);
         destination.classList.remove("generating");
         snapshotState();
     }
@@ -7281,7 +7273,9 @@ const Message = {
                 tokensInfo.textContent = tokens;
             }
         }
-        updateTokenCost();
+        recomputeTotals();
+        updateModelDescriptions();
+        $inputs.checkAvailability();
     }
 
     function updateChatTokenCost() {
@@ -7398,6 +7392,11 @@ const Message = {
         updateModelDescriptions();
         $inputs.checkAvailability();
     }
+    const recomputeTotals = debounce(() => {
+        updateChatTokenCost();
+        updateTextTokenCost();
+    }, 120);
+
 
 /**            VARIABLE HANDLING           **/
 
@@ -7699,13 +7698,11 @@ const Message = {
         // Re-render all messages if enabling markdown
         if (!disabled) {
             queryAll('.' + Message.selectors.content).forEach(contentDiv => {
-                const text = contentDiv.getAttribute('content') || buildText(contentDiv);
+                let text = contentDiv.getAttribute('content') || buildText(contentDiv);
                 contentDiv.innerHTML = marked.parse(text);
-                if (Array.from(text.matchAll(/\$/g)).length > 1) {
-                    renderMath(contentDiv);
-                }
+                renderMath(contentDiv);
+                highlightBlock(contentDiv);
             });
-            hljs.highlightAll();
         }
     }
 
@@ -7718,7 +7715,7 @@ const Message = {
             getId('left-column')?.classList.remove('hidden');
             getId('middle-column')?.classList.remove('full-width');
         }
-        updateTokenCost();
+        recomputeTotals();
     }
 
     function handleKeyboardShortcuts(e) {
