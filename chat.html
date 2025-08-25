@@ -29,7 +29,7 @@
                 --fonts-mono-main: 'Menlo', 'Monaco', 'Courier New', monospace;
                 --fonts-sans-alt: 'Roboto', 'Helvetica', sans-serif;
                 --fonts-mono-alt: 'Courier New', monospace;
-                --font-size-main: 14px;
+                --font-size-main: 13px;
             /* Role Colors */
                 /* User: blue */
                 --color-roles-user-main: #00f;
@@ -111,7 +111,7 @@
                 --button-filter-hover: saturate(750%) brightness(100%);
                 --compact-options-filter: saturate(750%) contrast(110%) brightness(110%);
 
-                --message-max-height: 500px;
+                --message-max-height: 750px;
                 --message-item-vpad: 1px;
                 --message-item-vpad-strong: 3px;
                 --message-item-hpad: 1px;
@@ -214,10 +214,24 @@
             color: var(--color-text-hard);
             margin: 0;
             padding: 0px;
+            padding-left: 10px;
             padding-right: 10px;
             &.markdown-disabled {
                 & .message-content, & .output {
                     white-space: pre-wrap;
+                }
+            }
+            &:not(.mosaic) {
+                .message-row {
+                    gap: 4px;
+                    margin-top: 4px;
+                }
+            }
+            &.mosaic {
+                .message-block:not(:hover, :has(.selected, .editing)) {
+                    .message-control {
+                        display: none;
+                    }
                 }
             }
         }
@@ -272,8 +286,6 @@
         .message-row {
             display: flex;
             flex-direction: row;
-            margin-top: 4px;
-            gap: 4px;
         }
         .message-block {
             --block-leftmost-side-width: 5px;
@@ -310,7 +322,8 @@
             border-color: var(--role-color-main);
             border-top-color: transparent;
             border-left-width: 2px;
-            border-bottom-width: 0px;
+            border-bottom-width: 1px;
+            border-bottom-color: transparent;
             /* text-shadow: 0px 0px 2px var(--color-main-shadow-light), 0px 0px 1px var(--role-color-shadow); */
             display: flex;
             flex-direction: column;
@@ -318,7 +331,7 @@
             flex: 1 1 auto;
             overflow-x: clip;
             padding: 0px 0px 0px 0px; /* ccw from top */
-            transition: all 0.1s ease-in-out;
+            transition: background-color 0.1s linear;
             z-index: 5;
             & div[contenteditable="true"] {
                 outline: none;
@@ -336,11 +349,19 @@
                 border-top-width: 1px;
                 & .message-control {
                     border-top: 1px solid var(--role-color-main);
-                    border-bottom: 1px solid var(--role-color-shadow);
+                    border-bottom: 0px solid var(--role-color-shadow);
                     background-color: var(--role-color-accent);
                     z-index: 100;
-                    padding: 1px 8px 0px 8px;
+                    padding: 0px 8px 0px 8px;
                     margin: -1px 0px -1px -3px;
+                }
+            }
+            &:has(.selected, .editing) {
+                & .message-control {
+                    background-image: linear-gradient(40deg, var(--role-color-accent) 0%, var(--role-color-main) 500%) !important;
+                    & .tokens-info, & .control-button {
+                        color: var(--color-text-medium);
+                    }
                 }
             }
             &:has(.collapsed:not(.editing)) {
@@ -361,7 +382,6 @@
             &:focus {border-width: 3px;}
             &:hover {
                 z-index: 10;
-                transition: all 0.0s ease-in-out;
                 border-top-color: var(--role-color-main);
                 border-bottom-color: var(--role-color-main);
                 &:not(:has(.selected)) {
@@ -395,6 +415,17 @@
                     /* box-shadow: 0px 0px 4px var(--role-color-main); */
                 }
             }
+            &:has(.message-content.generating), &.generating {
+                border-color: var(--role-color-shadow);
+                background-color: var(--role-color-light);
+                box-shadow: 0px 0px 10px var(--role-color-shadow), 0px 0px 2px var(--role-color-main);
+            }
+            &.divider, &:has(.message-content.divider) {
+                background-color: var(--color-text-light);
+                & .message-content {
+                    background-color: var(--transparent);
+                }
+            }
         }
 
         .message-content, .output {
@@ -402,25 +433,27 @@
             word-wrap: break-word;       /* Ensures long words don't overflow */
             word-break: break-word;      /* Allows breaking of long words */
             overflow-wrap: break-word;   /* Modern version of word-wrap */
-            tab-size: 4;                 /* Standardizes tab width */
             flex: 1;
             /* white-space: break-spaces; */
             overflow-x: clip;
             overflow-y: scroll;
+            border-bottom-width: 1px;
+            border-bottom-style: solid;
+            border-bottom-color: transparent;
             margin-bottom: 0px;
             padding: 4px 8px 4px 8px;
             &.disabled {opacity: 0.5;}
             &.selected {
                 z-index: 20;
-                border-bottom: 1px solid var(--role-color-main);
+                border-bottom-color: var(--role-color-main);
                 &:not(:is(.editing, .disabled)) {
                     opacity: 1.0;
                 }
             }
             &.condensed {
                 max-height: 144px;
-                font-size: 0.95em;
-                line-height: 1em;
+                font-size: 0.85em;
+                line-height: 0.9em;
                 overflow-y: scroll;
                 scrollbar-gutter: stable;
                 scrollbar-color: var(--color-scroll-main) var(--color-main-bg-light);
@@ -542,7 +575,7 @@
                     --order: 1;
                 }
                 &.control-button {
-                    top: 0px;
+                    top: 1px;
                     grid-row: 1;
                     grid-column: 5;
                     align-self: center;
@@ -1018,7 +1051,7 @@
             &:has(.tokens-used) {
                 justify-content: start;
             }
-            & > span:is(.tokens-used, .chat-cost, text.-cost) {
+            & > span:is(.tokens-used, .chat-cost, .text-cost) {
                 padding-left: 0px;
                 padding-right: 24px;}
         }
@@ -1326,12 +1359,12 @@
         body.theme-night, body.theme-4, html:has(body.theme-night), html:has(body.theme-4) {
             --background-image: url("https://e1.pxfuel.com/desktop-wallpaper/959/475/desktop-wallpaper-laptop-aesthetic-moon-laptop-aesthetic.jpg");
             --background-color: #d4e1ff00;
-            --accent-alpha: 0.2;
+            --accent-alpha: 0.3;
             --foreground-axis: #fff;
-            --background-axis: #222;
-            --heavy-blend-ratio: 25%;
-            --light-blend-ratio: 80%;
-            --color-main-bg: #222;
+            --background-axis: #111;
+            --heavy-blend-ratio: 70%;
+            --light-blend-ratio: 85%;
+            --color-main-bg: #101010;
             --color-roles-assistant-main: #b0b;
             --color-roles-user-main: #00f;
             --color-roles-syst-main: #f00;
@@ -1938,6 +1971,12 @@
                             Seamless mode
                         </label>
                     </div>
+                    <div id="stateToggle-mosaic">
+                        <input class="option" type="checkbox" id="mosaicMode" onchange="toggleMosaic(this.checked);" checked>
+                        <label for="mosaicMode">
+                            Mosaic mode
+                        </label>
+                    </div>
                 </div>
                 <br>
                 <div id="shamelessSelfPromotion">
@@ -1973,7 +2012,7 @@
                             <input
                                 class="option maxTokensChat"
                                 id="maxTokensChat"
-                                type="text" value="2048" size="4"
+                                type="text" value="90%" size="4"
                                 onchange="document.querySelectorAll('.maxTokensChat').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); recomputeTotals()"
                             />
                         </span>
@@ -1994,7 +2033,7 @@
                             Max tokens:
                             <input
                                 class="option maxTokensText"
-                                type="text" id="maxTokensText" value="128" size="4"
+                                type="text" id="maxTokensText" value="256" size="4"
                                 onchange="document.querySelectorAll('.maxTokensText').forEach(s=>{s.value=this.value;}); $inputs.saveAllOptions(); recomputeTotals();"
                             />
                         </span>
@@ -2167,8 +2206,9 @@
 /**                DATA OBJECTS                **/
 
     // see https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json for consistent updates
-    const $models = {
-        providers: {
+    const $models =
+    {
+        "providers": {
             "anthropic": {
                 "baseURL": "https://api.anthropic.com/v1",
                 "shortName": "Ant",
@@ -2290,1008 +2330,1314 @@
                 "capitalize": "None"
             }
         },
-        chat: {
+        "chat": {
             "openai/gpt-4o": {
-                short: "GPT-4o (OR)",
-                class: "gpt-4o",
-                provider: "OpenRouter",
-                cost: { in: 5.0, out: 15.0 },
-                max: { in: 128000, out: 16384 }
+                "short": "GPT-4o (OR)",
+                "class": "gpt-4o",
+                "provider": "OpenRouter",
+                "cost": { "in": 5.0, "out": 15.0 },
+                "max": { "in": 128000, "out": 16384 }
             },
             "openai/o4-mini-high": {
-                short: "o4 Mini High (OR)",
-                class: "o4-mini",
-                provider: "OpenRouter",
-                cost: { in: 1.10, out: 4.40 },
-                max: { in: 200000, out: 100000 },
-                extra: ["developer"],
-                pareto: true,
+                "short": "o4 Mini High (OR)",
+                "class": "o4-mini",
+                "provider": "OpenRouter",
+                "cost": { "in": 1.10, "out": 4.40 },
+                "max": { "in": 200000, "out": 100000 },
+                "extra": ["developer"],
+                "pareto": true
             },
             "openai/o3-pro": {
-                short: "o3 Pro (OR)",
-                class: "o3-pro",
-                provider: "OpenRouter",
-                cost: { in: 20.0, out: 80.0 },
-                max: { in: 200000, out: 100000 },
-                extra: ["developer"],
-                pareto: true,
+                "short": "o3 Pro (OR)",
+                "class": "o3-pro",
+                "provider": "OpenRouter",
+                "cost": { "in": 20.0, "out": 80.0 },
+                "max": { "in": 200000, "out": 100000 },
+                "extra": ["developer"],
+                "pareto": true
             },
             "openai/o3": {
-                short: "o3 (OR)",
-                class: "o3",
-                provider: "OpenRouter",
-                cost: { in: 2.0, out: 8.0 },
-                max: { in: 200000, out: 100000 },
-                extra: ["developer"],
-                pareto: true,
+                "short": "o3 (OR)",
+                "class": "o3",
+                "provider": "OpenRouter",
+                "cost": { "in": 2.0, "out": 8.0 },
+                "max": { "in": 200000, "out": 100000 },
+                "extra": ["developer"],
+                "pareto": true
             },
             "openai/o3-mini-high": {
-                short: "o3 Mini High (OR)",
-                class: "o3-mini",
-                provider: "OpenRouter",
-                cost: { in: 1.10, out: 4.40 },
-                max: { in: 200000, out: 100000 },
-                extra: ["developer"],
+                "short": "o3 Mini High (OR)",
+                "class": "o3-mini",
+                "provider": "OpenRouter",
+                "cost": { "in": 1.10, "out": 4.40 },
+                "max": { "in": 200000, "out": 100000 },
+                "extra": ["developer"]
             },
             "openai/o1": {
-                short: "o1 (OR)",
-                class: "o1",
-                provider: "OpenRouter",
-                cost: { in: 15.00, out: 60.00 },
-                max: { in: 200000, out: 100000 },
-                extra: ["developer"],
+                "short": "o1 (OR)",
+                "class": "o1",
+                "provider": "OpenRouter",
+                "cost": { "in": 15.00, "out": 60.00 },
+                "max": { "in": 200000, "out": 100000 },
+                "extra": ["developer"]
+            },
+            "openai/gpt-5": {
+                "short": "GPT-5 (OR)",
+                "class": "gpt-5",
+                "provider": "OpenRouter",
+                "cost": { "in": 1.25, "out": 10.0 },
+                "max": { "in": 400000, "out": 128000 },
+                "pareto": true
+            },
+            "openai/gpt-5-mini": {
+                "short": "GPT-5 Mini (OR)",
+                "class": "gpt-5-mini",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.25, "out": 2.0 },
+                "max": { "in": 400000, "out": 128000 },
+                "pareto": true
+            },
+            "openai/gpt-5-nano": {
+                "short": "GPT-5 Nano (OR)",
+                "class": "gpt-5-nano",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.05, "out": 0.40 },
+                "max": { "in": 400000, "out": 128000 },
+                "pareto": true
+            },
+            "openai/gpt-5-chat": {
+                "short": "GPT-5 Chat (OR)",
+                "class": "gpt-5",
+                "provider": "OpenRouter",
+                "cost": { "in": 1.25, "out": 10.0 },
+                "max": { "in": 400000, "out": 128000 },
+                "pareto": true
             },
             "openai/gpt-4.5-preview": {
-                short: "GPT-4.5 Preview (OR)",
-                class: "gpt-4.5-preview",
-                provider: "OpenRouter",
-                cost: { in: 75.00, out: 150.00 },
-                max: { in: 128000, out: 16384 },
-                pareto: true,
+                "short": "GPT-4.5 Preview (OR)",
+                "class": "gpt-4.5-preview",
+                "provider": "OpenRouter",
+                "cost": { "in": 75.00, "out": 150.00 },
+                "max": { "in": 128000, "out": 16384 },
+                "pareto": true
             },
             "openai/gpt-4.1": {
-                short: "GPT-4.1 (OR)",
-                class: "gpt-4.1",
-                provider: "OpenRouter",
-                cost: { in: 2.0, out: 8.0 },
-                max: { in: 1048576, out: 32768 },
-                pareto: true,
+                "short": "GPT-4.1 (OR)",
+                "class": "gpt-4.1",
+                "provider": "OpenRouter",
+                "cost": { "in": 2.0, "out": 8.0 },
+                "max": { "in": 1048576, "out": 32768 },
+                "pareto": true
             },
             "openai/gpt-4.1-mini": {
-                short: "GPT-4.1 Mini (OR)",
-                class: "gpt-4.1-mini",
-                provider: "OpenRouter",
-                cost: { in: 0.40, out: 1.60 },
-                max: { in: 1048576, out: 32768 }
+                "short": "GPT-4.1 Mini (OR)",
+                "class": "gpt-4.1-mini",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.40, "out": 1.60 },
+                "max": { "in": 1048576, "out": 32768 }
             },
             "openai/gpt-4.1-nano": {
-                short: "GPT-4.1 Nano (OR)",
-                class: "gpt-4.1-nano",
-                provider: "OpenRouter",
-                cost: { in: 0.10, out: 0.40 },
-                max: { in: 1048576, out: 32768 }
+                "short": "GPT-4.1 Nano (OR)",
+                "class": "gpt-4.1-nano",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.10, "out": 0.40 },
+                "max": { "in": 1048576, "out": 32768 }
+            },
+            "openai/gpt-oss-120b": {
+                "short": "GPT OSS 120B (OR)",
+                "class": "gpt-oss-120b",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.10, "out": 0.50 },
+                "max": { "in": 131072, "out": 131072 }
+            },
+            "openai/gpt-oss-20b": {
+                "short": "GPT OSS 20B (OR)",
+                "class": "gpt-oss-20b",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.05, "out": 0.20 },
+                "max": { "in": 131072, "out": 131072 }
+            },
+            "gpt-5": {
+                "short": "GPT-5 (OAI)",
+                "class": "gpt-5",
+                "provider": "OpenAI",
+                "cost": { "in": 1.25, "out": 10.0 },
+                "max": { "in": 400000, "out": 128000 },
+                "pareto": true
+            },
+            "gpt-5-mini": {
+                "short": "GPT-5 Mini (OAI)",
+                "class": "gpt-5-mini",
+                "provider": "OpenAI",
+                "cost": { "in": 0.25, "out": 2.0 },
+                "max": { "in": 400000, "out": 128000 },
+                "pareto": true
+            },
+            "gpt-5-nano": {
+                "short": "GPT-5 Nano (OAI)",
+                "class": "gpt-5-nano",
+                "provider": "OpenAI",
+                "cost": { "in": 0.05, "out": 0.40 },
+                "max": { "in": 400000, "out": 128000 },
+                "pareto": true
+            },
+            "gpt-5-chat": {
+                "short": "GPT-5 Chat (OAI)",
+                "class": "gpt-5",
+                "provider": "OpenAI",
+                "cost": { "in": 1.25, "out": 10.0 },
+                "max": { "in": 400000, "out": 128000 },
+                "pareto": true
             },
             "gpt-4.1": {
-                short: "GPT-4.1 (OAI)",
-                class: "gpt-4.1",
-                provider: "OpenAI",
-                cost: { in: 2.0, out: 8.0 },
-                max: { in: 1048576, out: 32768 },
-                pareto: true,
+                "short": "GPT-4.1 (OAI)",
+                "class": "gpt-4.1",
+                "provider": "OpenAI",
+                "cost": { "in": 2.0, "out": 8.0 },
+                "max": { "in": 1048576, "out": 32768 },
+                "pareto": true
             },
             "gpt-4.1-mini": {
-                short: "GPT-4.1 Mini (OAI)",
-                class: "gpt-4.1-mini",
-                provider: "OpenAI",
-                cost: { in: 0.40, out: 1.60 },
-                max: { in: 1048576, out: 32768 },
+                "short": "GPT-4.1 Mini (OAI)",
+                "class": "gpt-4.1-mini",
+                "provider": "OpenAI",
+                "cost": { "in": 0.40, "out": 1.60 },
+                "max": { "in": 1048576, "out": 32768 }
             },
             "gpt-4.1-nano": {
-                short: "GPT-4.1 Nano (OAI)",
-                class: "gpt-4.1-nano",
-                provider: "OpenAI",
-                cost: { in: 0.10, out: 0.40 },
-                max: { in: 1048576, out: 32768 },
+                "short": "GPT-4.1 Nano (OAI)",
+                "class": "gpt-4.1-nano",
+                "provider": "OpenAI",
+                "cost": { "in": 0.10, "out": 0.40 },
+                "max": { "in": 1048576, "out": 32768 }
             },
             "gpt-4o": {
-                short: "GPT-4o (OAI)",
-                class: "gpt-4o",
-                provider: "OpenAI",
-                cost: { in: 5.0, out: 15.0 },
-                max: { in: 128000, out: 16384 },
+                "short": "GPT-4o (OAI)",
+                "class": "gpt-4o",
+                "provider": "OpenAI",
+                "cost": { "in": 5.0, "out": 15.0 },
+                "max": { "in": 128000, "out": 16384 }
             },
             "o4-mini": {
-                short: "o4 Mini (OAI)",
-                class: "o4-mini",
-                provider: "OpenAI",
-                cost: { in: 1.10, out: 4.40 },
-                max: { in: 200000, out: 100000 },
-                extra: ["developer"],
-                pareto: true,
+                "short": "o4 Mini (OAI)",
+                "class": "o4-mini",
+                "provider": "OpenAI",
+                "cost": { "in": 1.10, "out": 4.40 },
+                "max": { "in": 200000, "out": 100000 },
+                "extra": ["developer"],
+                "pareto": true
             },
             "o3-pro": {
-                short: "o3 Pro (OAI)",
-                class: "o3-pro",
-                provider: "OpenAI",
-                cost: { in: 20.0, out: 80.0 },
-                max: { in: 200000, out: 100000 },
-                extra: ["developer"],
-                pareto: true,
+                "short": "o3 Pro (OAI)",
+                "class": "o3-pro",
+                "provider": "OpenAI",
+                "cost": { "in": 20.0, "out": 80.0 },
+                "max": { "in": 200000, "out": 100000 },
+                "extra": ["developer"],
+                "pareto": true
             },
             "o3": {
-                short: "o3 (OAI)",
-                class: "o3",
-                provider: "OpenAI",
-                cost: { in: 2.0, out: 8.0 },
-                max: { in: 200000, out: 100000 },
-                extra: ["developer"],
-                pareto: true,
+                "short": "o3 (OAI)",
+                "class": "o3",
+                "provider": "OpenAI",
+                "cost": { "in": 2.0, "out": 8.0 },
+                "max": { "in": 200000, "out": 100000 },
+                "extra": ["developer"],
+                "pareto": true
             },
             "o3-mini": {
-                short: "o3-mini (OAI)",
-                class: "o3-mini",
-                provider: "OpenAI",
-                cost: { in: 1.10, out: 4.40 },
-                max: { in: 200000, out: 100000 },
-                params: ["reasoning_effort"],
-                extra: ["developer"],
+                "short": "o3-mini (OAI)",
+                "class": "o3-mini",
+                "provider": "OpenAI",
+                "cost": { "in": 1.10, "out": 4.40 },
+                "max": { "in": 200000, "out": 100000 },
+                "params": ["reasoning_effort"],
+                "extra": ["developer"]
             },
             "o1": {
-                short: "o1 (OAI)",
-                class: "o1",
-                provider: "OpenAI",
-                cost: { in: 15.00, out: 60.00 },
-                max: { in: 200000, out: 100000 },
-                extra: ["developer"],
+                "short": "o1 (OAI)",
+                "class": "o1",
+                "provider": "OpenAI",
+                "cost": { "in": 15.00, "out": 60.00 },
+                "max": { "in": 200000, "out": 100000 },
+                "extra": ["developer"]
             },
-            "claude-opus-4": {
-                short: "Claude 4 Opus (Ant)",
-                class: "claude-4-opus",
-                provider: "Anthropic",
-                cost: { in: 15.0, out: 75.0 },
-                max: { in: 200000, out: 32000 },
-                extra: ["prefix"],
-                pareto: true,
-            },
-            "claude-sonnet-4": {
-                short: "Claude 4 Sonnet (Ant)",
-                class: "claude-4-sonnet",
-                provider: "Anthropic",
-                cost: { in: 3.0, out: 15.0 },
-                max: { in: 200000, out: 32000 },
-                extra: ["prefix"],
-                pareto: true,
-            },
-            "claude-3-7-sonnet-latest": {
-                short: "Claude 3.7 Sonnet (Ant)",
-                class: "claude-3.7-sonnet",
-                provider: "Anthropic",
-                cost: { in: 3.0, out: 15.0 },
-                max: { in: 200000, out: 8192 },
-                extra: ["prefix", "thinking"], // enable thinking by putting `extra_body={"thinking":{"type":"enabled","budget_tokens":2000}}` in the payload
-            },
-            "claude-3-5-sonnet-latest": {
-                short: "Claude 3.5.1 Sonnet (Ant)",
-                class: "claude-3.5-sonnet",
-                provider: "Anthropic",
-                cost: { in: 3.0, out: 15.0 },
-                max: { in: 200000, out: 8192 },
-                extra: ["prefix"],
-            },
-            "claude-3-5-haiku-latest": {
-                short: "Claude 3.5 Haiku (Ant)",
-                class: "claude-3.5-haiku",
-                provider: "Anthropic",
-                cost: { in: 0.80, out: 4.00 },
-                max: { in: 200000, out: 8192 },
-                extra: ["prefix"],
-            },
-            "anthropic/claude-opus-4": {
-                short: "Claude 4 Opus (OR)",
-                class: "claude-4-opus",
-                provider: "OpenRouter",
-                cost: { in: 15.0, out: 75.0 },
-                max: { in: 200000, out: 32000 },
-                extra: ["prefix"],
-                pareto: true,
+            "anthropic/claude-opus-4.1": {
+                "short": "Claude 4.1 Opus (OR)",
+                "class": "claude-4-opus",
+                "provider": "OpenRouter",
+                "cost": { "in": 15.0, "out": 75.0 },
+                "max": { "in": 200000, "out": 32000 },
+                "extra": ["prefix"],
+                "pareto": true
             },
             "anthropic/claude-sonnet-4": {
-                short: "Claude 4 Sonnet (OR)",
-                class: "claude-4-sonnet",
-                provider: "OpenRouter",
-                cost: { in: 3.0, out: 15.0 },
-                max: { in: 200000, out: 32000 },
-                extra: ["prefix"],
-                pareto: true,
+                "short": "Claude 4 Sonnet (OR)",
+                "class": "claude-4-sonnet",
+                "provider": "OpenRouter",
+                "cost": { "in": 3.0, "out": 15.0 },
+                "max": { "in": 200000, "out": 64000 },
+                "extra": ["prefix"],
+                "pareto": true
             },
             "anthropic/claude-3.7-sonnet": {
-                short: "Claude 3.7 Sonnet (OR)",
-                class: "claude-3.7-sonnet",
-                provider: "OpenRouter",
-                cost: { in: 3.0, out: 15.0 },
-                max: { in: 200000, out: 8192 },
-                extra: ["prefix", "thinking"],
+                "short": "Claude 3.7 Sonnet (OR)",
+                "class": "claude-3.7-sonnet",
+                "provider": "OpenRouter",
+                "cost": { "in": 3.0, "out": 15.0 },
+                "max": { "in": 200000, "out": 8192 },
+                "extra": ["prefix", "thinking"]
             },
             "anthropic/claude-3.5-sonnet": {
-                short: "Claude 3.5.1 Sonnet (OR)",
-                class: "claude-3.5-sonnet",
-                provider: "OpenRouter",
-                cost: { in: 3.0, out: 15.0 },
-                max: { in: 200000, out: 8192 },
-                extra: ["prefix"],
+                "short": "Claude 3.5.1 Sonnet (OR)",
+                "class": "claude-3.5-sonnet",
+                "provider": "OpenRouter",
+                "cost": { "in": 3.0, "out": 15.0 },
+                "max": { "in": 200000, "out": 8192 },
+                "extra": ["prefix"]
             },
-            "google/gemini-2.5-pro-preview": {
-                short: "Gemini 2.5 Pro (OR)",
-                class: "gemini-2.5-pro",
-                provider: "OpenRouter",
-                cost: { in: 1.25, out: 10.00 },
-                max: { in: 1048576, out: 65536 },
-                pareto: true,
+            "claude-opus-4-0": {
+                "short": "Claude 4 Opus (Ant)",
+                "class": "claude-4-opus",
+                "provider": "Anthropic",
+                "cost": { "in": 15.0, "out": 75.0 },
+                "max": { "in": 200000, "out": 32000 },
+                "extra": ["prefix"],
+                "pareto": true
             },
-            "google/gemini-2.5-flash-preview": {
-                short: "Gemini 2.5 Flash Preview (OR)",
-                class: "gemini-2.5-flash",
-                provider: "OpenRouter",
-                cost: { in: 0.15, out: 0.60 },
-                max: { in: 1048576, out: 65536 },
-                pareto: true,
+            "claude-sonnet-4-0": {
+                "short": "Claude 4 Sonnet (Ant)",
+                "class": "claude-4-sonnet",
+                "provider": "Anthropic",
+                "cost": { "in": 3.0, "out": 15.0 },
+                "max": { "in": 200000, "out": 64000 },
+                "extra": ["prefix"],
+                "pareto": true
+            },
+            "claude-3-7-sonnet-latest": {
+                "short": "Claude 3.7 Sonnet (Ant)",
+                "class": "claude-3.7-sonnet",
+                "provider": "Anthropic",
+                "cost": { "in": 3.0, "out": 15.0 },
+                "max": { "in": 200000, "out": 128000 },
+                "extra": ["prefix", "thinking"]
+            },
+            "claude-3-5-sonnet-latest": {
+                "short": "Claude 3.6 Sonnet (Ant)",
+                "class": "claude-3.5-sonnet",
+                "provider": "Anthropic",
+                "cost": { "in": 3.0, "out": 15.0 },
+                "max": { "in": 200000, "out": 8192 },
+                "extra": ["prefix"]
+            },
+            "claude-3-5-haiku-latest": {
+                "short": "Claude 3.5 Haiku (Ant)",
+                "class": "claude-3.5-haiku",
+                "provider": "Anthropic",
+                "cost": { "in": 0.80, "out": 4.00 },
+                "max": { "in": 200000, "out": 8192 },
+                "extra": ["prefix"]
+            },
+            "google/gemini-2.5-pro": {
+                "short": "Gemini 2.5 Pro (OR)",
+                "class": "gemini-2.5-pro",
+                "provider": "OpenRouter",
+                "cost": { "in": 1.25, "out": 10.00 },
+                "max": { "in": 1048576, "out": 65536 },
+                "pareto": true
+            },
+            "google/gemini-2.5-flash": {
+                "short": "Gemini 2.5 Flash (OR)",
+                "class": "gemini-2.5-flash",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.30, "out": 2.50 },
+                "max": { "in": 1048576, "out": 65536 },
+                "pareto": true
             },
             "google/gemini-2.5-flash-preview:thinking": {
-                short: "Gemini 2.5 Flash Preview (thinking) (OR)",
-                class: "gemini-2.5-flash",
-                provider: "OpenRouter",
-                cost: { in: 0.15, out: 3.50 },
-                max: { in: 1048576, out: 65536 },
-                pareto: true,
+                "short": "Gemini 2.5 Flash Preview (thinking) (OR)",
+                "class": "gemini-2.5-flash",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.15, "out": 3.50 },
+                "max": { "in": 1048576, "out": 65536 },
+                "pareto": true
             },
             "google/gemini-2.5-flash-lite-preview-06-17": {
-                short: "Gemini 2.5 Flash Lite Preview (06-17) (OR)",
-                class: "gemini-2.5-flash",
-                provider: "OpenRouter",
-                cost: { in: 0.10, out: 0.40 },
-                max: { in: 1048576, out: 65536 },
-                pareto: true,
+                "short": "Gemini 2.5 Flash Lite Preview (06-17) (OR)",
+                "class": "gemini-2.5-flash-lite",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.10, "out": 0.40 },
+                "max": { "in": 1000000, "out": 64000 },
+                "pareto": true
             },
-            "gemini-2.5-pro-exp-03-25": {
-                short: "Gemini 2.5 Pro 3-25 (Gem)",
-                class: "gemini-2.5-pro",
-                provider: "Gemini",
-                cost: { in: 0.0, out: 0.0 },
-                max: { in: 1048576, out: 8192 }
+            "gemini-2.5-pro": {
+                "short": "Gemini 2.5 Pro (Gem)",
+                "class": "gemini-2.5-pro",
+                "provider": "Gemini",
+                "cost": { "in": 1.25, "out": 10 },
+                "max": { "in": 1048576, "out": 65536 }
             },
-            "gemini-2.5-flash-preview-04-17": {
-                short: "Gemini 2.5 Flash Preview (04-17) (Gem)",
-                class: "gemini-2.5-flash",
-                provider: "Gemini",
-                cost: { in: 0.15, out: 0.60 },
-                max: { in: 1048576, out: 65536 }
+            "gemini-2.5-flash": {
+                "short": "Gemini 2.5 Flash (Gem)",
+                "class": "gemini-2.5-flash",
+                "provider": "Gemini",
+                "cost": { "in": 0.15, "out": 0.60 },
+                "max": { "in": 1048576, "out": 65536 }
+            },
+            "gemini-2.5-flash-lite-preview-06-17": {
+                "short": "Gemini 2.5 Flash Lite Preview (Gem)",
+                "class": "gemini-2.5-flash-lite",
+                "provider": "Gemini",
+                "cost": { "in": 0.10, "out": 0.40 },
+                "max": { "in": 1000000, "out": 64000 }
             },
             "gemini-2.0-flash": {
-                short: "Gemini 2.0 Flash (Gem)",
-                class: "gemini-2.0-flash",
-                provider: "Gemini",
-                cost: { in: 0.10, out: 0.40 },
-                max: { in: 1048576, out: 8192 }
+                "short": "Gemini 2.0 Flash (Gem)",
+                "class": "gemini-2.0-flash",
+                "provider": "Gemini",
+                "cost": { "in": 0.10, "out": 0.40 },
+                "max": { "in": 1048576, "out": 8192 }
             },
             "gemini-2.0-flash-lite-001": {
-                short: "Gemini 2.0 Flash Lite (Gem)",
-                class: "gemini-2.0-flash-lite",
-                provider: "Gemini",
-                cost: { in: 0.075, out: 0.30 },
-                max: { in: 1048576, out: 8192 }
+                "short": "Gemini 2.0 Flash Lite (Gem)",
+                "class": "gemini-2.0-flash-lite",
+                "provider": "Gemini",
+                "cost": { "in": 0.075, "out": 0.30 },
+                "max": { "in": 1048576, "out": 8192 }
             },
             "gemini-2.0-flash-thinking-exp": {
-                short: "Gemini 2.0 Flash Thinking Experimental (Gem)",
-                class: "gemini-2.0-flash",
-                provider: "Gemini",
-                cost: { in: 0.0, out: 0.0 },
-                max: { in: 1048576, out: 8192 }
+                "short": "Gemini 2.0 Flash Thinking Experimental (Gem)",
+                "class": "gemini-2.0-flash",
+                "provider": "Gemini",
+                "cost": { "in": 0.0, "out": 0.0 },
+                "max": { "in": 1048576, "out": 8192 }
             },
             "gemini-2.0-pro-exp": {
-                short: "Gemini 2.0 Pro Experimental (Gem)",
-                class: "gemini-2.0-pro",
-                provider: "Gemini",
-                cost: { in: 0.0, out: 0.0 },
-                max: { in: 2097152, out: 8192 }
+                "short": "Gemini 2.0 Pro Experimental (Gem)",
+                "class": "gemini-2.0-pro",
+                "provider": "Gemini",
+                "cost": { "in": 0.0, "out": 0.0 },
+                "max": { "in": 2097152, "out": 8192 }
+            },
+            "x-ai/grok-4": {
+                "short": "Grok 4 (OR)",
+                "class": "grok-4",
+                "provider": "OpenRouter",
+                "cost": { "in": 3.00, "out": 15.00 },
+                "max": { "in": 256000, "out": 256000 },
+                "pareto": true
             },
             "x-ai/grok-3-beta": {
-                short: "Grok 3 Beta (OR)",
-                class: "grok-3",
-                provider: "OpenRouter",
-                cost: { in: 3.00, out: 15.00 },
-                max: { in: 131072, out: 131072 },
-                pareto: true,
+                "short": "Grok 3 Beta (OR)",
+                "class": "grok-3",
+                "provider": "OpenRouter",
+                "cost": { "in": 3.00, "out": 15.00 },
+                "max": { "in": 131072, "out": 131072 },
+                "pareto": false
             },
             "x-ai/grok-3-mini-beta": {
-                short: "Grok 3 Mini Beta (OR)",
-                class: "grok-3-mini",
-                provider: "OpenRouter",
-                cost: { in: 0.30, out: 0.50 },
-                max: { in: 131072, out: 131072 }
+                "short": "Grok 3 Mini Beta (OR)",
+                "class": "grok-3-mini",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.30, "out": 0.50 },
+                "max": { "in": 131072, "out": 131072 }
             },
             "grok-2-1212": {
-                short: "Grok 2 12-12 (xAI)",
-                class: "grok-2",
-                provider: "xAI",
-                cost: { in: 2.0, out: 10.0 },
-                max: { in: 131072, out: 8192 }
+                "short": "Grok 2 12-12 (xAI)",
+                "class": "grok-2",
+                "provider": "xAI",
+                "cost": { "in": 2.0, "out": 10.0 },
+                "max": { "in": 131072, "out": 8192 }
+            },
+            "moonshotai/kimi-k2": {
+                "short": "Kimi K2 (OR)",
+                "class": "kimi-k2",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.57, "out": 2.30 },
+                "max": { "in": 131072, "out": 131072 }
+            },
+            "moonshotai/Kimi-K2-Instruct::chutes": {
+                "short": "Kimi K2 (Chu)",
+                "class": "kimi-k2",
+                "provider": "Chutes",
+                "cost": { "in": 0.0878, "out": 0.0878 },
+                "max": { "in": 128000, "out": 128000 },
+                "pareto": true
+            },
+            "mistralai/devstral-medium": {
+                "short": "Devstral Medium (OR)",
+                "class": "devstral",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.40, "out": 2.00 },
+                "max": { "in": 131072, "out": 131072 }
+            },
+            "mistralai/devstral-small": {
+                "short": "Devstral Small 1.1 (OR)",
+                "class": "devstral",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.10, "out": 0.30 },
+                "max": { "in": 131072, "out": 131072 }
             },
             "cohere/command-r-plus-08-2024": {
-                short: "Cohere Command R+ 08-2024 (OR)",
-                class: "command-r-plus",
-                provider: "OpenRouter",
-                cost: { in: 2.5, out: 10.0 },
-                max: { in: 128000, out: 4000 }
+                "short": "Cohere Command R+ 08-2024 (OR)",
+                "class": "command-r-plus",
+                "provider": "OpenRouter",
+                "cost": { "in": 2.5, "out": 10.0 },
+                "max": { "in": 128000, "out": 4000 }
             },
             "inception/mercury-coder-small-beta": {
-                short: "Mercury Coder Small Beta (OR)",
-                class: "mercury-coder-small",
-                provider: "OpenRouter",
-                cost: { in: 0.25, out: 1.00 },
-                max: { in: 32000, out: 32000 }
+                "short": "Mercury Coder Small Beta (OR)",
+                "class": "mercury-coder-small",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.25, "out": 1.00 },
+                "max": { "in": 32000, "out": 32000 }
             },
             "mercury-coder-small": {
-                short: "Mercury Coder Small (Inc)",
-                class: "mercury-coder-small",
-                provider: "Inception",
-                cost: { in: 0.25, out: 1.00 },
-                max: { in: 32000, out: 32000 }
+                "short": "Mercury Coder Small (Inc)",
+                "class": "mercury-coder-small",
+                "provider": "Inception",
+                "cost": { "in": 0.25, "out": 1.00 },
+                "max": { "in": 32000, "out": 32000 }
+            },
+            "accounts/fireworks/models/deepseek-v3p1": {
+                "short": "DeepSeek V3.1 (FW)",
+                "class": "deepseek-v3.1",
+                "provider": "Fireworks",
+                "cost": { "in": 0.56, "out": 1.68 },
+                "max": { "in": 160000, "out": 20480 }
             },
             "deepseek/deepseek-prover-v2": {
-                short: "DeepSeek Prover V2 (OR)",
-                class: "deepseek-prover-v2",
-                provider: "OpenRouter",
-                cost: { in: 0.70, out: 2.50 },
-                max: { in: 160000, out: 160000 }
+                "short": "DeepSeek Prover V2 (OR)",
+                "class": "deepseek-prover-v2",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.70, "out": 2.50 },
+                "max": { "in": 160000, "out": 160000 }
             },
             "tngtech/deepseek-r1t-chimera:free": {
-                short: "DeepSeek R1T Chimera (Free) (OR)",
-                class: "deepseek-r1t-chimera",
-                provider: "OpenRouter",
-                cost: { in: 0.00, out: 0.00 },
-                max: { in: 163480, out: 163480 }
+                "short": "DeepSeek R1T Chimera (Free) (OR)",
+                "class": "deepseek-r1t-chimera",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.00, "out": 0.00 },
+                "max": { "in": 163480, "out": 163480 }
             },
             "deepseek/deepseek-r1": {
-                short: "DeepSeek R1 (OR)",
-                class: "deepseek-r1",
-                provider: "OpenRouter",
-                cost: { in: 0.55, out: 2.19 },
-                max: { in: 64000, out: 8000 },
-                extra: ["prefix"],
-                pareto: true,
+                "short": "DeepSeek R1 (OR)",
+                "class": "deepseek-r1",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.55, "out": 2.19 },
+                "max": { "in": 64000, "out": 8000 },
+                "extra": ["prefix"],
+                "pareto": true
+            },
+            "deepseek-ai/DeepSeek-R1::chutes": {
+                "short": "DeepSeek R1 (Chu)",
+                "class": "deepseek-r1",
+                "provider": "Chutes",
+                "cost": { "in": 0.27216, "out": 0.27216 },
+                "max": { "in": 163840, "out": 163840 },
+                "params": ["min_tokens"]
+            },
+            "deepseek-ai/DeepSeek-V3-0324::chutes": {
+                "short": "DeepSeek V3 0324 (Chu)",
+                "class": "deepseek-v3",
+                "provider": "Chutes",
+                "cost": { "in": 0.27216, "out": 0.27216 },
+                "max": { "in": 163840, "out": 163840 },
+                "params": ["min_tokens"]
             },
             "deepseek-ai/DeepSeek-R1": {
-                short: "DeepSeek R1 (Hyp)",
-                class: "deepseek-r1",
-                provider: "Hyperbolic",
-                cost: { in: 2.00, out: 2.00 },
-                max: { in: 131072, out: 131072 },
-                extra: ["prefix"],
-                pareto: true,
+                "short": "DeepSeek R1 (Hyp)",
+                "class": "deepseek-r1",
+                "provider": "Hyperbolic",
+                "cost": { "in": 2.00, "out": 2.00 },
+                "max": { "in": 131072, "out": 131072 },
+                "extra": ["prefix"],
+                "pareto": true
             },
             "deepseek-ai/DeepSeek-R1-Zero": {
-                short: "DeepSeek R1 Zero (Hyp)",
-                class: "deepseek-r1-zero",
-                provider: "Hyperbolic",
-                cost: { in: 2.00, out: 2.00 },
-                max: { in: 131072, out: 131072 },
-                pareto: true,
+                "short": "DeepSeek R1 Zero (Hyp)",
+                "class": "deepseek-r1-zero",
+                "provider": "Hyperbolic",
+                "cost": { "in": 2.00, "out": 2.00 },
+                "max": { "in": 131072, "out": 131072 },
+                "pareto": true
             },
             "deepseek/deepseek-chat": {
-                short: "DeepSeek V3 (OR)",
-                class: "deepseek-v3",
-                provider: "OpenRouter",
-                cost: { in: 0.9, out: 0.9 },
-                max: { in: 128000, out: 128000 },
-                extra: ["prefix"],
-                pareto: true,
+                "short": "DeepSeek V3 (OR)",
+                "class": "deepseek-v3",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.9, "out": 0.9 },
+                "max": { "in": 128000, "out": 128000 },
+                "extra": ["prefix"],
+                "pareto": true
             },
             "DeepSeek-V3-0324": {
-                short: "DeepSeek V3-0324 (SN)",
-                class: "deepseek-v3",
-                provider: "SambaNova",
-                cost: { in: 1.0, out: 1.5 },
-                max: { in: 8000, out: 4000 },
-                defaults: { temperature: 1.0, },
+                "short": "DeepSeek V3-0324 (SN)",
+                "class": "deepseek-v3",
+                "provider": "SambaNova",
+                "cost": { "in": 1.0, "out": 1.5 },
+                "max": { "in": 8000, "out": 4000 },
+                "defaults": { "temperature": 1.0 }
             },
             "deepseek-chat": {
-                short: "DeepSeek V3 (DS)",
-                class: "deepseek-v3",
-                provider: "DeepSeek_Beta",
-                cost: { in: 0.14, out: 0.28 },
-                max: { in: 64000, out: 8000 },
-                extra: ["prefix"],
-                pareto: true,
+                "short": "DeepSeek V3.1 (DS)",
+                "class": "deepseek-v3.1",
+                "provider": "DeepSeek_Beta",
+                "cost": { "in": 0.56, "out": 1.12 },
+                "max": { "in": 128000, "out": 8000 },
+                "extra": ["prefix"],
+                "pareto": true
             },
             "deepseek-reasoner": {
-                short: "DeepSeek R1 (DS)",
-                class: "deepseek-r1",
-                provider: "DeepSeek_Beta",
-                cost: { in: 0.55, out: 2.19 },
-                max: { in: 64000, out: 8000 },
-                extra: ["prefix", "reasoning_content"],
-                pareto: true,
+                "short": "DeepSeek R1 (DS)",
+                "class": "deepseek-r1",
+                "provider": "DeepSeek_Beta",
+                "cost": { "in": 0.55, "out": 2.19 },
+                "max": { "in": 64000, "out": 8000 },
+                "extra": ["prefix", "reasoning_content"],
+                "pareto": true
             },
             "DeepSeek-R1": {
-                short: "DeepSeek R1 (SN)",
-                class: "deepseek-r1",
-                provider: "SambaNova",
-                cost: { in: 5.0, out: 7.0 },
-                max: { in: 16000, out: 4000 },
-                pareto: true,
+                "short": "DeepSeek R1 (SN)",
+                "class": "deepseek-r1",
+                "provider": "SambaNova",
+                "cost": { "in": 5.0, "out": 7.0 },
+                "max": { "in": 16000, "out": 4000 },
+                "pareto": true
             },
             "google/gemma-3-27b-it": {
-                short: "Gemma 3 27B Instruct (OR)",
-                class: "gemma-3-27b-it",
-                provider: "OpenRouter",
-                cost: { in: 0.1, out: 0.2 },
-                max: { in: 131072, out: 8192 },
+                "short": "Gemma 3 27B Instruct (OR)",
+                "class": "gemma-3-27b-it",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.1, "out": 0.2 },
+                "max": { "in": 131072, "out": 8192 }
             },
             "mistralai/codestral-2501": {
-                short: "Codestral 2501 (OR)",
-                class: "codestral",
-                provider: "OpenRouter",
-                cost: { in: 0.30, out: 0.90 },
-                max: { in: 256000, out: 256000 },
+                "short": "Codestral 2501 (OR)",
+                "class": "codestral",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.30, "out": 0.90 },
+                "max": { "in": 256000, "out": 256000 }
             },
             "microsoft/phi-4": {
-                short: "Phi 4 (OR)",
-                class: "phi-4",
-                provider: "OpenRouter",
-                cost: { in: 0.07, out: 0.14 },
-                max: { in: 16384, out: 16384 },
+                "short": "Phi 4 (OR)",
+                "class": "phi-4",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.07, "out": 0.14 },
+                "max": { "in": 16384, "out": 16384 }
             },
             "accounts/fireworks/models/llama4-scout-instruct-basic": {
-                short: "Llama 4 Scout Instruct Basic (FW)",
-                class: "llama-4-scout-instruct",
-                provider: "Fireworks",
-                cost: { in: 0.15, out: 0.6 },
-                max: { in: 128000, out: 16384 },
-                params: ["min_tokens"],
+                "short": "Llama 4 Scout Instruct Basic (FW)",
+                "class": "llama-4-scout-instruct",
+                "provider": "Fireworks",
+                "cost": { "in": 0.15, "out": 0.6 },
+                "max": { "in": 128000, "out": 16384 },
+                "params": ["min_tokens"]
             },
             "accounts/fireworks/models/llama4-maverick-instruct-basic": {
-                short: "Llama 4 Maverick Instruct Basic (FW)",
-                class: "llama-4-maverick-instruct",
-                provider: "Fireworks",
-                cost: { in: 0.22, out: 0.88 },
-                max: { in: 1000000, out: 131072 },
-                params: ["min_tokens"],
-                pareto: true,
+                "short": "Llama 4 Maverick Instruct Basic (FW)",
+                "class": "llama-4-maverick-instruct",
+                "provider": "Fireworks",
+                "cost": { "in": 0.22, "out": 0.88 },
+                "max": { "in": 1000000, "out": 131072 },
+                "params": ["min_tokens"],
+                "pareto": true
             },
             "meta-llama/llama-3.1-405b-instruct": {
-                short: "Llama 3.1 405B Inst (OR)",
-                class: "llama-3.1-405b-instruct",
-                provider: "OpenRouter",
-                cost: { in: 1.79, out: 1.79 },
-                max: { in: 131072, out: 32000 },
+                "short": "Llama 3.1 405B Inst (OR)",
+                "class": "llama-3.1-405b-instruct",
+                "provider": "OpenRouter",
+                "cost": { "in": 1.79, "out": 1.79 },
+                "max": { "in": 131072, "out": 32000 }
             },
             "Meta-Llama-3.1-405B-Instruct": {
-                short: "Llama 3.1 405B Inst (SN)",
-                class: "llama-3.1-405b-instruct",
-                provider: "SambaNova",
-                cost: { in: 0.0, out: 0.0 },
-                max: { in: 8192, out: 8192 },
+                "short": "Llama 3.1 405B Inst (SN)",
+                "class": "llama-3.1-405b-instruct",
+                "provider": "SambaNova",
+                "cost": { "in": 0.0, "out": 0.0 },
+                "max": { "in": 8192, "out": 8192 }
             },
             "meta-llama/Meta-Llama-3.1-405B-Instruct": {
-                short: "Llama 3.1 405B Inst (Hyp)",
-                class: "llama-3.1-405b-instruct",
-                provider: "Hyperbolic",
-                cost: { in: 4.0, out: 4.0 },
-                max: { in: 8192, out: 8192 },
+                "short": "Llama 3.1 405B Inst (Hyp)",
+                "class": "llama-3.1-405b-instruct",
+                "provider": "Hyperbolic",
+                "cost": { "in": 4.0, "out": 4.0 },
+                "max": { "in": 8192, "out": 8192 }
             },
             "nousresearch/hermes-3-llama-3.1-405b": {
-                short: "Nous Hermes 3 Llama 3.1 405B (OR)",
-                class: "hermes-3-405b-instruct",
-                provider: "OpenRouter",
-                cost: { in: 4.5, out: 4.5 },
-                max: { in: 131072, out: 8192 },
+                "short": "Nous Hermes 3 Llama 3.1 405B (OR)",
+                "class": "hermes-3-405b-instruct",
+                "provider": "OpenRouter",
+                "cost": { "in": 4.5, "out": 4.5 },
+                "max": { "in": 131072, "out": 8192 }
             },
             "meta-llama/llama-3.2-90b-vision-instruct": {
-                short: "Llama 3.2V 90B Inst (OR)",
-                class: "llama-3.2v-90b-instruct",
-                provider: "OpenRouter",
-                cost: { in: 0.9, out: 0.9 },
-                max: { in: 131072, out: 131072 },
+                "short": "Llama 3.2V 90B Inst (OR)",
+                "class": "llama-3.2v-90b-instruct",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.9, "out": 0.9 },
+                "max": { "in": 131072, "out": 131072 }
             },
             "meta-llama/llama-3.3-70b-instruct": {
-                short: "Llama 3.3 70B Inst (OR)",
-                class: "llama-3.3-70b-instruct",
-                provider: "OpenRouter",
-                cost: { in: 0.4, out: 0.4 },
-                max: { in: 131072, out: 131072 },
+                "short": "Llama 3.3 70B Inst (OR)",
+                "class": "llama-3.3-70b-instruct",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.4, "out": 0.4 },
+                "max": { "in": 131072, "out": 131072 }
             },
             "NousResearch/Hermes-3-Llama-3.1-70B": {
-                short: "Nous Hermes 3.1 70B (Hyp)",
-                class: "hermes-3.1-70b-instruct",
-                provider: "Hyperbolic",
-                cost: { in: 0.4, out: 0.4 },
-                max: { in: 12288, out: 12288 },
+                "short": "Nous Hermes 3.1 70B (Hyp)",
+                "class": "hermes-3.1-70b-instruct",
+                "provider": "Hyperbolic",
+                "cost": { "in": 0.4, "out": 0.4 },
+                "max": { "in": 12288, "out": 12288 }
             },
             "nvidia/llama-3.1-nemotron-70b-instruct": {
-                short: "Llama 3.1 70B Nemo Inst (OR)",
-                class: "llama-3.1-nemotron-70b-instruct",
-                provider: "OpenRouter",
-                cost: { in: 0.35, out: 0.4 },
-                max: { in: 131072, out: 131072 },
+                "short": "Llama 3.1 70B Nemo Inst (OR)",
+                "class": "llama-3.1-nemotron-70b-instruct",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.35, "out": 0.4 },
+                "max": { "in": 131072, "out": 131072 }
             },
             "llama-3.1-70b-versatile": {
-                short: "Llama 3.1 70B (Groq)",
-                class: "llama-3.1-70b-instruct",
-                provider: "Groq",
-                cost: { in: 0.3, out: 0.3 },
-                max: { in: 131072, out: 4096 },
+                "short": "Llama 3.1 70B (Groq)",
+                "class": "llama-3.1-70b-instruct",
+                "provider": "Groq",
+                "cost": { "in": 0.3, "out": 0.3 },
+                "max": { "in": 131072, "out": 4096 }
             },
             "sao10k/l3.1-euryale-70b": {
-                short: "Llama 3.1 Euryale 70B v2.2 (OR)",
-                class: "llama-3.1-70b-euryale",
-                provider: "OpenRouter",
-                cost: { in: 0.35, out: 0.4 },
-                max: { in: 8192, out: 16000 },
+                "short": "Llama 3.1 Euryale 70B v2.2 (OR)",
+                "class": "llama-3.1-70b-euryale",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.35, "out": 0.4 },
+                "max": { "in": 8192, "out": 16000 }
             },
             "meta-llama/llama-3.2-11b-vision-instruct": {
-                short: "Llama 3.2V 11B Inst (OR)",
-                class: "llama-3.2v-11b-instruct",
-                provider: "OpenRouter",
-                cost: { in: 0.2, out: 0.2 },
-                max: { in: 131072, out: 131072 },
+                "short": "Llama 3.2V 11B Inst (OR)",
+                "class": "llama-3.2v-11b-instruct",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.2, "out": 0.2 },
+                "max": { "in": 131072, "out": 131072 }
             },
             "llama-3.1-8b-instant": {
-                short: "Llama 3.1 8B (Groq)",
-                class: "llama-3.1-8b-instruct",
-                provider: "Groq",
-                cost: { in: 0.055, out: 0.055 },
-                max: { in: 131072, out: 4096 },
+                "short": "Llama 3.1 8B (Groq)",
+                "class": "llama-3.1-8b-instruct",
+                "provider": "Groq",
+                "cost": { "in": 0.055, "out": 0.055 },
+                "max": { "in": 131072, "out": 4096 }
+            },
+            "qwen/qwen3-coder": {
+                "short": "Qwen3 Coder 480B (OR)",
+                "class": "qwen3-coder-480b-a35b-instruct",
+                "provider": "OpenRouter",
+                "cost": { "in": 1.00, "out": 2.00 },
+                "max": { "in": 262144, "out": 262144 },
+                "pareto": true
+            },
+            "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8::chutes": {
+                "short": "Qwen3 Coder 480B (Chu)",
+                "class": "qwen3-coder-480b-a35b-instruct",
+                "provider": "Chutes",
+                "cost": { "in": 0.3024, "out": 0.3024 },
+                "max": { "in": 262144, "out": 262144 },
+                "params": ["min_tokens"],
+                "pareto": true
+            },
+            "qwen/qwen3-235b-a22b-07-25": {
+                "short": "Qwen3 235B A22B Instruct (OR)",
+                "class": "qwen3-235b-a22b",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.15, "out": 0.85 },
+                "max": { "in": 262144, "out": 262144 },
+                "pareto": true
             },
             "qwen/qwen3-235b-a22b": {
-                short: "Qwen3 235B A22B (OR)",
-                class: "qwen3-235b-a22b",
-                provider: "OpenRouter",
-                cost: { in: 0.10, out: 2.00 },
-                max: { in: 32768, out: 32768 },
-                pareto: true,
+                "short": "Qwen3 235B A22B (OR)",
+                "class": "qwen3-235b-a22b",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.10, "out": 2.00 },
+                "max": { "in": 32768, "out": 32768 },
+                "pareto": false
             },
             "qwen/qwen3-30b-a3b": {
-                short: "Qwen3 30B A3B (OR)",
-                class: "qwen3-30b-a3b",
-                provider: "OpenRouter",
-                cost: { in: 0.10, out: 0.30 },
-                max: { in: 40960, out: 40960 }
+                "short": "Qwen3 30B A3B (OR)",
+                "class": "qwen3-30b-a3b",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.10, "out": 0.30 },
+                "max": { "in": 40960, "out": 40960 }
             },
             "qwen/qwen3-32b": {
-                short: "Qwen3 32B (OR)",
-                class: "qwen3-32b",
-                provider: "OpenRouter",
-                cost: { in: 0.10, out: 0.30 },
-                max: { in: 40960, out: 40960 }
+                "short": "Qwen3 32B (OR)",
+                "class": "qwen3-32b",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.10, "out": 0.30 },
+                "max": { "in": 40960, "out": 40960 }
             },
             "qwen/qwen3-14b": {
-                short: "Qwen3 14B (OR)",
-                class: "qwen3-14b",
-                provider: "OpenRouter",
-                cost: { in: 0.07, out: 0.24 },
-                max: { in: 40960, out: 40960 }
+                "short": "Qwen3 14B (OR)",
+                "class": "qwen3-14b",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.07, "out": 0.24 },
+                "max": { "in": 40960, "out": 40960 }
             },
             "qwen/qwen3-8b": {
-                short: "Qwen3 8B (OR)",
-                class: "qwen3-8b",
-                provider: "OpenRouter",
-                cost: { in: 0.035, out: 0.138 },
-                max: { in: 40960, out: 40960 }
+                "short": "Qwen3 8B (OR)",
+                "class": "qwen3-8b",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.035, "out": 0.138 },
+                "max": { "in": 40960, "out": 40960 }
             },
             "qwen/qvq-72b-preview": {
-                short: "Qwen QvQ 72B Preview (OR)",
-                class: "qvq-72b",
-                provider: "OpenRouter",
-                cost: { in: 0.25, out: 0.5 },
-                max: { in: 128000, out: 4000 },
+                "short": "Qwen QvQ 72B Preview (OR)",
+                "class": "qvq-72b",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.25, "out": 0.5 },
+                "max": { "in": 128000, "out": 4000 }
             },
             "qwen/qwq-32b": {
-                short: "Qwen QwQ 32B (OR)",
-                class: "qwq-32b",
-                provider: "OpenRouter",
-                cost: { in: 0.12, out: 0.18 },
-                max: { in: 131072, out: 131072 },
+                "short": "Qwen QwQ 32B (OR)",
+                "class": "qwq-32b",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.12, "out": 0.18 },
+                "max": { "in": 131072, "out": 131072 }
             },
             "qwen-qwq-32b": {
-                short: "Qwen QwQ 32B (Groq)",
-                class: "qwq-32b",
-                provider: "Groq",
-                cost: { in: 0.29, out: 0.39 },
-                max: { in: 131072, out: 131072 },
+                "short": "Qwen QwQ 32B (Groq)",
+                "class": "qwq-32b",
+                "provider": "Groq",
+                "cost": { "in": 0.29, "out": 0.39 },
+                "max": { "in": 131072, "out": 131072 }
             },
             "Qwen/QwQ-32B-Preview": {
-                short: "Qwen 2.5 QwQ 32B Preview (Hyp)",
-                class: "qwq-32b",
-                provider: "Hyperbolic",
-                cost: { in: 0.2, out: 0.6 },
-                max: { in: 32768, out: 32768 },
+                "short": "Qwen 2.5 QwQ 32B Preview (Hyp)",
+                "class": "qwq-32b",
+                "provider": "Hyperbolic",
+                "cost": { "in": 0.2, "out": 0.6 },
+                "max": { "in": 32768, "out": 32768 }
             },
             "Qwen/Qwen2.5-Coder-32B-Instruct": {
-                short: "Qwen 2.5 Coder 32B (Hyp)",
-                class: "qwen2.5-coder-32b-instruct",
-                provider: "Hyperbolic",
-                cost: { in: 0.6, out: 0.6 },
-                max: { in: 131072, out: 8192 },
+                "short": "Qwen 2.5 Coder 32B (Hyp)",
+                "class": "qwen2.5-coder-32b-instruct",
+                "provider": "Hyperbolic",
+                "cost": { "in": 0.6, "out": 0.6 },
+                "max": { "in": 131072, "out": 8192 }
             },
             "eva-unit-01/eva-qwen-2.5-72b": {
-                short: "Eva Qwen 2.5 72B (OR)",
-                class: "qwen-2.5-72b-eva",
-                provider: "OpenRouter",
-                cost: { in: 4.0, out: 4.0 },
-                max: { in: 32000, out: 32000 },
+                "short": "Eva Qwen 2.5 72B (OR)",
+                "class": "qwen-2.5-72b-eva",
+                "provider": "OpenRouter",
+                "cost": { "in": 4.0, "out": 4.0 },
+                "max": { "in": 32000, "out": 32000 }
             },
             "Qwen/Qwen2.5-72B-Instruct": {
-                short: "Qwen 2.5 72B Inst (Hyp)",
-                class: "qwen-2.5-72b-instruct",
-                provider: "Hyperbolic",
-                cost: { in: 0.4, out: 0.4 },
-                max: { in: 32768, out: 32768 },
+                "short": "Qwen 2.5 72B Inst (Hyp)",
+                "class": "qwen-2.5-72b-instruct",
+                "provider": "Hyperbolic",
+                "cost": { "in": 0.4, "out": 0.4 },
+                "max": { "in": 32768, "out": 32768 }
             },
             "qwen/qwen-2.5-7b-instruct": {
-                short: "Qwen 2.5 7B Inst (OR)",
-                class: "qwen-2.5-7b-instruct",
-                provider: "OpenRouter",
-                cost: { in: 0.27, out: 0.27 },
-                max: { in: 131072, out: 32768 },
+                "short": "Qwen 2.5 7B Inst (OR)",
+                "class": "qwen-2.5-7b-instruct",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.27, "out": 0.27 },
+                "max": { "in": 131072, "out": 32768 }
             },
             "gemini-1.5-pro-latest": {
-                short: "Gemini Pro 1.5",
-                class: "gemini-1.5-pro",
-                provider: "Gemini",
-                cost: { in: 1.25, out: 5.0 },
-                max: { in: 2000000, out: 8192 },
+                "short": "Gemini Pro 1.5",
+                "class": "gemini-1.5-pro",
+                "provider": "Gemini",
+                "cost": { "in": 1.25, "out": 5.0 },
+                "max": { "in": 2000000, "out": 8192 }
             },
             "gemini-1.5-flash-latest": {
-                short: "Gemini Flash 1.5",
-                class: "gemini-1.5-flash",
-                provider: "Gemini",
-                cost: { in: 0.0375, out: 0.075 },
-                max: { in: 1000000, out: 8192 },
+                "short": "Gemini Flash 1.5",
+                "class": "gemini-1.5-flash",
+                "provider": "Gemini",
+                "cost": { "in": 0.0375, "out": 0.075 },
+                "max": { "in": 1000000, "out": 8192 }
             },
             "x-ai/grok-2": {
-                short: "Grok 2 (OR)",
-                class: "grok-2",
-                provider: "OpenRouter",
-                cost: { in: 5.0, out: 15.0 },
-                max: { in: 131072, out: 131072 },
+                "short": "Grok 2 (OR)",
+                "class": "grok-2",
+                "provider": "OpenRouter",
+                "cost": { "in": 5.0, "out": 15.0 },
+                "max": { "in": 131072, "out": 131072 }
             },
             "chatgpt-4o-latest": {
-                short: "ChatGPT-4o (OAI)",
-                class: "chatgpt-4o",
-                provider: "OpenAI",
-                cost: { in: 5.0, out: 15.0 },
-                max: { in: 128000, out: 16384 },
+                "short": "ChatGPT-4o (OAI)",
+                "class": "chatgpt-4o",
+                "provider": "OpenAI",
+                "cost": { "in": 5.0, "out": 15.0 },
+                "max": { "in": 128000, "out": 16384 }
             },
             "gpt-4o-mini": {
-                short: "GPT-4o Mini (OAI)",
-                class: "gpt-4o-mini",
-                provider: "OpenAI",
-                cost: { in: 0.15, out: 0.6 },
-                max: { in: 128000, out: 16384 },
+                "short": "GPT-4o Mini (OAI)",
+                "class": "gpt-4o-mini",
+                "provider": "OpenAI",
+                "cost": { "in": 0.15, "out": 0.6 },
+                "max": { "in": 128000, "out": 16384 }
             },
             "liquid/lfm-40b": {
-                short: "Liquid LFM 40B MoE (OR)",
-                class: "lfm-40b",
-                provider: "OpenRouter",
-                cost: { in: 1.0, out: 2.0 },
-                max: { in: 32768, out: 32768 },
+                "short": "Liquid LFM 40B MoE (OR)",
+                "class": "lfm-40b",
+                "provider": "OpenRouter",
+                "cost": { "in": 1.0, "out": 2.0 },
+                "max": { "in": 32768, "out": 32768 }
             },
             "mistralai/mistral-large": {
-                short: "Mistral Large 2 (OR)",
-                class: "mistral-large",
-                provider: "OpenRouter",
-                cost: { in: 2.0, out: 6.0 },
-                max: { in: 128000, out: 128000 },
+                "short": "Mistral Large 2 (OR)",
+                "class": "mistral-large",
+                "provider": "OpenRouter",
+                "cost": { "in": 2.0, "out": 6.0 },
+                "max": { "in": 128000, "out": 128000 }
             },
             "mistralai/codestral-mamba": {
-                short: "Codestral Mamba (OR)",
-                class: "codestral-mamba",
-                provider: "OpenRouter",
-                cost: { in: 0.25, out: 0.25 },
-                max: { in: 256000, out: 256000 },
+                "short": "Codestral Mamba (OR)",
+                "class": "codestral-mamba",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.25, "out": 0.25 },
+                "max": { "in": 256000, "out": 256000 }
             },
             "codestral-latest": {
-                short: "Codestral (Mistral)",
-                class: "codestral",
-                provider: "Mistral",
-                cost: { in: 1.0, out: 3.0 },
-                max: { in: 32000, out: 8191 },
+                "short": "Codestral (Mistral)",
+                "class": "codestral",
+                "provider": "Mistral",
+                "cost": { "in": 1.0, "out": 3.0 },
+                "max": { "in": 32000, "out": 8191 }
             },
             "mistralai/mistral-nemo": {
-                short: "Mistral Nemo (OR)",
-                class: "mistral-nemo",
-                provider: "OpenRouter",
-                cost: { in: 0.13, out: 0.13 },
-                max: { in: 128000, out: 32768 },
+                "short": "Mistral Nemo (OR)",
+                "class": "mistral-nemo",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.13, "out": 0.13 },
+                "max": { "in": 128000, "out": 32768 }
             },
             "microsoft/wizardlm-2-8x22b": {
-                short: "WizardLM 2 8x22B (OR)",
-                class: "wizardlm-2-8x22b",
-                provider: "OpenRouter",
-                cost: { in: 0.5, out: 0.5 },
-                max: { in: 65536, out: 65536 },
+                "short": "WizardLM 2 8x22B (OR)",
+                "class": "wizardlm-2-8x22b",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.5, "out": 0.5 },
+                "max": { "in": 65536, "out": 65536 }
             },
             "cognitivecomputations/dolphin-mixtral-8x22b": {
-                short: "Dolphin 2.9.2 Mixtral 8x22B (OR)",
-                class: "mixtral-8x22b-dolphin",
-                provider: "OpenRouter",
-                cost: { in: 0.9, out: 0.9 },
-                max: { in: 65536, out: 16000 },
+                "short": "Dolphin 2.9.2 Mixtral 8x22B (OR)",
+                "class": "mixtral-8x22b-dolphin",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.9, "out": 0.9 },
+                "max": { "in": 65536, "out": 16000 }
             },
             "anthropic/claude-3-opus": {
-                short: "Claude 3 Opus (OR)",
-                class: "claude-3-opus",
-                provider: "OpenRouter",
-                cost: { in: 15.0, out: 75.0 },
-                max: { in: 200000, out: 4096 },
+                "short": "Claude 3 Opus (OR)",
+                "class": "claude-3-opus",
+                "provider": "OpenRouter",
+                "cost": { "in": 15.0, "out": 75.0 },
+                "max": { "in": 200000, "out": 4096 }
             },
             "anthropic/claude-3-haiku": {
-                short: "Claude 3 Haiku (OR)",
-                class: "claude-3-haiku",
-                provider: "OpenRouter",
-                cost: { in: 0.25, out: 1.25 },
-                max: { in: 200000, out: 4096 },
+                "short": "Claude 3 Haiku (OR)",
+                "class": "claude-3-haiku",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.25, "out": 1.25 },
+                "max": { "in": 200000, "out": 4096 }
             },
             "echo": {
-                short: "Echo input",
-                class: "echo",
-                provider: "none",
-                cost: {in: 0, out: 0},
-                max: {in: -1, out: -1},
-                pareto: true,
+                "short": "Echo input",
+                "class": "echo",
+                "provider": "none",
+                "cost": { "in": 0, "out": 0 },
+                "max": { "in": -1, "out": -1 },
+                "pareto": true
             },
             "none": {
-                short: "No model",
-                class: "none",
-                provider: "none",
-                cost: {in: 0, out: 0},
-                max: {in: -1, out: -1},
-                pareto: true,
-            },
+                "short": "No model",
+                "class": "none",
+                "provider": "none",
+                "cost": { "in": 0, "out": 0 },
+                "max": { "in": -1, "out": -1 },
+                "pareto": true
+            }
         },
-        text: {
-            "gpt-3.5-turbo-instruct": {
-                short: "GPT-3.5 Turbo Inst (OAI)",
-                class: "gpt-3.5-turbo-instruct",
-                provider: "OpenAI",
-                cost: { in: 1.5, out: 2.0 },
-                max: { in: 4095, out: 4096 },
-                extra: ["suffix"],
+        "text": {
+            "deepseek/deepseek-v3-base": {
+                "short": "DeepSeek V3 Base (OR)",
+                "class": "deepseek-v3-base",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.302, "out": 0.302 },
+                "max": { "in": 163840, "out": 163840 },
+                "params": ["min_tokens"],
+                "defaults": {
+                    "temperature": 1.5,
+                    "repetition_penalty": 0.5,
+                    "presence_penalty": 0.5,
+                    "frequency_penalty": 0.5,
+                    "min_tokens": 100
+                },
+                "pareto": true
             },
-            "deepseek/deepseek-v3-base:free": {
-                short: "DeepSeek V3 Base (free) (OR)",
-                class: "deepseek-v3-base",
-                provider: "OpenRouter",
-                cost: { in: 0.0, out: 0.0 },
-                max: { in: 131072, out: 131072 },
-                params: ["min_tokens"],
-                defaults: { temperature: 1.5, repetition_penalty: 0.5, presence_penalty: 0.5, frequency_penalty: 0.5 },
-                pareto: true,
+            "deepseek/deepseek-v3.1-base": {
+                "short": "DeepSeek V3.1 Base (OR)",
+                "class": "deepseek-v3.1-base",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.20, "out": 0.80 },
+                "max": { "in": 163840, "out": 163840 },
+                "pareto": true
             },
-            "davinci-002": {
-                short: "davinci-002 (OAI)",
-                class: "davinci-002",
-                provider: "OpenAI",
-                cost: { in: 2.0, out: 2.0 },
-                max: { in: 16835, out: 4096 },
-                extra: ["suffix"],
+            "deepseek-ai/DeepSeek-V3.1-Base": {
+                "short": "DeepSeek V3.1 Base (Chu)",
+                "class": "deepseek-v3.1-base",
+                "provider": "Chutes",
+                "cost": { "in": 0.20, "out": 0.80 },
+                "max": { "in": 163840, "out": 163840 },
+                "pareto": true
             },
-            "babbage-002": {
-                short: "babbage-002 (OAI)",
-                class: "babbage-002",
-                provider: "OpenAI",
-                cost: { in: 0.4, out: 0.4 },
-                max: { in: 4095, out: 4096 },
-                extra: ["suffix"],
+            "accounts/fireworks/models/deepseek-v3p1": {
+                "short": "DeepSeek V3.1 (FW)",
+                "class": "deepseek-v3.1",
+                "provider": "Fireworks",
+                "cost": { "in": 0.56, "out": 1.68 },
+                "max": { "in": 160000, "out": 20480 },
+                "pareto": true
+            },
+            "moonshotai/kimi-k2": {
+                "short": "Kimi K2 (OR)",
+                "class": "kimi-k2",
+                "provider": "OpenRouter",
+                "cost": { "in": 0.57, "out": 2.30 },
+                "max": { "in": 131072, "out": 131072 },
+                "pareto": true
+            },
+            "deepseek-ai/DeepSeek-R1::chutes": {
+                "short": "DeepSeek R1 (Chu)",
+                "class": "deepseek-r1",
+                "provider": "Chutes",
+                "cost": { "in": 0.27216, "out": 0.27216 },
+                "max": { "in": 163840, "out": 163840 },
+                "params": ["min_tokens"]
+            },
+            "deepseek-ai/DeepSeek-V3-0324::chutes": {
+                "short": "DeepSeek V3 0324 (Chu)",
+                "class": "deepseek-v3",
+                "provider": "Chutes",
+                "cost": { "in": 0.27216, "out": 0.27216 },
+                "max": { "in": 163840, "out": 163840 },
+                "params": ["min_tokens"]
+            },
+            "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8::chutes": {
+                "short": "Qwen3 Coder 480B (Chu)",
+                "class": "qwen3-coder-480b-a35b-instruct",
+                "provider": "Chutes",
+                "cost": { "in": 0.3024, "out": 0.3024 },
+                "max": { "in": 262144, "out": 262144 },
+                "params": ["min_tokens"],
+                "pareto": true
+            },
+            "moonshotai/Kimi-K2-Instruct::chutes": {
+                "short": "Kimi K2 (Chu)",
+                "class": "kimi-k2",
+                "provider": "Chutes",
+                "cost": { "in": 0.0878, "out": 0.0878 },
+                "max": { "in": 128000, "out": 128000 },
+                "pareto": true
+            },
+            "accounts/fireworks/models/kimi-k2-instruct": {
+                "short": "Kimi K2 Instruct (FW)",
+                "class": "kimi-k2-instruct",
+                "provider": "Fireworks",
+                "cost": { "in": 0.60, "out": 2.50 },
+                "max": { "in": 128000, "out": 16384 },
+                "params": ["min_tokens"],
+                "pareto": true
+            },
+            "accounts/fireworks/models/gpt-oss-120b": {
+                "short": "GPT OSS 120B (FW)",
+                "class": "gpt-oss-120b",
+                "provider": "Fireworks",
+                "cost": { "in": 0.15, "out": 0.60 },
+                "max": { "in": 128000, "out": 16384 },
+                "params": ["min_tokens"],
+                "pareto": true
+            },
+            "accounts/fireworks/models/gpt-oss-20b": {
+                "short": "GPT OSS 20B (FW)",
+                "class": "gpt-oss-20b",
+                "provider": "Fireworks",
+                "cost": { "in": 0.07, "out": 0.30 },
+                "max": { "in": 128000, "out": 16384 },
+                "params": ["min_tokens"],
+                "pareto": true
+            },
+            "accounts/fireworks/models/glm-4p5": {
+                "short": "GLM-4.5 (FW)",
+                "class": "glm-4.5",
+                "provider": "Fireworks",
+                "cost": { "in": 0.55, "out": 2.19 },
+                "max": { "in": 128000, "out": 16384 },
+                "params": ["min_tokens"],
+                "pareto": true
+            },
+            "accounts/fireworks/models/glm-4p5-air": {
+                "short": "GLM-4.5 Air (FW)",
+                "class": "glm-4.5-air",
+                "provider": "Fireworks",
+                "cost": { "in": 0.22, "out": 0.88 },
+                "max": { "in": 128000, "out": 16384 },
+                "params": ["min_tokens"],
+                "pareto": true
+            },
+            "accounts/fireworks/models/qwen3-235b-a22b-instruct-2507": {
+                "short": "Qwen3 235B A22B Instruct (FW)",
+                "class": "qwen3-235b-a22b",
+                "provider": "Fireworks",
+                "cost": { "in": 0.22, "out": 0.88 },
+                "max": { "in": 256000, "out": 32768 },
+                "params": ["min_tokens"],
+                "pareto": true
+            },
+            "accounts/fireworks/models/qwen3-coder-480b-a35b-instruct": {
+                "short": "Qwen3 Coder 480B A35B Instruct (FW)",
+                "class": "qwen3-coder-480b-a35b",
+                "provider": "Fireworks",
+                "cost": { "in": 0.45, "out": 1.80 },
+                "max": { "in": 4000, "out": 4000 },
+                "params": ["min_tokens"],
+                "note": "Unsure of actual max_input/context length",
+                "pareto": true
             },
             "accounts/fireworks/models/llama4-maverick-instruct-basic": {
-                short: "Llama 4 Maverick Instruct Basic (FW)",
-                class: "llama-4-maverick-instruct",
-                provider: "Fireworks",
-                cost: { in: 0.22, out: 0.88 },
-                max: { in: 1000000, out: 131072 },
-                params: ["min_tokens"],
-                pareto: true,
+                "short": "Llama 4 Maverick Instruct Basic (FW)",
+                "class": "llama-4-maverick-instruct",
+                "provider": "Fireworks",
+                "cost": { "in": 0.22, "out": 0.88 },
+                "max": { "in": 1000000, "out": 131072 },
+                "params": ["min_tokens"],
+                "pareto": true
             },
             "accounts/fireworks/models/llama4-scout-instruct-basic": {
-                short: "Llama 4 Scout Instruct Basic (FW)",
-                class: "llama-4-scout-instruct",
-                provider: "Fireworks",
-                cost: { in: 0.15, out: 0.6 },
-                max: { in: 128000, out: 16384 },
-                params: ["min_tokens"],
+                "short": "Llama 4 Scout Instruct Basic (FW)",
+                "class": "llama-4-scout-instruct",
+                "provider": "Fireworks",
+                "cost": { "in": 0.15, "out": 0.6 },
+                "max": { "in": 128000, "out": 16384 },
+                "params": ["min_tokens"]
             },
             "accounts/fireworks/models/deepseek-v3-0324": {
-                short: "DeepSeek V3-0324 (FW)",
-                class: "deepseek-v3",
-                provider: "Fireworks",
-                cost: { in: 0.9, out: 0.9 },
-                max: { in: 160000, out: 160000 },
-                defaults: { temperature: 1.5, },
-                params: ["min_tokens"],
-                pareto: true,
+                "short": "DeepSeek V3-0324 (FW)",
+                "class": "deepseek-v3",
+                "provider": "Fireworks",
+                "cost": { "in": 0.9, "out": 0.9 },
+                "max": { "in": 160000, "out": 160000 },
+                "defaults": { "temperature": 1.5 },
+                "params": ["min_tokens"],
+                "pareto": true
             },
             "accounts/fireworks/models/deepseek-v3": {
-                short: "DeepSeek V3 (FW)",
-                class: "deepseek-v3",
-                provider: "Fireworks",
-                cost: { in: 0.9, out: 0.9 },
-                max: { in: 128000, out: 128000 },
-                defaults: { temperature: 1.5,  },
-                params: ["min_tokens"],
-                pareto: true,
+                "short": "DeepSeek V3 (FW)",
+                "class": "deepseek-v3",
+                "provider": "Fireworks",
+                "cost": { "in": 0.9, "out": 0.9 },
+                "max": { "in": 128000, "out": 128000 },
+                "defaults": { "temperature": 1.5  },
+                "params": ["min_tokens"],
+                "pareto": true
             },
             "accounts/fireworks/models/deepseek-r1": {
-                short: "DeepSeek R1 (FW)",
-                class: "deepseek-r1",
-                provider: "Fireworks",
-                cost: { in: 8.00, out: 8.00 },
-                max: { in: 20480, out: 20480 },
-                params: ["min_tokens"],
-                pareto: true,
+                "short": "DeepSeek R1 (FW)",
+                "class": "deepseek-r1",
+                "provider": "Fireworks",
+                "cost": { "in": 8.00, "out": 8.00 },
+                "max": { "in": 20480, "out": 20480 },
+                "params": ["min_tokens"],
+                "pareto": true
             },
             "deepseek-chat": {
-                short: "DeepSeek V3 (DS)",
-                class: "deepseek-v3",
-                provider: "DeepSeek_Beta",
-                cost: { in: 0.14, out: 0.28 },
-                max: { in: 64000, out: 8000 },
-                defaults: { temperature: 1.5, },
-                extra: ["suffix"],
-                pareto: true,
+                "short": "DeepSeek V3.1 (DS)",
+                "class": "deepseek-v3.1",
+                "provider": "DeepSeek_Beta",
+                "cost": { "in": 0.56, "out": 1.12 },
+                "max": { "in": 128000, "out": 8000 },
+                "defaults": { "temperature": 1.5 },
+                "extra": ["suffix"],
+                "pareto": true
             },
             "codestral-latest": {
-                short: "Codestral (Mistral)",
-                class: "codestral",
-                provider: "Mistral_Text",
-                cost: { in: 1.0, out: 3.0 },
-                max: { in: 32000, out: 8191 },
-                extra: ["suffix"],
+                "short": "Codestral (Mistral)",
+                "class": "codestral",
+                "provider": "Mistral_Text",
+                "cost": { "in": 1.0, "out": 3.0 },
+                "max": { "in": 32000, "out": 8191 },
+                "extra": ["suffix"]
             },
             "accounts/fireworks/models/qwen-qwq-32b-preview": {
-                short: "Qwen 2.5 QwQ 32B Preview (FW)",
-                class: "qwq-32b",
-                provider: "Fireworks",
-                cost: { in: 0.2, out: 0.6 },
-                max: {in: 32768, out: 32768 },
-                params: ["min_tokens"],
+                "short": "Qwen 2.5 QwQ 32B Preview (FW)",
+                "class": "qwq-32b",
+                "provider": "Fireworks",
+                "cost": { "in": 0.2, "out": 0.6 },
+                "max": { "in": 32768, "out": 32768 },
+                "params": ["min_tokens"]
             },
             "accounts/fireworks/models/qwen2p5-coder-32b-instruct": {
-                short: "Qwen 2.5 Coder 32B (FW)",
-                class: "qwen2.5-coder-32b-instruct",
-                provider: "Fireworks",
-                cost: { in: 0.9, out: 0.9 },
-                max: {in: 32768, out: 32768 },
-                params: ["min_tokens"],
+                "short": "Qwen 2.5 Coder 32B (FW)",
+                "class": "qwen2.5-coder-32b-instruct",
+                "provider": "Fireworks",
+                "cost": { "in": 0.9, "out": 0.9 },
+                "max": { "in": 32768, "out": 32768 },
+                "params": ["min_tokens"]
             },
             "accounts/fireworks/models/qwen2p5-72b-instruct": {
-                short: "Qwen 2.5 72B Inst (FW)",
-                class: "qwen2.5-72b-instruct",
-                provider: "Fireworks",
-                cost: { in: 0.9, out: 0.9 },
-                max: {in: 32768, out: 32768 },
-                params: ["min_tokens"],
+                "short": "Qwen 2.5 72B Inst (FW)",
+                "class": "qwen2.5-72b-instruct",
+                "provider": "Fireworks",
+                "cost": { "in": 0.9, "out": 0.9 },
+                "max": { "in": 32768, "out": 32768 },
+                "params": ["min_tokens"]
             },
             "accounts/fireworks/models/llama-v3p2-90b-vision-instruct": {
-                short: "Llama 3.2 90B Inst (FW)",
-                class: "llama-3.2-90b-instruct",
-                provider: "Fireworks",
-                cost: { in: 0.9, out: 0.9 },
-                max: { in: 131072, out: 131072 },
-                params: ["min_tokens"],
+                "short": "Llama 3.2 90B Inst (FW)",
+                "class": "llama-3.2-90b-instruct",
+                "provider": "Fireworks",
+                "cost": { "in": 0.9, "out": 0.9 },
+                "max": { "in": 131072, "out": 131072 },
+                "params": ["min_tokens"]
             },
             "accounts/fireworks/models/llama-v3p2-11b-vision-instruct": {
-                short: "Llama 3.2 11B Inst (FW)",
-                class: "llama-3.2-11b-instruct",
-                provider: "Fireworks",
-                cost: { in: 0.2, out: 0.2 },
-                max: { in: 131072, out: 131072 },
-                params: ["min_tokens"],
+                "short": "Llama 3.2 11B Inst (FW)",
+                "class": "llama-3.2-11b-instruct",
+                "provider": "Fireworks",
+                "cost": { "in": 0.2, "out": 0.2 },
+                "max": { "in": 131072, "out": 131072 },
+                "params": ["min_tokens"]
             },
             "accounts/fireworks/models/llama-v3p2-3b-instruct": {
-                short: "Llama 3.2 3B Inst (FW)",
-                class: "llama-3.2-3b-instruct",
-                provider: "Fireworks",
-                cost: { in: 0.1, out: 0.1 },
-                max: { in: 131072, out: 131072 },
-                params: ["min_tokens"],
+                "short": "Llama 3.2 3B Inst (FW)",
+                "class": "llama-3.2-3b-instruct",
+                "provider": "Fireworks",
+                "cost": { "in": 0.1, "out": 0.1 },
+                "max": { "in": 131072, "out": 131072 },
+                "params": ["min_tokens"]
             },
             "accounts/fireworks/models/llama-v3p2-1b-instruct": {
-                short: "Llama 3.2 1B Inst (FW)",
-                class: "llama-3.2-1b-instruct",
-                provider: "Fireworks",
-                cost: { in: 0.1, out: 0.1 },
-                max: { in: 131072, out: 131072 },
-                params: ["min_tokens"],
+                "short": "Llama 3.2 1B Inst (FW)",
+                "class": "llama-3.2-1b-instruct",
+                "provider": "Fireworks",
+                "cost": { "in": 0.1, "out": 0.1 },
+                "max": { "in": 131072, "out": 131072 },
+                "params": ["min_tokens"]
             },
             "meta-llama/Meta-Llama-3.1-405B": {
-                short: "Llama 3.1 405B Base (Hyp)",
-                class: "llama-3.1-405b-base",
-                provider: "Hyperbolic",
-                cost: { in: 4.0, out: 4.0 },
-                max: { in: 32768, out: 32768 },
+                "short": "Llama 3.1 405B Base (Hyp)",
+                "class": "llama-3.1-405b-base",
+                "provider": "Hyperbolic",
+                "cost": { "in": 4.0, "out": 4.0 },
+                "max": { "in": 32768, "out": 32768 }
             },
             "accounts/fireworks/models/llama-v3p1-405b-instruct": {
-                short: "Llama 3.1 405B Inst (FW)",
-                class: "llama-3.1-405b-instruct",
-                provider: "Fireworks",
-                cost: { in: 1.79, out: 1.79 },
-                max: { in: 131072, out: 4096 },
-                params: ["min_tokens"],
+                "short": "Llama 3.1 405B Inst (FW)",
+                "class": "llama-3.1-405b-instruct",
+                "provider": "Fireworks",
+                "cost": { "in": 1.79, "out": 1.79 },
+                "max": { "in": 131072, "out": 4096 },
+                "params": ["min_tokens"]
             },
             "accounts/fireworks/models/llama-v3p1-70b-instruct": {
-                short: "Llama 3.1 70B Inst (FW)",
-                class: "llama-3.1-70b-instruct",
-                provider: "Fireworks",
-                cost: { in: 0.3, out: 0.3 },
-                max: { in: 131072, out: 4096 },
-                params: ["min_tokens"],
+                "short": "Llama 3.1 70B Inst (FW)",
+                "class": "llama-3.1-70b-instruct",
+                "provider": "Fireworks",
+                "cost": { "in": 0.3, "out": 0.3 },
+                "max": { "in": 131072, "out": 4096 },
+                "params": ["min_tokens"]
             },
             "accounts/fireworks/models/llama-v3p1-8b-instruct": {
-                short: "Llama 3.1 8B Inst (FW)",
-                class: "llama-3.1-8b-instruct",
-                provider: "Fireworks",
-                cost: { in: 0.055, out: 0.055 },
-                max: { in: 131072, out: 4096 },
-                params: ["min_tokens"],
+                "short": "Llama 3.1 8B Inst (FW)",
+                "class": "llama-3.1-8b-instruct",
+                "provider": "Fireworks",
+                "cost": { "in": 0.055, "out": 0.055 },
+                "max": { "in": 131072, "out": 4096 },
+                "params": ["min_tokens"]
             },
             "accounts/fireworks/models/mixtral-8x22b-instruct": {
-                short: "Mixtral 8x22B Inst (FW)",
-                class: "mixtral-8x22b-instruct",
-                provider: "Fireworks",
-                cost: { in: 0.65, out: 0.65 },
-                max: { in: 65536, out: 4096 },
-                params: ["min_tokens"],
+                "short": "Mixtral 8x22B Inst (FW)",
+                "class": "mixtral-8x22b-instruct",
+                "provider": "Fireworks",
+                "cost": { "in": 0.65, "out": 0.65 },
+                "max": { "in": 65536, "out": 4096 },
+                "params": ["min_tokens"]
             },
             "accounts/fireworks/models/mixtral-8x7b-instruct": {
-                short: "Mixtral 8x7B Inst (FW)",
-                class: "mixtral-8x7b-instruct",
-                provider: "Fireworks",
-                cost: { in: 0.24, out: 0.24 },
-                max: { in: 32768, out: 4096 },
-                params: ["min_tokens"],
+                "short": "Mixtral 8x7B Inst (FW)",
+                "class": "mixtral-8x7b-instruct",
+                "provider": "Fireworks",
+                "cost": { "in": 0.24, "out": 0.24 },
+                "max": { "in": 32768, "out": 4096 },
+                "params": ["min_tokens"]
             },
             "accounts/fireworks/models/gemma2-9b-it": {
-                short: "Gemma 2 9B Inst (FW)",
-                class: "gemma-2-9b-it",
-                provider: "Fireworks",
-                cost: { in: 0.2, out: 0.2 },
-                max: { in: 8192, out: 4096 },
-                params: ["min_tokens"],
+                "short": "Gemma 2 9B Inst (FW)",
+                "class": "gemma-2-9b-it",
+                "provider": "Fireworks",
+                "cost": { "in": 0.2, "out": 0.2 },
+                "max": { "in": 8192, "out": 4096 },
+                "params": ["min_tokens"]
             },
             "accounts/fireworks/models/phi-3-vision-128k-instruct": {
-                short: "Phi 3.5V Inst (FW)",
-                class: "phi-3-instruct",
-                provider: "Fireworks",
-                cost: { in: 0.0, out: 0.0 },
-                max: { in: 32064, out: 4096 },
-                params: ["min_tokens"],
+                "short": "Phi 3.5V Inst (FW)",
+                "class": "phi-3-instruct",
+                "provider": "Fireworks",
+                "cost": { "in": 0.0, "out": 0.0 },
+                "max": { "in": 32064, "out": 4096 },
+                "params": ["min_tokens"]
             },
             "accounts/yi-01-ai/models/yi-large": {
-                short: "Yi Large (FW)",
-                class: "yi-large",
-                provider: "Fireworks",
-                cost: { in: 3.0, out: 3.0 },
-                max: { in: 32768, out: 4096 },
+                "short": "Yi Large (FW)",
+                "class": "yi-large",
+                "provider": "Fireworks",
+                "cost": { "in": 3.0, "out": 3.0 },
+                "max": { "in": 32768, "out": 4096 }
+            },
+            "gpt-3.5-turbo-instruct": {
+                "short": "GPT-3.5 Turbo Inst (OAI)",
+                "class": "gpt-3.5-turbo-instruct",
+                "provider": "OpenAI",
+                "cost": { "in": 1.5, "out": 2.0 },
+                "max": { "in": 4095, "out": 4096 },
+                "extra": ["suffix"]
+            },
+            "davinci-002": {
+                "short": "davinci-002 (OAI)",
+                "class": "davinci-002",
+                "provider": "OpenAI",
+                "cost": { "in": 2.0, "out": 2.0 },
+                "max": { "in": 16835, "out": 4096 },
+                "extra": ["suffix"]
+            },
+            "babbage-002": {
+                "short": "babbage-002 (OAI)",
+                "class": "babbage-002",
+                "provider": "OpenAI",
+                "cost": { "in": 0.4, "out": 0.4 },
+                "max": { "in": 4095, "out": 4096 },
+                "extra": ["suffix"]
             },
             "echo": {
-                short: "Echo input",
-                class: "echo",
-                provider: "none",
-                cost: {in: 0, out: 0},
-                max: {in: -1, out: -1},
-                pareto: true,
+                "short": "Echo input",
+                "class": "echo",
+                "provider": "none",
+                "cost": { "in": 0, "out": 0 },
+                "max": { "in": -1, "out": -1 },
+                "pareto": true
             },
             "none": {
-                short: "No model",
-                class: "none",
-                provider: "none",
-                cost: {in: 0, out: 0},
-                max: {in: -1, out: -1},
-                pareto: true,
+                "short": "No model",
+                "class": "none",
+                "provider": "none",
+                "cost": { "in": 0, "out": 0 },
+                "max": { "in": -1, "out": -1 },
+                "pareto": true
             }
         }
-    };
+    }
+    ;
 
     const addLiteLLMModels = async () => {
         const prettyVersion = (rawId) => {
@@ -3383,7 +3729,7 @@
             // const modelSelect = getId(typeId);
             const value = getLocal(typeId) || Object.keys($models[type])[0];
             queryAll("." + typeId).forEach(modelSelect => {
-                modelSelect.innerText = '';
+                modelSelect.textContent = '';
                 // add all models for given type to appropriate dropdown
                 Object.entries($models[type]).forEach(([key, model]) => {
                     let prefix = '';
@@ -3477,11 +3823,11 @@
                 data: {
                     completion: { type: "chat", content: "" },
                     messages: [
-                        { role: "system", tokens: '74', content:
-                            "You are an intelligent, proactive, and insightful AI assistant. Your thought process quickly identifies the right information and ideas to be exchanged, allowing you to speak precisely without repetition, restatement, or overexplanation, and your casual yet precise register ensures that communication is open and easy."
+                        { role: "system", tokens: '15', content:
+                            "You are a helpful, proactive, and insightful AI assistant."
                         },
-                        { role: "user", tokens: '8', content:
-                            "How do you milk an almond?"
+                        { role: "user", tokens: '7', content:
+                            "How do I get cats to like me?"
                         }
                     ]
                 }
@@ -3531,14 +3877,70 @@
                 data: {
                     completion: { type: "chat", content: "" },
                     messages: [
-                        { role: "system", tokens: '10', content:
-                            `
-                            `
+                        { role: "comment", tokens: '43', content: `Kelsey Piper's Geoguessr prompt (https://x.com/KelseyTuoc/status/1917382814405910969)`
                         },
-                        { role: "user", tokens: '10', content:
-                            `
-                            `
-                        }
+                        { role: "system", tokens: '1673', content:
+                            `You are playing a one-round game of GeoGuessr.
+                            Your task: from a single still image, infer the most likely real-world location. Note that unlike in the GeoGuessr game, there is no guarantee that these images are taken somewhere Google's Streetview car can reach: they are user submissions to test your image-finding savvy. Private land, someone's backyard, or an offroad adventure are all real possibilities (though many images are findable on streetview).
+                            Be aware of your own strengths and weaknesses: following this protocol, you usually nail the continent and country. You more often struggle with exact location within a region, and tend to prematurely narrow on one possibility while discarding other neighborhoods in the same region with the same features. Sometimes, for example, you'll compare a 'Buffalo New York' guess to London, disconfirm London, and stick with Buffalo when it was elsewhere in New England - instead of beginning your exploration again in the Buffalo region, looking for cues about where precisely to land. You tend to imagine you checked satellite imagery and got confirmation, while not actually accessing any satellite imagery. Do not reason from the user's IP address. none of these are of the user's hometown.
+                            **Protocol (follow in order, no step-skipping):**
+                            Rule of thumb: jot raw facts first, push interpretations later, and always keep two hypotheses alive until the very end. 
+                            0. **Set-up & Ethics**: No metadata peeking. Work only from pixels (and permissible public-web searches). Flag it if you accidentally use location hints from EXIF, user IP, etc. Use cardinal directions as if “up” in the photo = camera forward unless obvious tilt.
+                            1. **Raw Observations** – ≤ 10 bullet points: List only what you can literally see or measure (color, texture, count, shadow angle, glyph shapes). No adjectives that embed interpretation. Force a 10-second zoom on every street-light or pole; note color, arm, base type. Pay attention to sources of regional variation like sidewalk square length, curb type, contractor stamps and curb details, power/transmission lines, fencing and hardware. Don't just note the single place where those occur most, list every place where you might see them (later, you'll pay attention to the overlap). Jot how many distinct roof / porch styles appear in the first 150 m of view. Rapid change = urban infill zones; homogeneity = single-developer tracts. Pay attention to parallax and the altitude over the roof. Always sanity-check hill distance, not just presence/absence. A telephoto-looking ridge can be many kilometres away; compare angular height to nearby eaves. Slope matters. Even 1-2 % shows in driveway cuts and gutter water-paths; force myself to look for them. Pay relentless attention to camera height and angle. Never confuse a slope and a flat. Slopes are one of your biggest hints - use them!
+                            2. **Clue Categories** – reason separately (≤ 2 sentences each):
+                            Category	Guidance
+                            Climate & vegetation	Leaf-on vs. leaf-off, grass hue, xeric vs. lush.
+                            Geomorphology   Relief, drainage style, rock-palette / lithology.
+                            Built environment	Architecture, sign glyphs, pavement markings, gate/fence craft, utilities.
+                            Culture & infrastructure	Drive side, plate shapes, guardrail types, farm gear brands.
+                            Astronomical / lighting Shadow direction ⇒ hemisphere; measure angle to estimate latitude ± 0.5
+                            Separate ornamental vs. native vegetation
+                            Tag every plant you think was planted by people (roses, agapanthus, lawn) and every plant that almost certainly grew on its own (oaks, chaparral shrubs, bunch-grass, tussock).
+                            Ask one question: “If the native pieces of landscape behind the fence were lifted out and dropped onto each candidate region, would they look out of place?”
+                            Strike any region where the answer is “yes,” or at least down-weight it. 
+                            3. **First-Round Shortlist** – exactly five candidates
+                            Produce a table; make sure #1 and #5 are ≥ 160 km apart.
+                            | Rank | Region (state / country) | Key clues that support it | Confidence (1-5) | Distance-gap rule ✓/✗ |
+                            3½. **Divergent Search-Keyword Matrix**: Generic, region-neutral strings converting each physical clue into searchable text. When you are approved to search, you'll run these strings to see if you missed that those clues also pop up in some region that wasn't on your radar.
+                            4. **Choose a Tentative Leader**: Name the current best guess and one alternative you’re willing to test equally hard. State why the leader edges others. Explicitly spell the disproof criteria (“If I see X, this guess dies”). Look for what should be there and isn't, too: if this is X region, I expect to see Y: is there Y? If not why not? At this point, confirm with the user that you're ready to start the search step, where you look for images to prove or disprove this. You HAVE NOT LOOKED AT ANY IMAGES YET. Do not claim you have. Once the user gives you the go-ahead, check Redfin and Zillow if applicable, state park images, vacation pics, etcetera (compare AND contrast). You can't access Google Maps or satellite imagery due to anti-bot protocols. Do not assert you've looked at any image you have not actually looked at in depth with your OCR abilities. Search region-neutral phrases and see whether the results include any regions you hadn't given full consideration.
+                            5. **Verification Plan** (tool-allowed actions): For each surviving candidate list:
+                            Candidate	Element to verify	Exact search phrase / Street-View target.
+                            Look at a map. Think about what the map implies.
+                            6. **Lock-in Pin**: This step is crucial and is where you usually fail. Ask yourself 'wait! did I narrow in prematurely? are there nearby regions with the same cues?' List some possibilities. Actively seek evidence in their favor. You are an LLM, and your first guesses are 'sticky' and excessively convincing to you - be deliberate and intentional here about trying to disprove your initial guess and argue for a neighboring city. Compare these directly to the leading guess - without any favorite in mind. How much of the evidence is compatible with each location? How strong and determinative is the evidence? Then, name the spot - or at least the best guess you have. Provide lat / long or nearest named place. Declare residual uncertainty (km radius). Admit over-confidence bias; widen error bars if all clues are “soft”. Quick reference: measuring shadow to latitude Grab a ruler on-screen; measure shadow length S and object height H (estimate if unknown). Solar elevation θ ≈ arctan(H / S). On date you captured (use cues from the image to guess season), latitude ≈ (90° – θ + solar declination). This should produce a range from the range of possible dates. Keep ± 0.5–1° as error; 1° ≈ 111 km.`
+                        },
+                        { role: "comment", "tokens": 69, content: `Example photo from https://www.astralcodexten.com/p/testing-ais-geoguessr-genius. Enable it (space, or click eye symbol), select o3 as the chat model, click the little person symbol to generate a chat message from that point, and you can see how well o3 can guess it yourself.`
+                        },
+                        { role: "user", tokens: 53, disabled: true, content:
+                            `{{img https://substackcdn.com/image/fetch/$s_!1wGA!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fbe243a70-7abf-418f-a848-07dfb97c6cfe_808x601.png}}`
+                        },
+                        { role: "comment", tokens: 19, content: "The @eigenrobot prompt (https://x.com/eigenrobot/status/1782957877856018514)" },
+                        { role: "system", tokens: "350", content:
+                            `Don't worry about formalities.
+                            Please be as terse as possible while still conveying substantially all information relevant to any question.
+                            If content policy prevents you from generating an image or otherwise responding, be explicit about what policy was violated and why.
+                            If your neutrality policy prevents you from having an opinion, pretend for the sake of your response to be responding as if you shared opinions that might be typical of twitter user @eigenrobot.
+                            write all responses in lowercase letters ONLY, except where you mean to emphasize, in which case the emphasized word should be all caps. Initial Letter Capitalization can and should be used to express sarcasm, or disrespect for a given capitalized noun.
+                            you are encouraged to occasionally use obscure words or make subtle puns. don't point them out, I'll know. drop lots of abbreviations like "rn" and "bc." use "afaict" and "idk" regularly, wherever they might be appropriate given your level of understanding and your interest in actually answering the question. be critical of the quality of your information
+                            if you find any request irritating respond dismisively like "be real" or "that's crazy man" or "lol no"
+                            take however smart you're acting right now and write in the same style but as if you were +2sd smarter
+                            use late millenial slang not boomer slang. mix in zoomer slang in tonally-inappropriate circumstances occasionally`
+                        },
+                        {
+                            role: "comment", "tokens": 20, "content": `A very old and generic, but useful, tree-of-thoughts prompt, from https://x.com/migtissera/status/1725027314067706111. `
+                        },
+                        {
+                            role: "system", "tokens": 100, "content":
+                            `Answer the question by exploring multiple reasoning paths as follows:
+                        - First, carefully analyze the question to extract the key information components and break it down into logical sub-questions. This helps set up the framework for reasoning. The goal is to construct an internal search tree.
+                        - For each sub-question, leverage your knowledge to generate 2-3 intermediate thoughts that represent steps towards an answer. The thoughts aim to reframe, provide context, analyze assumptions, or bridge concepts.
+                        - Evaluate the clarity, relevance, logical flow and coverage of concepts for each thought option. Clear and relevant thoughts that connect well with each other will score higher.
+                        - Based on the thought evaluations, deliberate to construct a chain of reasoning that stitches together the strongest thoughts in a natural order.
+                        - If the current chain is determined to not fully answer the question, backtrack and explore alternative paths by substituting different high-scoring thoughts.
+                        - Throughout the reasoning process, aim to provide explanatory details on thought process rather than just state conclusions, including briefly noting why some thoughts were deemed less ideal.
+                        - Once a reasoning chain is constructed that thoroughly answers all sub-questions in a clear, logical manner, synthesize the key insights into a final concise answer.
+                        - Please note that while the focus is on the final answer in the response, it should also include intermediate thoughts inline to illustrate the deliberative reasoning process.
+                        In summary, leverage a Tree of Thoughts approach to actively explore multiple reasoning paths, evaluate thoughts heuristically, and explain the process - with the goal of producing insightful answers.`
+                        },
                     ]
                 }
             }
@@ -3620,7 +4022,7 @@
     };
 
     const debounce = (fn, wait=150) => {
-        let t; return (...a)=>(clearTimeout(t),t=setTimeout(fn,wait,...a));
+        let t; return (...a)=>(clearTimeout(t), t=setTimeout(fn,wait,...a));
     };
     const renderMath = (elem) => {
         renderMathInElement(elem, {delimiters: mathDelimiters});
@@ -3631,7 +4033,7 @@
 
     // wrap the heavy trio
     const updateRender = rafThrottle((el, raw) => {
-        el.innerHTML = renderMarked(raw);
+        el.innerHTML = renderMarked(raw || " ");
         renderMath(el);
         highlightBlock(el);
     });
@@ -3715,6 +4117,7 @@
                 }
             )
         );
+
     const inheritStatic = (el, staticFn, newKey = null) =>
         applyPatches(el, {[newKey || staticFn]: el[staticFn]});
 
@@ -3722,6 +4125,7 @@
     // inheritStatic(Object, 'entries');  // obj.entries()
     // inheritStatic(Object, 'keys');     // obj.keys()
     // inheritStatic(Object, 'values');   // obj.values()
+
 
     function chain(x) {
         /* A generalized map function that works on arrays, objects, and single values */
@@ -3732,6 +4136,7 @@
         return chainFn(x);
     }
 
+
     const Poly = Seq( (f) => (X) => {
         // we think of Poly as making a function run in parallel on an indexed collection of inputs via postcomposition
         if(isArray(X)) return X.map(f);
@@ -3740,14 +4145,17 @@
         return f(X);
     } );
 
+
     const objectify = Seq(
         (defaultObj) => (objFn) => Object.assign(objFn, objFn(defaultObj))
     );
+
 
     const parameterize = (objFnFn) => Object.assign(
         (param) => chain( objMap(applyTo(param), objFnFn) ),
         objMap(Seq, objFnFn)
     );
+
 
     function getItem(arr, idx) {
         // Returns the item at index idx of arr. Handles negative indices, returns null if out of bounds.
@@ -3773,6 +4181,7 @@
         }
         return arr[idx];
     }
+
 
     const localPatches = {
         Element: {
@@ -3809,6 +4218,7 @@
     };
     applyPatches(Element, localPatches.Element);
 
+
     const addClass = (selector, cls) => {
         if (isArray(cls)) {
             cls.forEach(c => addClass(selector, c));
@@ -3820,6 +4230,7 @@
         }
         queryAll(selector).forEach(el => el.classList.add(cls));
     }
+
 
     const removeClass = (selector, cls) => {
         if (isArray(cls)) {
@@ -3833,6 +4244,7 @@
         queryAll(selector).forEach(el => el.classList.remove(cls));
     }
 
+
     const toggleClass = (selector, cls) => {
         if (isArray(cls)) {
             cls.forEach(c => toggleClass(selector, c));
@@ -3844,6 +4256,7 @@
         }
         queryAll(selector).forEach(el => el.classList.toggle(cls));
     }
+
 
     function getLocal(key) {
         if (isString(key))
@@ -3858,6 +4271,7 @@
             return obj;
         }
     }
+
 
     function setLocal(key, value) {
         if (isString(key)) {
@@ -3882,12 +4296,14 @@
 
 
     const $inputs = {
+
         get: (id) => {
             let el = getId(id);
             if (el.type == 'checkbox' || el.type == 'radio')
                 return el?.checked || false;
             return el?.value || '';
         },
+
         set: (id, value) => {
             if (value === undefined || value === null) return;
             // let el = getId(id);
@@ -3898,16 +4314,18 @@
                     el.value = value;
             })
         },
+
         saveAllOptions: () => {
             queryAll(".option")
-                .map(x=>x.id)
-                .forEach(id => setLocal(id, $inputs.get(id)));
+                .map( x => x.id )
+                .forEach( id => setLocal(id, $inputs.get(id)) );
         },
+
         checkAvailability: () => {
-            const keyList = queryAll(".secret.key").map(x=>x.id);
-            const available = keyList.mapping(id => $inputs.get(id).trim());
+            const keyList = queryAll(".secret.key").map( x => x.id );
+            const available = keyList.mapping( id => $inputs.get(id).trim() );
             available["customKey"] = true;
-            const hidden = keyList.mapping(id => $inputs.get(id) == "hide");
+            const hidden = keyList.mapping( id => ($inputs.get(id) == "hide") );
             const selectedModels = ["chat", "text"].map(type => {
                 const typeId = type == "chat" ? "modelChat" : "modelText";
                 let value = null;
@@ -3941,6 +4359,7 @@
             });
 
         },
+
         loadAllOptions: async () => {
             queryAll(".option")
                 .map(x=>x.id)
@@ -3953,12 +4372,18 @@
             toggleTokenVisibility();
             if ($inputs.get('seamlessMode'))
                 await toggleSeamless(true); // the ui is initiated in non-seamless mode by default, so no point setting it to false
+            if ($inputs.get('mosaicMode') === false)
+                await toggleMosaic(false); // mosaic mode is true by default
+            else
+                await toggleMosaic(true);
         },
+
         saveAllApiKeys: () => {
             const secretList = queryAll(".secret").map(x=>x.id);
             setLocal('keys', secretList.mapping($inputs.get));
             $inputs.checkAvailability();
         },
+
         loadAllApiKeys: async () => {
             const secretList = queryAll(".secret").map(x=>x.id);
             if(!getLocal('keys')) {
@@ -3971,6 +4396,7 @@
             });
             $inputs.checkAvailability();
         },
+
         attributes: {
             messages: [
                 "role",
@@ -3999,11 +4425,13 @@
                 "label",
             ],
         },
+
         attrDefaults: {
             messages: {
 
             },
         },
+
         classes: {
             messages: [
                 "disabled",
@@ -4099,6 +4527,7 @@
 
 /**                CONSTANT STRINGS                **/
 
+
     const makeSVG = (name, pathData, options = {}) => {
         return `<svg xmlns="http://www.w3.org/2000/svg" ` +
             `width="${options?.width ?? '1em'}" height="${options?.height ?? '1em'}" ` +
@@ -4108,10 +4537,13 @@
             `class="lucide lucide-${name}">${pathData}</svg>`
     };
 
+
     const constants = {
+
         internal: {
             maxHtmlLength: 200000 * 4,
         },
+
         symbols: {  // mostly lucide-icons
             download: makeSVG(
                 `download`,
@@ -4296,9 +4728,12 @@
         },
         text: {
             generationInProgress: 'A generation is already in progress',
+
             enterAPIKey: (provider) =>
                 `Please enter your ${provider} API key`,
+
             generationStopped: '[Generation Stopped]',
+
             roleDefaults: {
                 system: 'You are a helpful assistant.',
                 user: 'Please do the thing.',
@@ -4306,6 +4741,7 @@
                 comment: '(now we do the thing)',
                 output: '(output)',
             },
+
             errors: {
                 noURLFound: "No URL found in the input",
                 contextExceeded: "(context exceeded)",
@@ -4355,6 +4791,7 @@
                     `Both OpenAI and OpenRouter ${model} summarization attempts failed`,
                 removeDefaultMessages: `Last message to be sent is a default role message; change or remove it before re-sending.`,
             },
+
             variables: {
                 inactive: "now inactive",
                 active: "now active",
@@ -4364,7 +4801,9 @@
                 key: "Key: ",
                 value: "Value: ",
             },
+
             localStorageCleaned: "Local storage cleaned successfully",
+
             states: {
                 saved: (name) => `Saved state: ${name}`,
                 loaded: (name) => `Loaded state: ${name}`,
@@ -4380,6 +4819,7 @@
                     failure: (msg) => `Import failed: ${msg}`,
                 },
             },
+
             buttons: {
                 moveUp: "move up",
                 moveDown: "move down",
@@ -4400,6 +4840,7 @@
         },
 
         html: {
+
             saveBoxImmutable: (name, buttons) => {
                 return `
                     <div class="save-name">
@@ -4411,6 +4852,7 @@
                         </button>
                     </div>`
             },
+
             saveBoxMutable: (name, buttons) => {
                 return `
                     <div class="save-name" onclick="editSaveName('${name}', this)">
@@ -4431,12 +4873,15 @@
                         </button>
                     </div>`
             },
+
             tokensValid: (totalTokens) => {
                 return `<span style="color: green;font-size:1.0em;">${totalTokens}</span>`
             },
+
             tokensExceeded: (totalTokens, maxTokensIn) => {
                 return `<span style="color: red;font-size:1.0em;">${totalTokens}</span> / ${maxTokensIn} <span style="color: red;">${constants.text.errors.contextExceeded}</span>`
             },
+
             variableBlock: (variable) => {
                 return `
                     <div style="display: flex; flex-direction: row;">
@@ -4564,7 +5009,9 @@
                 messageBlock.append(controlDiv, contentDiv);
                 requestAnimationFrame(async () => {
                     addEventListeners(messageBlock);
+                    updateRender(contentDiv, contentDiv.getAttribute("content"));
                     await updateTokenCount(messageBlock, true, attrValues.tokens);
+                    Message.isDivider(contentDiv);
                 });
                 return messageBlock;
             },
@@ -4577,6 +5024,7 @@
             validTags: ['div', 'span', 'button', 'input', 'textarea', 'select', 'option', 'label', 'form', 'fieldset', 'legend', 'table', 'tr', 'td', 'th', 'tbody', 'thead', 'tfoot', 'caption', 'colgroup', 'col', 'ul', 'ol', 'li', 'dl', 'dt', 'dd', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'pre', 'blockquote', 'hr', 'address', 'cite', 'q', 'code', 'kbd', 'samp', 'var', 'abbr', 'acronym', 'dfn', 's', 'strike', 'big', 'small', 'sub', 'sup', 'tt', 'i', 'b', 'u', 'em', 'strong', 'a', 'img', 'map', 'area', 'object', 'iframe', 'embed', 'param',],
         },
     };
+
 
     const displayCurrency = (val) => {
         // get the final number we'll show
@@ -4592,7 +5040,9 @@
         const [whole, dec] = num.split('.');
         return `${symbol}${whole}<span style="font-size: 0.8em;">.${dec}</span>`;
         //return val >= 0.10 ? `$${val.toFixed(3)}` : `¢${(val * 100).toFixed(2)}`;
-    }
+    };
+
+
     const randStr = (n) => {
         // a string of n random lowercase letters of length n (max 12)
         return Array.from(Math.random().toString(26).slice(2))
@@ -4600,6 +5050,7 @@
             .map(x => String.fromCharCode(x + (x < 97 ? 65 : 0)))
             .join("").slice(-n);
     };
+
 
     const tree = {
         parent: ((node) => { return node.parentNode }),
@@ -4611,6 +5062,7 @@
         first: ((node) => { return node.firstElementChild }),
         last: ((node) => { return node.lastElementChild }),
     };
+
 
     function create(tag, props = {}, children = []) {
         const element = document.createElement(tag);
@@ -4629,6 +5081,7 @@
         return element;
     }
 
+
     const batchUpdate = (() => {
         const updates = new Set();
         let scheduled = false;
@@ -4646,6 +5099,7 @@
         };
     })();
 
+
     function renderMarked(text) {
         if (getId('disableMarkdown')?.checked || !marked?.parse) {
             return text;
@@ -4655,187 +5109,209 @@
 
 /**            DATA MODELS             **/
 
-const Message = {
-    // Selectors for different parts of the message block
-    selectors: {
-        block: 'message-block',
-        row: 'message-row',
-        content: 'message-content',
-        control: 'message-control',
-        tokensInfo: 'tokens-info',
-        roleButton: 'role-button'
-    },
-    // Data accessors
-    get: {
-        ...Object.fromEntries(
-                $inputs.attributes.messages.map((attr) => [
-                    attr,
-                    (element) => Message.get.contentDiv(element).getAttribute(attr)
-                ])
-            ),
-        ...Object.fromEntries(
-                $inputs.classes.messages.map((cls) => [
-                    cls,
-                    (element) => Message.get.contentDiv(element).classList.contains(cls)
-                ])
-            ),
-        ...{
-            // Get the content div from a block or content div
-            contentDiv: (element) => {
-                if (element.classList.contains(Message.selectors.content))
-                    return element;
-                return element.querySelector('.' + Message.selectors.content);
-            },
 
-            // Get the block from a block, content div, or control div
-            block: (element) => {
-                if (element.classList.contains(Message.selectors.block))
-                    return element;
-                return element.closest('.' + Message.selectors.block);
-            },
-            // Get content
-            content: (element) => Message.get.contentDiv(element).getAttribute('content') || buildText(Message.get.contentDiv(element)),
+    const Message = {
 
-            text: (element) => Message.get.contentDiv(element).textContent,
-        }
-    },
-
-    // Data mutators
-    set: {
-        ...Object.fromEntries(
-            $inputs.attributes.messages.map(
-            (attr) => [
-                attr,
-                (element, value) => Message.get.contentDiv(element).setAttribute(attr, value)
-            ])),
-        ...Object.fromEntries(
-            $inputs.classes.messages.map(
-            (cls) => [
-                cls,
-                (element, value) => Message.get.contentDiv(element).classList.toggle(cls, value)
-            ])),
-        ...{
-            role: (element, role) => {
-                const contentDiv = Message.get.contentDiv(element);
-                contentDiv.setAttribute('role', role);
-                const roleButton = contentDiv.previousElementSibling.querySelector('.' + Message.selectors.roleButton);
-                roleButton.textContent = role.charAt(0).toUpperCase();
-            },
-            tokens: async (element, count) => {
-                const contentDiv = Message.get.contentDiv(element);
-                contentDiv.setAttribute('tokens', count);
-                const tokensInfo = contentDiv.previousElementSibling.querySelector('.' + Message.selectors.tokensInfo);
-                if (tokensInfo)
-                    tokensInfo.textContent = count;
-                recomputeTotals();
-            },
-            text: (element, value) => {
-                Message.get.contentDiv(element).textContent = value;
-            },
-            disabled: (element, value) => {
-                Message.get.contentDiv(element).classList.toggle('disabled', value);
-                recomputeTotals();
-            },
-            selected: (element, value) => {
-                queryAll('.selected').forEach(el => el.classList.remove('selected'));
-                Message.get.contentDiv(element).classList.toggle('selected', value);
-            },
-            editing: (element, value) => {
-                Message.get.contentDiv(element).classList.toggle('editing', value);
-                Message.get.contentDiv(element).contentEditable = value;
-            },
-        }
-    },
-
-    // Operations
-    operations: {
-        create: (options) => constants.html.messageBlock(options),
-        delete: async (element) => {
-            const block = Message.get.block(element);
-            if (block.previousElementSibling)
-                await selectCell(block.previousElementSibling.querySelector('.' + Message.selectors.content));
-            else if (block.nextElementSibling)
-                await selectCell(block.nextElementSibling.querySelector('.' + Message.selectors.content));
-            block.remove();
-            recomputeTotals();
+        // Selectors for different parts of the message block
+        selectors: {
+            block: 'message-block',
+            row: 'message-row',
+            content: 'message-content',
+            control: 'message-control',
+            tokensInfo: 'tokens-info',
+            roleButton: 'role-button'
         },
-        move: (element, direction) => {
-            const block = Message.get.block(element);
-            const sibling = direction === 'up' ? block.previousElementSibling : block.nextElementSibling;
-            if (sibling) {
-                if (direction === 'up') {
-                    block.parentNode.insertBefore(block, sibling);
-                } else {
-                    block.parentNode.insertBefore(sibling, block);
-                }
+
+        // Data accessors
+        get: {
+            ...Object.fromEntries(
+                    $inputs.attributes.messages.map((attr) => [
+                        attr,
+                        (element) => Message.get.contentDiv(element).getAttribute(attr)
+                    ])
+                ),
+            ...Object.fromEntries(
+                    $inputs.classes.messages.map((cls) => [
+                        cls,
+                        (element) => Message.get.contentDiv(element).classList.contains(cls)
+                    ])
+                ),
+            ...{
+                // Get the content div from a block or content div
+                contentDiv: (element) => {
+                    if (element.classList.contains(Message.selectors.content))
+                        return element;
+                    return element.querySelector('.' + Message.selectors.content);
+                },
+
+                // Get the block from a block, content div, or control div
+                block: (element) => {
+                    if (element.classList.contains(Message.selectors.block))
+                        return element;
+                    return element.closest('.' + Message.selectors.block);
+                },
+                // Get content
+                content: (element) => Message.get.contentDiv(element).getAttribute('content') || buildText(Message.get.contentDiv(element)),
+
+                text: (element) => Message.get.contentDiv(element).textContent,
             }
         },
-        serialize: (element) => {
+
+        // Data mutators
+        set: {
+            ...Object.fromEntries(
+                $inputs.attributes.messages.map(
+                (attr) => [
+                    attr,
+                    (element, value) => Message.get.contentDiv(element).setAttribute(attr, value)
+                ])),
+            ...Object.fromEntries(
+                $inputs.classes.messages.map(
+                (cls) => [
+                    cls,
+                    (element, value) => Message.get.contentDiv(element).classList.toggle(cls, value)
+                ])),
+            ...{
+                role: (element, role) => {
+                    const contentDiv = Message.get.contentDiv(element);
+                    contentDiv.setAttribute('role', role);
+                    const roleButton = contentDiv.previousElementSibling.querySelector('.' + Message.selectors.roleButton);
+                    roleButton.textContent = role.charAt(0).toUpperCase();
+                },
+                tokens: async (element, count) => {
+                    const contentDiv = Message.get.contentDiv(element);
+                    contentDiv.setAttribute('tokens', count);
+                    const tokensInfo = contentDiv.previousElementSibling.querySelector('.' + Message.selectors.tokensInfo);
+                    if (tokensInfo)
+                        tokensInfo.textContent = count;
+                    recomputeTotals();
+                },
+                text: (element, value) => {
+                    Message.get.contentDiv(element).textContent = value;
+                },
+                disabled: (element, value) => {
+                    Message.get.contentDiv(element).classList.toggle('disabled', value);
+                    recomputeTotals();
+                },
+                selected: (element, value) => {
+                    queryAll('.selected').forEach(el => el.classList.remove('selected'));
+                    Message.get.contentDiv(element).classList.toggle('selected', value);
+                },
+                editing: (element, value) => {
+                    Message.get.contentDiv(element).classList.toggle('editing', value);
+                    Message.get.contentDiv(element).contentEditable = value;
+                },
+            }
+        },
+
+        // Operations
+        operations: {
+            create: (options) => constants.html.messageBlock(options),
+            delete: async (element) => {
+                const block = Message.get.block(element);
+                if (block.previousElementSibling)
+                    await selectCell(block.previousElementSibling.querySelector('.' + Message.selectors.content));
+                else if (block.nextElementSibling)
+                    await selectCell(block.nextElementSibling.querySelector('.' + Message.selectors.content));
+                block.remove();
+                recomputeTotals();
+            },
+            move: (element, direction) => {
+                const block = Message.get.block(element);
+                const sibling = direction === 'up' ? block.previousElementSibling : block.nextElementSibling;
+                if (sibling) {
+                    if (direction === 'up') {
+                        block.parentNode.insertBefore(block, sibling);
+                    } else {
+                        block.parentNode.insertBefore(sibling, block);
+                    }
+                }
+            },
+            serialize: (element) => {
+                const contentDiv = Message.get.contentDiv(element);
+                return {
+                    ...Object.fromEntries(
+                        $inputs.attributes.messages.map(
+                        (attr) => [attr, Message.get[attr](element)]
+                    )),
+                    ...Object.fromEntries(
+                        $inputs.classes.messages.map(
+                        (cls) => [cls, Message.get[cls](element)]
+                    )),
+                };
+            },
+            group: (elements) => {
+                const row = constants.html.messageRow();
+                elements.forEach(el => {
+                    const block = Message.get.block(el);
+                    row.appendChild(block);
+                });
+                getId('messages')?.appendChild(row);
+                return row;
+            },
+            ungroup: (row) => {
+                const blocks = Array.from(row.children);
+                const parent = row.parentNode;
+                blocks.forEach(block => {
+                    const newRow = constants.html.messageRow();
+                    newRow.appendChild(block);
+                    parent.insertBefore(newRow, row);
+                });
+                row.remove();
+            },
+            format: (element, format) => {
+                const contentDiv = Message.get.contentDiv(element);
+                const range = window.getSelection().getRangeAt(0);
+                if (range.commonAncestorContainer.parentNode !== contentDiv)
+                    return;
+                const wrapper = document.createElement(format);
+                range.surroundContents(wrapper);
+                contentDiv.normalize();
+                contentDiv.setAttribute('content', buildText(contentDiv));
+            },
+            indent: (element, direction = 'right') => {
+                const contentDiv = Message.get.contentDiv(element);
+                const lines = contentDiv.innerHTML.split('\n');
+                const indentedLines = lines.map(line =>
+                    direction === 'right' ?
+                        '    ' + line :
+                        line.replace(/^    /, '')
+                );
+                contentDiv.innerHTML = indentedLines.join('\n');
+                contentDiv.setAttribute('content', buildText(contentDiv));
+            }
+        },
+
+        shortcuts: {
+            'Alt+G': (element) => Message.operations.group([element]),
+            'Alt+U': (element) => Message.operations.ungroup(element.closest('.' + Message.selectors.row)),
+            //'Tab': (element) => Message.operations.indent(element, 'right'),
+            //'Shift+Tab': (element) => Message.operations.indent(element, 'left'),
+            'Ctrl+B': (element) => Message.operations.format(element, 'strong'),
+            'Ctrl+I': (element) => Message.operations.format(element, 'em'),
+            'Ctrl+`': (element) => Message.operations.format(element, 'code')
+        },
+
+        isDivider: (element) => {
             const contentDiv = Message.get.contentDiv(element);
-            return {
-                ...Object.fromEntries(
-                    $inputs.attributes.messages.map(
-                    (attr) => [attr, Message.get[attr](element)]
-                )),
-                ...Object.fromEntries(
-                    $inputs.classes.messages.map(
-                    (cls) => [cls, Message.get[cls](element)]
-                )),
-            };
+            if ((element.getAttribute("content") || "").trim().toLowerCase() === "divider") {
+                contentDiv.classList.add("divider");
+                contentDiv.parentNode.classList.add("divider");
+                return true;
+            } else {
+                contentDiv.classList.remove("divider");
+                contentDiv.parentNode.classList.remove("divider");
+                return false;
+            }
         },
-        group: (elements) => {
-            const row = constants.html.messageRow();
-            elements.forEach(el => {
-                const block = Message.get.block(el);
-                row.appendChild(block);
-            });
-            getId('messages')?.appendChild(row);
-            return row;
-        },
-        ungroup: (row) => {
-            const blocks = Array.from(row.children);
-            const parent = row.parentNode;
-            blocks.forEach(block => {
-                const newRow = constants.html.messageRow();
-                newRow.appendChild(block);
-                parent.insertBefore(newRow, row);
-            });
-            row.remove();
-        },
-        format: (element, format) => {
+        isGenerating: (element) => {
             const contentDiv = Message.get.contentDiv(element);
-            const range = window.getSelection().getRangeAt(0);
-            if (range.commonAncestorContainer.parentNode !== contentDiv)
-                return;
-            const wrapper = document.createElement(format);
-            range.surroundContents(wrapper);
-            contentDiv.normalize();
-            contentDiv.setAttribute('content', buildText(contentDiv));
+            return contentDiv.classList.contains("generating");
         },
-        indent: (element, direction = 'right') => {
-            const contentDiv = Message.get.contentDiv(element);
-            const lines = contentDiv.innerHTML.split('\n');
-            const indentedLines = lines.map(line =>
-                direction === 'right' ?
-                    '    ' + line :
-                    line.replace(/^    /, '')
-            );
-            contentDiv.innerHTML = indentedLines.join('\n');
-            contentDiv.setAttribute('content', buildText(contentDiv));
-        }
-    },
-    shortcuts: {
-        'Alt+G': (element) => Message.operations.group([element]),
-        'Alt+U': (element) => Message.operations.ungroup(element.closest('.' + Message.selectors.row)),
-        //'Tab': (element) => Message.operations.indent(element, 'right'),
-        //'Shift+Tab': (element) => Message.operations.indent(element, 'left'),
-        'Ctrl+B': (element) => Message.operations.format(element, 'strong'),
-        'Ctrl+I': (element) => Message.operations.format(element, 'em'),
-        'Ctrl+`': (element) => Message.operations.format(element, 'code')
-    }
-};
+    };
 
 /**               SAVE MANAGEMENT               **/
+
 
     /**
     * Captures the current state of the application, including settings and messages,
@@ -4859,6 +5335,7 @@ const Message = {
         updates.snapshot = state;
         forEach(updates, setLocal);
     }
+
 
     /**
      * Serializes the current state of the chat interface, including settings, messages,
@@ -4922,6 +5399,7 @@ const Message = {
         };
     }
 
+
     /**
      * Deserializes a given state object and updates the chat interface to reflect that state.
      * @param {object} state The state object to deserialize.
@@ -4931,7 +5409,7 @@ const Message = {
 
         // Clear existing messages
         const messagesDiv = getId('messages');
-        messagesDiv.innerText = '';
+        messagesDiv.textContent = '';
 
         // Add messages from state
         await data.messages.forEach(async (msg) => {
@@ -4971,6 +5449,7 @@ const Message = {
             contentDiv.innerHTML = renderMarked(msg.content);
             renderMath(contentDiv);
             highlightBlock(contentDiv);
+            Message.isDivider(contentDiv);
 
             row.appendChild(messageBlock);
             messagesDiv.appendChild(row);
@@ -5005,6 +5484,7 @@ const Message = {
         requestAnimationFrame(() => snapshotState());
     }
 
+
     /**
      * Saves the current state of the chat to local storage under a given slot.
      * @param {string} slot The slot number to save the state to.
@@ -5021,6 +5501,7 @@ const Message = {
         saveGlobalVariables();
     }
 
+
     /**
      * Loads a chat state from local storage based on the provided slot.
      * @param {string} slot The slot number to load the state from.
@@ -5035,6 +5516,7 @@ const Message = {
             showSaveLoadMessage(constants.text.states.slot.empty(slot));
         updateSaveMenu();
     }
+
 
     /**
      * Displays a message in the save/load message area.
@@ -5055,6 +5537,7 @@ const Message = {
             setTimeout(() => {messageDiv.classList.remove('active')}, timeout);
     }
 
+
     /**
      * Loads saved states from local storage into the application.
      */
@@ -5065,6 +5548,7 @@ const Message = {
         updateSaveMenu();
     }
 
+
     /**
      * Saves the current saved states to local storage.
      */
@@ -5072,6 +5556,7 @@ const Message = {
         setLocal('quickSaveSlots', quickSaveSlots);
         setLocal('savedConversations', savedStates);
     }
+
 
     /**
      * Updates the save menu in the UI with the current saved states.
@@ -5131,6 +5616,7 @@ const Message = {
         });
     }
 
+
     /**
     * Allows editing of a save name directly in the UI.
     * @param {string} oldName The current name of the save.
@@ -5152,6 +5638,7 @@ const Message = {
         element.replaceWith(input);
         input.focus();
     }
+
 
     /**
     * Creates a new save with a default title and optionally generates an auto-title.
@@ -5181,6 +5668,7 @@ const Message = {
         updateSaveMenu();
     }
 
+
     /**
     * Saves the current state under a specified name.
     * @param {string} name The name under which to save the current state.
@@ -5191,6 +5679,7 @@ const Message = {
         showSaveLoadMessage(constants.text.states.saved(name));
     }
 
+
     async function loadState(name) {
         snapshotState();
         if (savedStates[name]) {
@@ -5198,6 +5687,7 @@ const Message = {
             showSaveLoadMessage(constants.text.states.loaded(name));
         }
     }
+
 
     /**
     * Generates a title for a saved state using auto-summarization.
@@ -5220,6 +5710,7 @@ const Message = {
         }
     }
 
+
     /**
     * Deletes a saved state by name.
     * @param {string} name The name of the saved state to delete.
@@ -5231,6 +5722,7 @@ const Message = {
         showSaveLoadMessage(constants.text.states.deleted(name));
     }
 
+
     /**
     * Saves the current state to a quicksave slot.
     * @param {string} slot The quicksave slot number.
@@ -5241,6 +5733,7 @@ const Message = {
         if(slot)
             showSaveLoadMessage(constants.text.states.slot.saved(slot));
     }
+
 
     /**
     * Loads a state from a quicksave slot.
@@ -5254,6 +5747,7 @@ const Message = {
             showSaveLoadMessage(constants.text.states.slot.empty(slot));
         }
     }
+
 
     /**
     * Deletes a quicksave from a specified slot.
@@ -5272,6 +5766,7 @@ const Message = {
 
 
 /******************** SAVED PROMPTS ********************/
+
 
     // Serialize a single message element to an object
     function serializeMessage(el) {
@@ -5456,6 +5951,7 @@ const Message = {
         updatePromptMenu();
     }
 
+
 /******************** IMPORT-EXPORT ********************/
 
     /**
@@ -5482,6 +5978,7 @@ const Message = {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }
+
 
     /**
     * Imports settings and saved states from a JSON file.
@@ -5517,6 +6014,7 @@ const Message = {
     }
 
 /******************** AUTO-SUMMARIZATION ********************/
+
 
     /**
      * Automatically generates a short title for a given conversation state using a summarization model.
@@ -5715,6 +6213,7 @@ const Message = {
 
 /**               UI MANAGEMENT               **/
 
+
     /**
      * Adds event listeners to a message block for handling user interactions.
      * @param {HTMLElement} messageBlock - The message block element to which event listeners are added.
@@ -5737,6 +6236,7 @@ const Message = {
         };
     }
 
+
     /**
      * Disables buttons that should not be active during certain operations.
      */
@@ -5752,6 +6252,7 @@ const Message = {
         completionShownButtons.forEach(button => {getId(button).style.display = 'inline-block';});
     }
 
+
     /**
      * Enables buttons that were previously disabled.
      */
@@ -5759,6 +6260,7 @@ const Message = {
         completionLockedButtons.forEach(button => {getId(button).disabled = false;});
         completionShownButtons.forEach(button => {getId(button).style.display = 'none';});
     }
+
 
     /**
      * Stops the current completion process and resets the UI state.
@@ -5776,12 +6278,14 @@ const Message = {
         destination.classList.remove("generating");
     }
 
+
     /**
      * Toggles the visibility of the settings container.
      */
     function toggleSettings() {
         getId('settings-container')?.classList?.toggle('expanded');
     }
+
 
     /**
      * Adds a new message to the chat interface.
@@ -5840,6 +6344,7 @@ const Message = {
         return messageBlock;
     }
 
+
     /**
      * Creates a button element with specified content and click handler.
      * @param {string} content - The inner HTML content of the button.
@@ -5861,12 +6366,14 @@ const Message = {
         return button;
     }
 
+
     /**
      * Clears the output area of the chat interface.
      */
     function clearOutput() {
         getId('outputs').querySelector(".output").textContent = '';
     }
+
 
     /**
      * Resets all input fields and settings to their default values.
@@ -5888,6 +6395,7 @@ const Message = {
 
 /**                CONTROLS HANDLING                **/
 
+
     /**
      * Toggles the 'condensed' class on a message content div, visually indicating whether the message is condensed or not.
      * @param {HTMLElement} contentDiv - The message content div to toggle.
@@ -5902,6 +6410,7 @@ const Message = {
                 constants.symbols.chevronsUpDown;
         }
     }
+
 
     /**
      * Toggles the 'disabled' class on a message content div, visually indicating whether the message is enabled or disabled.
@@ -5919,7 +6428,9 @@ const Message = {
                 constants.symbols.eye;
         }
         updateTokenCount(contentDiv);
+        Message.isDivider(contentDiv);
     }
+
 
     /**
      * Toggles the 'collapsed' class on a message content div, hiding or showing the message content.
@@ -5944,6 +6455,7 @@ const Message = {
         return opfn;
     });
 
+
     function toggleCollapse(contentDiv, button, reset = false) {
         if (!reset)
             contentDiv.classList.toggle('collapsed');
@@ -5953,6 +6465,7 @@ const Message = {
                 constants.symbols.arrowDownFromLine;
         }
     }
+
 
     /**
      * Selects a cell in the chat interface, visually highlighting it and deselecting any previously selected cell.
@@ -5985,6 +6498,7 @@ const Message = {
         updateTextTokenCost(); // Update text token cost when a new cell is selected
     }
 
+
     /**
      * Cycles the role of a message content div, changing its role to the next role in the sequence (system, user, assistant, comment).
      * @param {HTMLElement} cell - The message content div to cycle.
@@ -5998,6 +6512,7 @@ const Message = {
         const roleButton = cell.previousElementSibling.querySelector('.role-button');
         roleButton.textContent = roles[nextIndex];
     }
+
 
     /**
      * Moves a node in the DOM, either up or down relative to its siblings.
@@ -6023,6 +6538,7 @@ const Message = {
         }
     }
 
+
     /**
      * Moves a node to the extreme top or bottom of its parent.
      * @param {HTMLElement} node - The node to move.
@@ -6040,6 +6556,7 @@ const Message = {
             parent.appendChild(node);
         }
     }
+
 
     /**
      * Joins the content of two nodes, either appending the content of the selected cell to the previous cell, or vice versa.
@@ -6074,6 +6591,7 @@ const Message = {
 
         await updateTokenCount(up ? targetCell : cell, true);
     }
+
 
     /**
      * Deletes a cell from the chat interface.
@@ -6111,17 +6629,24 @@ const Message = {
         recomputeTotals();
     }
 
+
     /**
      * Enters edit mode for a cell, allowing the user to modify its content.
      * @param {HTMLElement} cell - The cell to enter edit mode for.
      */
     async function enterEditMode(cell, seamless = false) {
-        if (!seamless) snapshotState();
+        if (!seamless)  // in seamless mode, edit mode is permanent
+            snapshotState();
         if (cell.classList.contains(Message.selectors.block)) {
-            let newCell = await enterEditMode(cell.querySelector('.' + Message.selectors.content), seamless);
+            // edit message-content, not message-block
+            let newCell = await enterEditMode(
+                cell.querySelector('.' + Message.selectors.content),
+                seamless
+            );
             return newCell;
         }
-        if (!seamless) await selectCell(cell);
+        if (!seamless)
+            await selectCell(cell);
         cell.innerText = cell.getAttribute('content') || buildText(cell);
         cell.contentEditable = true;
         editMode = true;
@@ -6132,6 +6657,7 @@ const Message = {
             cell.focus();
         }
     }
+
 
     /**
      * Exits edit mode for a cell, saving any changes made by the user.
@@ -6154,9 +6680,11 @@ const Message = {
                 elem.contentEditable = true;
             }
             await updateTokenCount(elem, true);
+            Message.isDivider(elem);
         }
         snapshotState();
     }
+
 
     async function toggleSeamless(value) {
         // toggle seamless mode for all message rows
@@ -6183,6 +6711,18 @@ const Message = {
             await exitEditMode();
         }
     }
+
+    async function toggleMosaic(value) {
+        // toggle mosaic mode for body alone
+        let b = query("body");
+        if (value) {
+            b.classList.add('mosaic');
+        } else {
+            b.classList.remove('mosaic');
+        }
+    }
+
+
 
     document.addEventListener('keydown', async function(e) {
         didLastSave = false;
@@ -6387,7 +6927,8 @@ const Message = {
                         await addMessage(
                             roleLetters[e.key],
                             constants.text.roleDefaults[roleLetters[e.key]],
-                            {author: '', label: ''}
+                            {author: '', label: ''},
+                            after = selectedCell | null,
                         );
                         recomputeTotals();
                         break;
@@ -6417,6 +6958,7 @@ const Message = {
 
 /**                GENERATION                **/
 
+
     /**
      * Retrieves the API key and base URL for a given provider.
      * @param {string} provider - The name of the provider.
@@ -6435,6 +6977,7 @@ const Message = {
         }
         return { key, url };
     }
+
 
     /**
      * Substitutes variables in a text string with their corresponding values.
@@ -6465,6 +7008,7 @@ const Message = {
         }
         return text;
     }
+
 
     /**
      * Forms a message object from a message content div.
@@ -6519,6 +7063,7 @@ const Message = {
         return msgObj;
     }
 
+
     /**
      * Gets the destination element for generated text.
      * @returns {HTMLElement} - The destination element.
@@ -6555,6 +7100,7 @@ const Message = {
         }
         return destination;
     }
+
 
     /**
      * Generates text using a specified model type (chat or text).
@@ -6609,7 +7155,7 @@ const Message = {
         }
         if (!key && info.provider != 'none') {
             destination.setAttribute('content', constants.text.enterAPIKey(info.provider));
-            destination.innerHTML = renderMarked(constants.text.enterAPIKey(info.provider));
+            updateRender(destination, constants.text.enterAPIKey(info.provider));
             await stopCompletion(destination);
             return;
         }
@@ -6644,90 +7190,152 @@ const Message = {
                 // repetition_penalty: parseFloat(getId('repetition_penalty')?.value),
                 // seed: parseInt(getId('seed')?.value),
             };
+            /* some providers throw an error if an unrecognized argument is passed, and
+               providers are inconsistent on what arguments they'll recognize, so we'll
+               just send what the user provides, and let the user handle any complaints */
 
-            ["temperature", "top_p", "top_k", "frequency_penalty", "presence_penalty", "repetition_penalty", "seed"].forEach(param => {
-                let value = getId(param)?.value;
+            const generalParams = {
+                "temperature": "float",
+                "top_p": "float",
+                "top_k": "int",
+                "frequency_penalty": "float",
+                "presence_penalty": "float",
+                "repetition_penalty": "float",
+                "seed": "int",
+             };
+            const specificParams = {
+                "min_tokens": "int",
+            };
+            // this split is unnatural; should consider refactoring it some day
+
+            Object.entries(generalParams).forEach(([paraName, paraType]) => {
+                let value = getId(paraName)?.value;
                 if (value && value.trim() !== "") {
                     try {
-                        if (["top_k", "seed"].includes(param)) {
-                            idParams[param] = parseInt(value);
-                        } else {
-                            idParams[param] = parseFloat(value);
+                        if (paraType == "int") {
+                            idParams[paraName] = parseInt(value);
+                        } else if (paraType == "float") {
+                            idParams[paraName] = parseFloat(value);
+                        } else if (paraType == "str") {
+                            idParams[paraName] = value;
                         }
                     } catch (e) {
-                        console.log(`Error parsing ${param}: ${e}`);
+                        console.log(`Error parsing ${paraName}: ${e}`);
                     }
                 }
             });
 
             // model-specified optional params
-            ["min_tokens"].forEach(param => {
-                let value = getId(param)?.value;
-                if (value && info.params && info.params.includes(param)) {
+            Object.entries(specificParams).forEach(([paraName, paraType]) => {
+                let value = getId(paraName)?.value;
+                if (value && info.params && info.params.includes(paraName)) {
                     try {
-                        if (["min_tokens"].includes(param)) {
-                            idParams[param] = parseInt(value);
-                        } else {
-                            idParams[param] = parseFloat(value);
+                        if (paraType == "int") {
+                            idParams[paraName] = parseInt(value);
+                        } else if (paraType == "float") {
+                            idParams[paraName] = parseFloat(value);
+                        } else if (paraType == "str") {
+                            idParams[paraName] = value;
                         }
                     } catch (e) {
-                        console.log(`Error parsing ${param}: ${e}`);
+                        console.log(`Error parsing ${paraName}: ${e}`);
                     }
                 }
             });
+            let model = customModel || modelKey;
+            if (model.includes("::")) {
+                /*
+                    the convention for distinguishing between different provisions with identical names
+                        e.g. OpenRouter and Groq both serve Qwen3 32B under the name "qwen/qwen3-32b"
+                    is to prepend the specific provider to the name with a double colon
+                        e.g. `${name}` directs to OpenRouter's provision, `groq::${name}` to Groq's
+                        you can also append: `${name}::${provider}` works too, but we'll prepend
+                    the prepended string must be equal to the model object's listed provider
+                */
+                model = model.split("::").filter( x => (x.toLowerCase() != info.provider.toLowerCase()) )[0]
+            }
+            let stream = getId("streaming")?.checked;
+            let defaultParams = info?.defaults || {};
+            let otherParams = JSON.parse(getId("otherParams")?.value || "{}");
 
             const payload = {
-                ...(info?.defaults || {}),
+                ...defaultParams,
                 ...{
-                    model: customModel || modelKey,
+                    model: model,
                     max_tokens: maxTokens,
-                    stream: getId('streaming')?.checked,
+                    stream: stream,
                     ...idParams,
                 },
-                ...JSON.parse(getId('otherParams')?.value || '{}')
+                ...otherParams,
             };
-            if (["o4-mini", "o3", "o3-mini", "o1", "o1-mini"].includes(payload.model)) {
+
+            let isGptTypeParamsException = false;
+            let isOTypeParamsException = false;
+            if ([ "o1", "o3", "o4" ].some(x => (new RegExp("(^|/)"+x+"(-mini)?$")).test(payload.model))) {
+                // this matches o1, o1-mini, foo/o1, bar/o1-mini; doesn't match o1foo, baro1
+                isOTypeParamsException = true;
+            }
+            if (["gpt-5"].some(x => (new RegExp("(^|/)"+x+"(-mini|-nano|-chat)?$")).test(payload.model))) {
+                isGptTypeParamsException = true;
+            }
+
+            if (isGptTypeParamsException || isOTypeParamsException) {
                 // max_tokens isn't supported, change to max_completion_tokens
                 payload.max_completion_tokens = maxTokens;
                 payload.max_tokens = undefined;
+                // and remove a bunch of other stuff that these models don't support
+                // should indicate that these aren't supported by graying out inputs
                 payload.temperature = undefined;
                 payload.top_p = undefined;
                 payload.top_k = undefined;
                 payload.frequency_penalty = undefined;
                 payload.presence_penalty = undefined;
                 payload.repetition_penalty = undefined;
-                payload.reasoning_effort = "high";
+                // should add option to modify this
+                if (isOTypeParamsException)
+                    payload.reasoning_effort = "high";
             }
 
             if (isChat) {
-                const messageElements = queryAll('#messages div.message-content:not(.disabled)');
-                const messageObjects = [];
+                const messageElements = queryAll(`#messages div.message-content:not(.disabled):not([role='comment'])`);
+                let messageObjects = [];
 
                 for (const el of messageElements) {
-                    if (el.classList.contains("generating")) {
-                        break; // blocks in generation, and anything after them, shouldn't be added
+                    if (Message.isGenerating(el)) {
+                        break;
+                        // blocks in generation, *and anything after them*, shouldn't be added
+                        // this is why we don't use `:not(.disabled, .generating)` in the above query;
+                        // we wouldn't know where to stop
+                    }
+                    if (Message.isDivider(el)) {
+                        // drop all acquired messages and restart after divider
+                        messageObjects = [];
+                        continue;
                     }
                     const msgObj = await formMessageObject(el);
                     if (info.extra && info.extra.includes("developer")) {
                         if (msgObj.role == "system")
                             msgObj.role = "developer";
                     }
-                    if (msgObj && msgObj.content) {
+                    if (msgObj && msgObj?.content) {
                         messageObjects.push(msgObj);
                     }
                     if (settings?.callerId && settings.callerId === el.id) {
                         break;
+                        // if the generation was called from a button in this block,
+                        // don't continue to next block.
                     }
                 }
                 const lastMsg = messageObjects[messageObjects.length - 1];
                 if (lastMsg.content == constants.text.roleDefaults[lastMsg.role]) {
-                    destination.setAttribute(content, constants.text.errors.removeDefaultMessages);
+                    destination.setAttribute("content", constants.text.errors.removeDefaultMessages);
                     destination.innerHTML = constants.text.errors.removeDefaultMessages;
                     await stopCompletion(destination);
                     return;
                 }
                 if (lastMsg.role == "assistant" && info.provider.toLowerCase().includes("deepseek")) {
-                    lastMsg.prefix = true;  // deepseek wants you to indicate whether a final assistant message should be treated as a prefix
+                    lastMsg.prefix = true;
+                    // deepseek wants you to indicate whether a final assistant message should be treated as a prefix
                 }
                 payload.messages = messageObjects;
             } else {
@@ -6777,7 +7385,7 @@ const Message = {
             }
             // const outputDivs = queryAll('.output:not(.locked)');
             // outputDivs.forEach(outputDiv => {
-            //     outputDiv.innerText = '';
+            //     outputDiv.textContent = '';
             // });
 
             if (info.provider == "none") {
@@ -6878,19 +7486,19 @@ const Message = {
                                 }
 
                                 // unprincipled hack to make models output parseable latex
-                                [
-                                    [/(\n+\s*\$\$\s*?\n+)?(.*?)\n+\s*\$\$\s*?\n+/g, "\n$1$2$$$$\n"],
-                                    [/\n\$ /g, "\n$$"],
-                                    [/ \$\n/g, "$$\n"],
-                                    [/\n\s*\\\[\s/g, " $$$$"],
-                                    [/\n*\s\\\]\s*\n/g, "$$$$ "],
-                                    [/\n\\\[\s*/g, " $$$$"],
-                                    [/\n*\s*\\\]\n/g, "$$$$ "],
-                                    [/\s*\\\(\s/g, " $$"],
-                                    [/\s\\\)\s*/g, "$$ "],
-                                    [/\\\(\s*/g, " $$"],
-                                    [/\s*\\\)/g, "$$ "],
-                                ].forEach(([fst, snd]) => {output = output.replaceAll(fst, snd)});
+                                // [
+                                //     [/(\n+\s*\$\$\s*?\n+)?(.*?)\n+\s*\$\$\s*?\n+/g, "\n$1$2$$$$\n"],
+                                //     [/\n\$ /g, "\n$$"],
+                                //     [/ \$\n/g, "$$\n"],
+                                //     [/\n\s*\\\[\s/g, " $$$$"],
+                                //     [/\n*\s\\\]\s*\n/g, "$$$$ "],
+                                //     [/\n\\\[\s*/g, " $$$$"],
+                                //     [/\n*\s*\\\]\n/g, "$$$$ "],
+                                //     [/\s*\\\(\s/g, " $$"],
+                                //     [/\s\\\)\s*/g, "$$ "],
+                                //     [/\\\(\s*/g, " $$"],
+                                //     [/\s*\\\)/g, "$$ "],
+                                // ].forEach(([fst, snd]) => {output = output.replaceAll(fst, snd)});
                                 // output = output.replaceAll(/\n\$\$\n(.*?)\n\$\$\n/g, "\n$$$$$1$$$$\n");
                                 // output = output.replaceAll(/\n\$ /g, "\n$$");
                                 // output = output.replaceAll(/ \$\n/g, "$$\n");
@@ -7012,10 +7620,11 @@ const Message = {
         destination.setAttribute("content", output);
         destination.setAttribute("author", modelKey);
         destination.setAttribute("label", "");
-        updateRender(destination, output);
         destination.classList.remove("generating");
+        setTimeout(() => updateRender(destination, output), 100);
         snapshotState();
     }
+
 
     async function embed(inputs, provider, params) {
         const { key, url } = getApiKeyAndUrl(provider);
@@ -7047,6 +7656,7 @@ const Message = {
         return embeddings;
     }
 
+
     function dot(v1, v2) {
         const L = v1.length;
         if (L !== v2.length) {
@@ -7074,13 +7684,13 @@ const Message = {
             corsProxy += '?';
         }
         if (!exaKey) {
-            destination.innerText = constants.text.enterAPIKey('Exa');
+            destination.textContent = constants.text.enterAPIKey('Exa');
             destination.setAttribute('content', '');
             return;
         }
 
         if (!urlMatch) {
-            destination.innerText = constants.text.errors.noURLFound;
+            destination.textContent = constants.text.errors.noURLFound;
             destination.setAttribute('content', '');
             return;
         }
@@ -7130,7 +7740,7 @@ const Message = {
             corsProxy += '?';
         }
         if (!exaKey) {
-            destination.innerText = constants.text.enterAPIKey('Exa');
+            destination.textContent = constants.text.enterAPIKey('Exa');
             destination.setAttribute('content', '');
             return;
         }
@@ -7287,6 +7897,10 @@ const Message = {
             if (contentDiv.tokens) {
                 total += parseInt(contentDiv.tokens);
             }
+            if (Message.isDivider(contentDiv)) {
+                blocks = 0;
+                total = 0;
+            }
         });
         // set the total token count in the UI
 
@@ -7296,19 +7910,19 @@ const Message = {
         const info = $models.chat[key];
         if (info) {
             const cCost = info.cost;
-            const maxTRaw = getId('maxTokensChat')?.value;
-            let maxT = parseInt(maxTRaw);
-            if (maxTRaw.endsWith('%')) {
-                const maxTPercent = parseInt(maxTRaw.slice(0, -1));
+            const maxTokensChat_raw = getId('maxTokensChat')?.value;
+            let maxTokensChat = parseInt(maxTokensChat_raw);
+            if (maxTokensChat_raw.endsWith('%')) {
+                const maxTPercent = parseInt(maxTokensChat_raw.slice(0, -1));
                 const maxTMax = info.max.out;
-                maxT = Math.round(maxTMax * maxTPercent / 100);
-            } else if (maxTRaw == "auto" || maxTRaw == "" || maxTRaw == "max") {
-                maxT = info.max.out;
+                maxTokensChat = Math.round(maxTMax * maxTPercent / 100);
+            } else if (maxTokensChat_raw == "auto" || maxTokensChat_raw == "" || maxTokensChat_raw == "max") {
+                maxTokensChat = info.max.out;
             } else {
-                maxT = parseInt(maxTRaw);
+                maxTokensChat = parseInt(maxTokensChat_raw);
             }
             const maxIn = info.max.in;
-            const maxOut = info.max.out >= 0 ? Math.min(maxT, info.max.out) : maxT;
+            const maxOut = info.max.out >= 0 ? Math.min(maxTokensChat, info.max.out) : maxTokensChat;
             const tokMult = info?.tokMult ?? 1;
             getId('totalTokens').innerHTML += ` / ${maxIn} (${blocks} block${ blocks!==1 ? 's' : '' })`;
             if (total > maxIn) {
@@ -7319,32 +7933,38 @@ const Message = {
             const outCost = parseFloat(((maxOut * cCost.out) / 1000000));
             const sumCost = parseFloat(((total * cCost.in + maxOut * cCost.out) / 1000000));
             // compute arithmetic mean of all assistant token lengths, geometric mean of all token lengths
-            let totProd = 1, totSum = 0, totCount = 0, astProd = 1, astSum = 0, astCount = 0;
+            let totalProd = 1, totalSum = 0, totalN = 0, asstProd = 1, asstSum = 0, asstN = 0;
             queryAll('.message-content:not(.disabled, [role="comment"])').forEach(contentDiv => {
+                if (Message.isDivider(contentDiv)) {
+                    // reset everything and continue onto next
+                    totalProd = 1; totalSum = 0; totalN = 0;
+                    asstProd = 1; asstSum = 0; asstN = 0;
+                    return;
+                }
                 let thisCount = contentDiv.getAttribute('tokens');
                 let thisRole = contentDiv.getAttribute('role');
                 if (thisCount && thisRole != 'comment') {
                     let t = parseInt(thisCount);
                     if (t >= 2) {
-                        totProd *= t; totCount += 1; totSum += t;
+                        totalProd *= t; totalN += 1; totalSum += t;
                         if (thisRole == 'assistant' || thisRole == 'system') {
-                            astProd *= t; astCount += 1; astSum += t;
+                            asstProd *= t; asstN += 1; asstSum += t;
                         }
                     }
                 }
             });
-            let astGeo = 1, astArt = 0, totGeo = 1, totArt = 0;
-            if (astCount != 0) {
-                astGeo = Math.pow(astProd, 1 / astCount);
-                astArt = astSum / astCount;
+            let asstGeoMean = 1, asstArithMean = 0, totalGeoMean = 1, totalArithMean = 0;
+            if (asstN != 0) {
+                asstGeoMean = Math.pow(asstProd, 1 / asstN);
+                asstArithMean = asstSum / asstN;
             }
-            if (totCount != 0) {
-                totGeo = Math.pow(totProd, 1 / totCount);
-                totArt = totSum / totCount;
+            if (totalN != 0) {
+                totalGeoMean = Math.pow(totalProd, 1 / totalN);
+                totalArithMean = totalSum / totalN;
             }
             // set the total cost in the UI
-            const outTokEstimate = Math.min(parseInt(1 + tokMult * Math.max(astArt, totGeo)), (maxOut > 0 ? maxOut : maxIn));
-            const estCost = parseFloat(((outTokEstimate * cCost.out + total * cCost.in) / 1000000));
+            const outTokEstimate = Math.min(parseInt(1 + tokMult * Math.max(asstArithMean, totalGeoMean)), (maxOut > 0 ? maxOut : maxIn));
+            const estCost = parseFloat(((outTokEstimate * cCost.out + total * cCost.in) / 1e6));
             const textMaxCost = parseInt(getId('maxTokensText')?.value);
             getId('completionCost').innerHTML = constants.html.chatCost(inCost, estCost, maxOut, cCost, sumCost);
         }
@@ -7358,32 +7978,32 @@ const Message = {
             const cell = query('.selected');
             const tokens = cell ? parseInt(cell.getAttribute('tokens')) || 0 : 0;
             const inCost = parseFloat(((tokens * tCost.in) / 1000000));
-            const maxTRaw = getId('maxTokensText')?.value;
-            let maxT = parseInt(maxTRaw);
-            if (maxTRaw.endsWith('%')) {
-                const maxTPercent = parseInt(maxTRaw.slice(0, -1));
+            const maxTokensText_raw = getId('maxTokensText')?.value;
+            let maxTokensText = parseInt(maxTokensText_raw);
+            if (maxTokensText_raw.endsWith('%')) {
+                const maxTPercent = parseInt(maxTokensText_raw.slice(0, -1));
                 const maxTMax = info.max.out;
-                maxT = Math.round(maxTMax * maxTPercent / 100);
-            } else if (maxTRaw == "auto" || maxTRaw == "" || maxTRaw == "max") {
-                maxT = info.max.out;
+                maxTokensText = Math.round(maxTMax * maxTPercent / 100);
+            } else if (maxTokensText_raw == "auto" || maxTokensText_raw == "" || maxTokensText_raw == "max") {
+                maxTokensText = info.max.out;
             } else {
-                maxT = parseInt(maxTRaw);
+                maxTokensText = parseInt(maxTokensText_raw);
             }
-            const outCost = parseFloat(((maxT * tCost.out) / 1000000));
-            const sumCost = parseFloat(((tokens * tCost.in + maxT * tCost.out) / 1000000));
+            const outCost = parseFloat(((maxTokensText * tCost.out) / 1000000));
+            const sumCost = parseFloat(((tokens * tCost.in + maxTokensText * tCost.out) / 1000000));
             getId('textCompletionCost').innerHTML = constants.html.textCost(inCost, sumCost);
         }
     }
     function updateModelDescriptions() {
         const chatModelKey = getId('modelChat')?.value;
         const textModelKey = getId('modelText')?.value;
-        const c = $models.chat[chatModelKey];
-        const t = $models.text[textModelKey];
-        if (c) {
-            getId('modelChatDescription').innerHTML = `${c.provider.split("_")[0]} ${chatModelKey}<br>${c?.long ? c.long+'<br>':''}Cost/MTok: $${c.cost.in} input, $${c.cost.out} output<br>Max Tokens: ${c.max.in} input, ${c.max.out} output`;
+        const chat = $models.chat[chatModelKey];
+        const text = $models.text[textModelKey];
+        if (chat) {
+            getId('modelChatDescription').innerHTML = `${chat.provider.split("_")[0]} ${chatModelKey}<br>${chat?.long ? chat.long+'<br>':''}Cost/MTok: $${chat.cost.in} input, $${chat.cost.out} output<br>Max Tokens: ${chat.max.in} input, ${chat.max.out} output`;
         }
-        if (t) {
-            getId('modelTextDescription').innerHTML = `${t.provider.split("_")[0]} ${textModelKey}<br>${t?.long ? t.long+'<br>':''}Cost/MTok: $${t.cost.in} input, $${t.cost.out} output<br>Max Tokens: ${t.max.in} input, ${t.max.out} output`;
+        if (text) {
+            getId('modelTextDescription').innerHTML = `${text.provider.split("_")[0]} ${textModelKey}<br>${text?.long ? text.long+'<br>':''}Cost/MTok: $${text.cost.in} input, $${text.cost.out} output<br>Max Tokens: ${text.max.in} input, ${text.max.out} output`;
         }
     }
     function updateTokenCost() {
@@ -7400,6 +8020,7 @@ const Message = {
 
 /**            VARIABLE HANDLING           **/
 
+
     function addVariable() {
         const variableBlock = document.createElement('div');
         const variable = {enabled: true, local: true, key: "", value: ""};
@@ -7410,6 +8031,7 @@ const Message = {
         snapshotState();
     }
 
+
     function toggleVariable(button) {
         const variableBlock = button.closest('.variable-block');
         variableBlock.classList.toggle('inactive');
@@ -7417,6 +8039,7 @@ const Message = {
         saveGlobalVariables();
         snapshotState();
     }
+
 
     function toggleVariableScope(button) {
         const variableBlock = button.closest('.variable-block');
@@ -7433,12 +8056,14 @@ const Message = {
         snapshotState();
     }
 
+
     function deleteVariable(button) {
         const variableBlock = button.closest('.variable-block');
         variableBlock.remove();
         saveGlobalVariables();
         snapshotState();
     }
+
 
     function saveGlobalVariables() {
         const globalVariables = Array.from(queryAll('.variable-block.global')).map(block => ({
@@ -7451,6 +8076,7 @@ const Message = {
         snapshotState(); // Update the snapshot after saving global variables
     }
 
+
     function loadGlobalVariables() {
         const globalVariables = JSON.parse(getLocal('globalVariables') || '[]');
         globalVariables.forEach(variable => {
@@ -7462,6 +8088,7 @@ const Message = {
         });
     }
 
+
     function getActiveVariables() {
         return Array.from(getId('variables-list')?.children || [])
             .filter(block => !block.classList.contains('inactive'))
@@ -7472,6 +8099,7 @@ const Message = {
     }
 
 /**            FETCH HANDLING           **/
+
 
     async function getHtml(url) {
         // First, check for problematic URLs
@@ -7521,6 +8149,7 @@ const Message = {
         }
     }
 
+
     fetch = async (site, params, useCorsProxy = null) => {
         try {
             return await fetch_builtin(site, params);
@@ -7536,6 +8165,7 @@ const Message = {
             throw new Error(constants.text.errors.corsFetchFail(site, proxyUrl, e.message));
         }
     };
+
 
     async function fetchWithJina(url) {
         const jinaKey = getId("jinaKey")?.value;
@@ -7564,6 +8194,7 @@ const Message = {
             throw new Error(constants.text.errors.jinaClient(error.message));
         }
     }
+
 
     async function fetchWithExa(url) {
         const exaKey = getId("exaKey")?.value;
@@ -7605,6 +8236,7 @@ const Message = {
         }
     }
 
+
     async function getContents(url) {
         if (cache.has(url) && !getId("scrapeIgnoreCache")?.checked) {
             return cache.get(url);
@@ -7635,6 +8267,7 @@ const Message = {
     }
 
 //**            FORMATTING HANDLING            **/
+
 
     function buildText(element, substituted = false) {
         // memoize text building
@@ -7690,7 +8323,9 @@ const Message = {
         return result;
     }
 
+
 /**            ONLOADS AND EVENTS            **/
+
 
     function toggleMarkdown(force = null) {
         const disabled = force ?? getId('disableMarkdown')?.checked;
@@ -7699,12 +8334,13 @@ const Message = {
         if (!disabled) {
             queryAll('.' + Message.selectors.content).forEach(contentDiv => {
                 let text = contentDiv.getAttribute('content') || buildText(contentDiv);
-                contentDiv.innerHTML = marked.parse(text);
+                contentDiv.innerHTML = renderMarked(text);
                 renderMath(contentDiv);
                 highlightBlock(contentDiv);
             });
         }
     }
+
 
     function toggleSidebar(force = null) {
         const hidden = force ?? getId('hideSidebar')?.checked;
@@ -7717,6 +8353,7 @@ const Message = {
         }
         recomputeTotals();
     }
+
 
     function handleKeyboardShortcuts(e) {
         const selectedCell = query('.selected');
@@ -7736,23 +8373,33 @@ const Message = {
         }
     }
 
+
     async function quickHash() {
+        // this checks if the code has been updated since the page was last loaded
         const scripts = Array.from(document.querySelectorAll("script"));
         const code = scripts.map(x => x.text).join("");
+
+        // do a simple rolling hash on the code
         const hash = Array.from(code)
             .map(c => c.charCodeAt())
-            .reduce((a, b) => ((a << 5) + a) + b, 0); // Simple rolling hash
+            .reduce((a, b) => ((a << 5) + a) + b, 0);
+
         const hexColor = Math.abs(hash).toString(16).padStart(6, '0').slice(0, 6);
         const output = document.getElementById('hashOutput');
         output.innerHTML = `<span style="color: #${hexColor};">${hexColor.toUpperCase()}</span>`;
+
         lastVersionHash = getLocal("versionHash");
-        if (!lastVersionHash || hexColor != lastVersionHash) {
-            document.getElementById('hashOutput').innerHTML += ` <span style="font-weight:600;color:red;"> (!)</span>`;
+        if (lastVersionHash && hexColor != lastVersionHash) {
+            document.getElementById("hashOutput").innerHTML += ` 
+                <span style="font-weight: 400; color: #FF000088;"> (changed from <span style="color: #${lastVersionHash};">${lastVersionHash.toUpperCase()}</span>)</span>
+            `;
             setLocal("versionHash", hexColor);
         }
     }
 
+
 /** Start doing things **/
+
 
     let hash = quickHash();  // cannot await here
 
@@ -7762,6 +8409,7 @@ const Message = {
         pedantic: false,
         silent: true
     });
+
 
     document.addEventListener('DOMContentLoaded', () => {
         // Set up UI elements immediately
@@ -7792,6 +8440,7 @@ const Message = {
         toggleTokenVisibility();
     });
 
+
     document.addEventListener('DOMContentLoaded', async () => {
         const snapshot = getLocal('snapshot') || 'null';
         const lastState = JSON.parse(snapshot);
@@ -7805,6 +8454,7 @@ const Message = {
         toggleSidebar(getLocal('hideSidebar') === 'true');
     });
 
+
     window.addEventListener('click', async function(event) {
         if (editMode && !event.target.classList.contains('editing'))
             await exitEditMode();
@@ -7816,17 +8466,20 @@ const Message = {
         }
     });
 
+
     document.addEventListener('keydown', handleKeyboardShortcuts);
+
 
     queryAll('.secret').forEach(secret => {
         secret.addEventListener('change', $inputs.saveAllApiKeys);
     });
 
+
     ["chat", "text"].forEach(type => {
-        const typeId = "model" + type.charAt(0).toUpperCase() + type.slice(1);
+        const typeId = "model" + type.charAt(0).toUpperCase() + type.slice(1);  // modelChat, modelText
         const value = getLocal(typeId) || Object.keys($models[type])[0];
         queryAll("." + typeId).forEach(modelSelect => {
-            modelSelect.innerText = '';
+            modelSelect.textContent = '';
             // add all models for given type to appropriate dropdown
             Object.entries($models[type]).forEach(([key, model]) => {
                 const option = document.createElement('option');
